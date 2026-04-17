@@ -67,6 +67,15 @@ export interface AIResearch {
   publishedAt: string;
 }
 
+export interface TrendingTopic {
+  id: string;
+  title: string;
+  views: number;
+  rank: number;
+  url: string;
+  category?: string;
+}
+
 export interface DashboardData {
   podcasts: PodcastEpisode[];
   economic: EconomicSignal[];
@@ -74,5 +83,6 @@ export interface DashboardData {
   news: WorldNews[];
   hotspots: GlobalHotspot[];
   research: AIResearch[];
+  trending: TrendingTopic[];
   lastUpdated: string;
 }

@@ -8,6 +8,7 @@ import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
 import { GlobeSection } from '@/components/globe/GlobeSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
+import { TrendingSection, TrendingTopic } from '@/components/trending/TrendingSection';
 import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch } from '@/types';
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
   const [news, setNews] = useState<WorldNews[]>([]);
   const [hotspots, setHotspots] = useState<GlobalHotspot[]>([]);
   const [research, setResearch] = useState<AIResearch[]>([]);
+  const [trending, setTrending] = useState<TrendingTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,13 +35,14 @@ export default function Home() {
     if (isRefresh) setRefreshing(true);
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes] = await Promise.all([
+      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes] = await Promise.all([
         fetch('/api/podcasts'),
         fetch('/api/economic'),
         fetch('/api/trends'),
         fetch('/api/news'),
         fetch('/api/hotspots'),
         fetch('/api/research'),
+        fetch('/api/trending'),
       ]);
 
       if (podcastsRes.ok) {
@@ -70,6 +73,11 @@ export default function Home() {
       if (researchRes.ok) {
         const data = await researchRes.json();
         setResearch(data.research || []);
+      }
+
+      if (trendingRes.ok) {
+        const data = await trendingRes.json();
+        setTrending(data.trending || []);
       }
 
       setLastRefresh(new Date());
@@ -139,7 +147,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <p className="text-sm text-slate-300">
                 <span className="text-amber-400 font-semibold">Today:</span>{' '}
-                {podcasts.length} podcasts • {news.length} news • {hotspots.length} hotspots • {research.length} AI papers
+                {hotspots.length} hotspots • {news.length} news • {trending.length} trending • {research.length} AI papers
               </p>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-slate-500">
@@ -168,11 +176,14 @@ export default function Home() {
         {/* Global Hotspots - 3D Globe */}
         <GlobeSection hotspots={hotspots} />
 
-        {/* Podcasts Section */}
-        <PodcastSection episodes={podcasts} />
+        {/* What the World is Searching */}
+        <TrendingSection trending={trending} />
 
         {/* World News Section */}
         <NewsSection news={news} />
+
+        {/* Podcasts Section */}
+        <PodcastSection episodes={podcasts} />
 
         {/* Two Column Layout for smaller sections */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -192,7 +203,7 @@ export default function Home() {
             DecisionUp • Your personal intelligence feed
           </p>
           <p className="text-xs text-slate-600 mt-1">
-            Sources: GDELT, Reuters, BBC, Guardian, ECB, Hacker News, arXiv
+            Sources: GDELT, Wikipedia, Reuters, BBC, Guardian, ECB, Hacker News, arXiv
           </p>
           {lastRefresh && (
             <p className="text-xs text-slate-600 mt-2">

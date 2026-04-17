@@ -93,10 +93,20 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
     }
   };
 
-  // Transform hotspots for globe
+  // Transform hotspots for globe - points
   const pointsData = hotspots.map(h => ({
     ...h,
-    size: 0.1 + (h.intensity / 10) * 0.4, // Size based on intensity
+    size: 0.05 + (h.intensity / 10) * 0.3, // Size based on intensity
+    color: categoryColors[h.category],
+  }));
+
+  // Transform hotspots for rings (pulsating glow effect)
+  const ringsData = hotspots.filter(h => h.intensity >= 5).map(h => ({
+    lat: h.lat,
+    lng: h.lng,
+    maxR: 3 + (h.intensity / 10) * 5, // Larger rings for higher intensity
+    propagationSpeed: 2,
+    repeatPeriod: 1000 + (10 - h.intensity) * 200, // Faster pulse for higher intensity
     color: categoryColors[h.category],
   }));
 
@@ -155,7 +165,7 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
             pointLng="lng"
             pointAltitude="size"
             pointColor="color"
-            pointRadius={0.4}
+            pointRadius={0.5}
             pointLabel={(d: object) => {
               const point = d as GlobalHotspot & { color: string };
               const catLabel = categoryLabels[point.category] || 'Event';
@@ -168,9 +178,18 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
               `;
             }}
             onPointClick={(point: object) => handlePointClick(point as GlobalHotspot)}
-            onPointHover={(point: any) => {
+            onPointHover={(point: unknown) => {
               document.body.style.cursor = point ? 'pointer' : 'grab';
             }}
+            
+            // Rings (pulsating glow for high-intensity hotspots)
+            ringsData={ringsData}
+            ringLat="lat"
+            ringLng="lng"
+            ringMaxRadius="maxR"
+            ringPropagationSpeed="propagationSpeed"
+            ringRepeatPeriod="repeatPeriod"
+            ringColor="color"
             
             // Styling
             atmosphereColor="#4f46e5"
