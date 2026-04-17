@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WorldNews } from '@/types';
+import { useTranslation } from '@/lib/translation';
 
 interface NewsSectionProps {
   news: WorldNews[];
@@ -15,7 +16,7 @@ const categoryColors: Record<string, string> = {
   geopolitics: 'bg-red-500/20 text-red-300 border-red-500/30',
 };
 
-const categoryLabels: Record<string, string> = {
+const categoryLabelsEN: Record<string, string> = {
   world: 'World',
   europe: 'Europe',
   business: 'Business',
@@ -23,7 +24,15 @@ const categoryLabels: Record<string, string> = {
   geopolitics: 'Geopolitics',
 };
 
-function formatTimeAgo(dateStr: string): string {
+const categoryLabelsCZ: Record<string, string> = {
+  world: 'Svět',
+  europe: 'Evropa',
+  business: 'Ekonomika',
+  science: 'Věda',
+  geopolitics: 'Geopolitika',
+};
+
+function formatTimeAgo(dateStr: string, lang: 'en' | 'cs'): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -31,21 +40,101 @@ function formatTimeAgo(dateStr: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+  if (lang === 'cs') {
+    if (diffMins < 60) return `před ${diffMins}m`;
+    if (diffHours < 24) return `před ${diffHours}h`;
+    if (diffDays === 1) return 'Včera';
+    return `před ${diffDays}d`;
+  }
+
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays === 1) return 'Yesterday';
   return `${diffDays}d ago`;
 }
 
+interface TranslatedNews {
+  title: string;
+  description: string;
+}
+
 export function NewsSection({ news }: NewsSectionProps) {
   const [expanded, setExpanded] = useState(false);
+  const { language, translate, isTranslating } = useTranslation();
+  const [translations, setTranslations] = useState<Record<string, TranslatedNews>>({});
   
   const displayedNews = expanded ? news : news.slice(0, 6);
+  const categoryLabels = language === 'cs' ? categoryLabelsCZ : categoryLabelsEN;
+
+  // Translate news when language changes to Czech
+  useEffect(() => {
+    if (language === 'cs' && news.length > 0) {
+      const translateNews = async () => {
+        // Get texts to translate
+        const titlesToTranslate = displayedNews
+          .filter(item => !translations[item.id]?.title)
+          .map(item => item.title);
+        
+        const descriptionsToTranslate = displayedNews
+          .filter(item => !translations[item.id]?.description && item.description)
+          .map(item => item.description || '');
+
+        if (titlesToTranslate.length === 0 && descriptionsToTranslate.length === 0) {
+          return;
+        }
+
+        // Translate titles
+        const translatedTitles = titlesToTranslate.length > 0 
+          ? await translate(titlesToTranslate) 
+          : [];
+        
+        // Translate descriptions
+        const translatedDescriptions = descriptionsToTranslate.length > 0 
+          ? await translate(descriptionsToTranslate) 
+          : [];
+
+        // Map translations back to items
+        const newTranslations: Record<string, TranslatedNews> = { ...translations };
+        let titleIdx = 0;
+        let descIdx = 0;
+
+        displayedNews.forEach((item) => {
+          if (!newTranslations[item.id]) {
+            newTranslations[item.id] = { title: '', description: '' };
+          }
+          if (!newTranslations[item.id].title && titleIdx < translatedTitles.length) {
+            newTranslations[item.id].title = translatedTitles[titleIdx++];
+          }
+          if (!newTranslations[item.id].description && item.description && descIdx < translatedDescriptions.length) {
+            newTranslations[item.id].description = translatedDescriptions[descIdx++];
+          }
+        });
+
+        setTranslations(newTranslations);
+      };
+
+      translateNews();
+    }
+  }, [language, news, displayedNews, translate, translations]);
+
+  const getTitle = (item: WorldNews) => {
+    if (language === 'cs' && translations[item.id]?.title) {
+      return translations[item.id].title;
+    }
+    return item.title;
+  };
+
+  const getDescription = (item: WorldNews) => {
+    if (language === 'cs' && translations[item.id]?.description) {
+      return translations[item.id].description;
+    }
+    return item.description;
+  };
 
   if (news.length === 0) {
     return (
       <div className="text-center py-4 text-slate-400">
-        <p>Loading world news...</p>
+        <p>{language === 'cs' ? 'Načítám světové zprávy...' : 'Loading world news...'}</p>
       </div>
     );
   }
@@ -54,10 +143,19 @@ export function NewsSection({ news }: NewsSectionProps) {
     <section className="mb-8">
       <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
         <span className="text-2xl">*</span>
-        World News
+        {language === 'cs' ? 'Světové zprávy' : 'World News'}
         <span className="text-xs text-slate-500 font-normal ml-2">
           Reuters, BBC, Guardian, NPR
         </span>
+        {isTranslating && (
+          <span className="ml-2 text-xs text-amber-400 flex items-center gap-1">
+            <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            {language === 'cs' ? 'Překládám...' : 'Translating...'}
+          </span>
+        )}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -74,17 +172,17 @@ export function NewsSection({ news }: NewsSectionProps) {
                 {categoryLabels[item.category]}
               </span>
               <span className="text-xs text-slate-500 whitespace-nowrap">
-                {formatTimeAgo(item.publishedAt)}
+                {formatTimeAgo(item.publishedAt, language)}
               </span>
             </div>
             
             <h3 className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors line-clamp-2 mb-2">
-              {item.title}
+              {getTitle(item)}
             </h3>
             
             {item.description && (
               <p className="text-xs text-slate-400 line-clamp-2 mb-2">
-                {item.description}
+                {getDescription(item)}
               </p>
             )}
             
@@ -108,14 +206,14 @@ export function NewsSection({ news }: NewsSectionProps) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
-              Show Less
+              {language === 'cs' ? 'Zobrazit méně' : 'Show Less'}
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              Show {news.length - 6} More Stories
+              {language === 'cs' ? `Zobrazit dalších ${news.length - 6} zpráv` : `Show ${news.length - 6} More Stories`}
             </>
           )}
         </button>

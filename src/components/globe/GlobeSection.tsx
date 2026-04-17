@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { GlobalHotspot } from '@/types';
+import { useTranslation } from '@/lib/translation';
 
 // Dynamic import to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), {
@@ -26,7 +27,7 @@ const categoryColors: Record<GlobalHotspot['category'], string> = {
   economy: '#10b981', // green
 };
 
-const categoryLabels: Record<GlobalHotspot['category'], string> = {
+const categoryLabelsEN: Record<GlobalHotspot['category'], string> = {
   conflict: 'Conflict',
   protest: 'Protest',
   disaster: 'Disaster',
@@ -34,10 +35,22 @@ const categoryLabels: Record<GlobalHotspot['category'], string> = {
   economy: 'Economy',
 };
 
+const categoryLabelsCZ: Record<GlobalHotspot['category'], string> = {
+  conflict: 'Konflikt',
+  protest: 'Protest',
+  disaster: 'Katastrofa',
+  politics: 'Politika',
+  economy: 'Ekonomika',
+};
+
 export function GlobeSection({ hotspots }: GlobeSectionProps) {
   const globeRef = useRef<any>(null);
   const [selectedHotspot, setSelectedHotspot] = useState<GlobalHotspot | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 500 });
+  const { language, translate, isTranslating } = useTranslation();
+  const [translatedEvents, setTranslatedEvents] = useState<Record<string, string>>({});
+  
+  const categoryLabels = language === 'cs' ? categoryLabelsCZ : categoryLabelsEN;
 
   // Handle resize
   useEffect(() => {
@@ -93,6 +106,29 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
     }
   };
 
+  // Translate selected hotspot event when language changes
+  useEffect(() => {
+    if (language === 'cs' && selectedHotspot && !translatedEvents[selectedHotspot.id]) {
+      const translateEvent = async () => {
+        const translated = await translate([selectedHotspot.topEvent]);
+        if (translated[0]) {
+          setTranslatedEvents(prev => ({
+            ...prev,
+            [selectedHotspot.id]: translated[0]
+          }));
+        }
+      };
+      translateEvent();
+    }
+  }, [language, selectedHotspot, translate, translatedEvents]);
+
+  const getTopEvent = (hotspot: GlobalHotspot) => {
+    if (language === 'cs' && translatedEvents[hotspot.id]) {
+      return translatedEvents[hotspot.id];
+    }
+    return hotspot.topEvent;
+  };
+
   // Transform hotspots for globe - points
   const pointsData = hotspots.map(h => ({
     ...h,
@@ -115,10 +151,10 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
       <section className="mb-8">
         <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
           <span className="text-2xl">*</span>
-          Global Hotspots
+          {language === 'cs' ? 'Globální události' : 'Global Hotspots'}
         </h2>
         <div className="w-full h-[300px] flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700">
-          <p className="text-slate-400">Loading global events...</p>
+          <p className="text-slate-400">{language === 'cs' ? 'Načítám globální události...' : 'Loading global events...'}</p>
         </div>
       </section>
     );
@@ -129,7 +165,15 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <span className="text-2xl">*</span>
-          Global Hotspots
+          {language === 'cs' ? 'Globální události' : 'Global Hotspots'}
+          {isTranslating && (
+            <span className="ml-2 text-xs text-amber-400 flex items-center gap-1">
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </span>
+          )}
         </h2>
         <div className="flex items-center gap-2 text-xs">
           {Object.entries(categoryColors).slice(0, 4).map(([cat, color]) => (
@@ -224,16 +268,16 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
               </button>
             </div>
             
-            <p className="text-sm text-slate-300 mb-3">{selectedHotspot.topEvent}</p>
+            <p className="text-sm text-slate-300 mb-3">{getTopEvent(selectedHotspot)}</p>
             
             <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
-              <span>{selectedHotspot.eventCount} events tracked</span>
-              <span>Intensity: {selectedHotspot.intensity}/10</span>
+              <span>{selectedHotspot.eventCount} {language === 'cs' ? 'událostí' : 'events tracked'}</span>
+              <span>{language === 'cs' ? 'Intenzita' : 'Intensity'}: {selectedHotspot.intensity}/10</span>
             </div>
             
             {selectedHotspot.sources.length > 0 && (
               <div className="text-xs text-slate-500 mb-3">
-                Sources: {selectedHotspot.sources.join(', ')}
+                {language === 'cs' ? 'Zdroje' : 'Sources'}: {selectedHotspot.sources.join(', ')}
               </div>
             )}
             
@@ -244,7 +288,7 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-sm font-medium transition-colors"
               >
-                Read More
+                {language === 'cs' ? 'Číst více' : 'Read More'}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>

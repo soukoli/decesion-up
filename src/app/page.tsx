@@ -8,8 +8,11 @@ import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
 import { GlobeSection } from '@/components/globe/GlobeSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
-import { TrendingSection, TrendingTopic } from '@/components/trending/TrendingSection';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch } from '@/types';
+import { TrendingSection, SearchTrend } from '@/components/trending/TrendingSection';
+import { StocksSection } from '@/components/stocks';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { useTranslation } from '@/lib/translation';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex } from '@/types';
 
 export default function Home() {
   const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
@@ -18,14 +21,20 @@ export default function Home() {
   const [news, setNews] = useState<WorldNews[]>([]);
   const [hotspots, setHotspots] = useState<GlobalHotspot[]>([]);
   const [research, setResearch] = useState<AIResearch[]>([]);
-  const [trending, setTrending] = useState<TrendingTopic[]>([]);
+  const [trending, setTrending] = useState<SearchTrend[]>([]);
+  const [stocks, setStocks] = useState<StockIndex[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   
+  const { language } = useTranslation();
+  
   const now = new Date();
-  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const dateStr = now.toLocaleDateString('en-US', { 
+  const greetingEN = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const greetingCZ = now.getHours() < 12 ? 'Dobré ráno' : now.getHours() < 18 ? 'Dobré odpoledne' : 'Dobrý večer';
+  const greeting = language === 'cs' ? greetingCZ : greetingEN;
+  
+  const dateStr = now.toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US', { 
     weekday: 'long', 
     month: 'long', 
     day: 'numeric' 
@@ -35,7 +44,7 @@ export default function Home() {
     if (isRefresh) setRefreshing(true);
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes] = await Promise.all([
+      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes, stocksRes] = await Promise.all([
         fetch('/api/podcasts'),
         fetch('/api/economic'),
         fetch('/api/trends'),
@@ -43,6 +52,7 @@ export default function Home() {
         fetch('/api/hotspots'),
         fetch('/api/research'),
         fetch('/api/trending'),
+        fetch('/api/stocks?period=5d'),
       ]);
 
       if (podcastsRes.ok) {
@@ -78,6 +88,11 @@ export default function Home() {
       if (trendingRes.ok) {
         const data = await trendingRes.json();
         setTrending(data.trending || []);
+      }
+
+      if (stocksRes.ok) {
+        const data = await stocksRes.json();
+        setStocks(data || []);
       }
 
       setLastRefresh(new Date());
@@ -130,9 +145,12 @@ export default function Home() {
               <p className="text-xs text-slate-400">Signal, not noise</p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-slate-300">{greeting}</p>
-            <p className="text-xs text-slate-500">{dateStr}</p>
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <div className="text-right">
+              <p className="text-sm text-slate-300">{greeting}</p>
+              <p className="text-xs text-slate-500">{dateStr}</p>
+            </div>
           </div>
         </div>
       </header>
@@ -185,6 +203,9 @@ export default function Home() {
         {/* Podcasts Section */}
         <PodcastSection episodes={podcasts} />
 
+        {/* Market Indices with Charts */}
+        <StocksSection initialStocks={stocks} />
+
         {/* Two Column Layout for smaller sections */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Economic Signals */}
@@ -203,7 +224,7 @@ export default function Home() {
             DecisionUp • Your personal intelligence feed
           </p>
           <p className="text-xs text-slate-600 mt-1">
-            Sources: GDELT, Wikipedia, Reuters, BBC, Guardian, ECB, Hacker News, arXiv
+            Sources: GDELT, Google Trends, Reuters, BBC, Guardian, Yahoo Finance, ECB, Hacker News, arXiv
           </p>
           {lastRefresh && (
             <p className="text-xs text-slate-600 mt-2">

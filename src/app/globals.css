@@ -16,8 +16,49 @@
 }
 
 body {
-  background: linear-gradient(to bottom, #0f172a, #1e3a5f);
+  background: #0f172a;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  /* Fallback gradient for when JS is disabled or loading */
+  background-image: linear-gradient(
+    180deg,
+    #0f172a 0%,
+    #1a2744 15%,
+    #162032 30%,
+    #1e293b 50%,
+    #162032 70%,
+    #1a2744 85%,
+    #0f172a 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Ensure content is above animated background */
+main, header, footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 168, 75, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 168, 75, 0.5);
 }

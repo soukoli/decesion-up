@@ -67,8 +67,9 @@ function categorizeEvent(title: string): GlobalHotspot['category'] {
 async function fetchCountryEvents(country: string): Promise<GDELTEvent[]> {
   try {
     // GDELT DOC 2.0 API - free, no auth required
-    const query = encodeURIComponent(country);
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${query}&mode=artlist&maxrecords=5&format=json&sort=datedesc`;
+    // Filter for English language sources only
+    const query = encodeURIComponent(`${country} sourcelang:english`);
+    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${query}&mode=artlist&maxrecords=10&format=json&sort=datedesc`;
     
     const response = await fetch(url, {
       signal: AbortSignal.timeout(8000),
@@ -82,7 +83,39 @@ async function fetchCountryEvents(country: string): Promise<GDELTEvent[]> {
     }
     
     const data: GDELTResponse = await response.json();
-    return data.articles || [];
+    const articles = data.articles || [];
+    
+    // Additional filter: only keep English articles (language = 'English' or 'en')
+    // and filter out known Chinese/non-Latin domains
+    const filteredArticles = articles.filter(article => {
+      // Skip if language is explicitly non-English
+      if (article.language && !article.language.toLowerCase().includes('english') && article.language !== 'en') {
+        return false;
+      }
+      
+      // Skip known Chinese, Russian, Arabic domains
+      const domain = article.domain?.toLowerCase() || '';
+      const blockedDomains = [
+        'xinhua', 'chinadaily', 'cgtn', 'globaltimes', 'peopledaily',
+        'rt.com', 'sputnik', 'tass.com',
+        'aljazeera', 'alarabiya',
+        '.cn', '.ru', '.ir'
+      ];
+      
+      if (blockedDomains.some(blocked => domain.includes(blocked))) {
+        return false;
+      }
+      
+      // Check if title contains Chinese/Cyrillic/Arabic characters
+      const title = article.title || '';
+      if (/[\u4e00-\u9fff]/.test(title)) return false; // Chinese
+      if (/[\u0400-\u04ff]/.test(title)) return false; // Cyrillic
+      if (/[\u0600-\u06ff]/.test(title)) return false; // Arabic
+      
+      return true;
+    });
+    
+    return filteredArticles.slice(0, 5); // Take top 5 filtered results
   } catch (error) {
     console.error(`Error fetching GDELT data for ${country}:`, error);
     return [];

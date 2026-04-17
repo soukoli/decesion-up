@@ -1,24 +1,25 @@
 import { NextResponse } from 'next/server';
-import { fetchTrendingTopics } from '@/lib/trending';
+import { fetchSearchTrends } from '@/lib/search-trends';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const trending = await fetchTrendingTopics();
+    const trends = await fetchSearchTrends();
     
     return NextResponse.json({
-      trending,
+      trends,
+      source: 'Google Trends',
       lastUpdated: new Date().toISOString(),
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // 1 hour cache
+        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600', // 30 min cache
       },
     });
   } catch (error) {
-    console.error('Error fetching trending:', error);
+    console.error('Error fetching search trends:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch trending', trending: [] },
+      { error: 'Failed to fetch search trends', trends: [] },
       { status: 500 }
     );
   }

@@ -70,10 +70,39 @@ export interface AIResearch {
 export interface TrendingTopic {
   id: string;
   title: string;
-  views: number;
-  rank: number;
+  traffic: string;
+  trafficNumber: number;
   url: string;
-  category?: string;
+  newsItems: {
+    title: string;
+    url: string;
+    source: string;
+  }[];
+  relatedQueries: string[];
+  imageUrl?: string;
+  pubDate: string;
+}
+
+export interface StockDataPoint {
+  date: string;
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface StockIndex {
+  symbol: string;
+  name: string;
+  currentPrice: number;
+  previousClose: number;
+  change: number;
+  changePercent: number;
+  dayHigh: number;
+  dayLow: number;
+  historicalData: StockDataPoint[];
 }
 
 export interface DashboardData {
@@ -84,5 +113,6 @@ export interface DashboardData {
   hotspots: GlobalHotspot[];
   research: AIResearch[];
   trending: TrendingTopic[];
+  stocks: StockIndex[];
   lastUpdated: string;
 }
