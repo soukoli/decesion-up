@@ -32,9 +32,21 @@ export interface TechTrend {
   timeAgo: string;
 }
 
+export interface WorldNews {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  source: string;
+  category: 'world' | 'europe' | 'business' | 'science' | 'geopolitics';
+  publishedAt: string;
+  imageUrl?: string;
+}
+
 export interface DashboardData {
   podcasts: PodcastEpisode[];
   economic: EconomicSignal[];
   trends: TechTrend[];
+  news: WorldNews[];
   lastUpdated: string;
 }
