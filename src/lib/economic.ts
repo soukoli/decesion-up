@@ -4,8 +4,8 @@ import { EconomicSignal } from '@/types';
 export async function fetchExchangeRates(): Promise<EconomicSignal[]> {
   try {
     const [todayRes, yesterdayRes] = await Promise.all([
-      fetch('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD'),
-      fetch(`https://api.frankfurter.app/${getYesterdayDate()}?from=EUR&to=CZK,USD`),
+      fetch('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD,GBP'),
+      fetch(`https://api.frankfurter.app/${getYesterdayDate()}?from=EUR&to=CZK,USD,GBP`),
     ]);
 
     const today = await todayRes.json();
@@ -45,6 +45,22 @@ export async function fetchExchangeRates(): Promise<EconomicSignal[]> {
       updatedAt: today.date,
     });
 
+    // EUR/GBP
+    const gbpToday = today.rates.GBP;
+    const gbpYesterday = yesterday.rates.GBP;
+    const gbpChange = ((gbpToday - gbpYesterday) / gbpYesterday * 100).toFixed(2);
+    
+    signals.push({
+      id: 'eur-gbp',
+      title: 'EUR/GBP',
+      value: gbpToday.toFixed(4),
+      change: `${parseFloat(gbpChange) >= 0 ? '+' : ''}${gbpChange}%`,
+      trend: parseFloat(gbpChange) > 0.1 ? 'up' : parseFloat(gbpChange) < -0.1 ? 'down' : 'stable',
+      detail: 'Euro to British Pound',
+      source: 'ECB',
+      updatedAt: today.date,
+    });
+
     return signals;
   } catch (error) {
     console.error('Error fetching exchange rates:', error);
@@ -58,29 +74,28 @@ function getYesterdayDate(): string {
   return date.toISOString().split('T')[0];
 }
 
-// Fetch basic stock indices (using free APIs)
+// Market indices with links to sources (no live data - requires paid API)
 export async function fetchMarketIndices(): Promise<EconomicSignal[]> {
-  // Using a simple approach - in production you'd use Alpha Vantage or similar
-  // For MVP, we'll use placeholder data that gets updated
+  // These are links to view current data - we can't fetch live values without paid API
   const indices: EconomicSignal[] = [
     {
       id: 'sp500',
       title: 'S&P 500',
-      value: '---',
-      change: '---',
+      value: 'View Live',
+      change: '→',
       trend: 'stable',
-      detail: 'US Large Cap Index',
-      source: 'Market',
+      detail: 'Click for real-time data',
+      source: 'https://www.google.com/finance/quote/.INX:INDEXSP',
       updatedAt: new Date().toISOString(),
     },
     {
       id: 'nasdaq',
       title: 'NASDAQ',
-      value: '---',
-      change: '---',
+      value: 'View Live',
+      change: '→',
       trend: 'stable',
-      detail: 'US Tech Index',
-      source: 'Market',
+      detail: 'Click for real-time data',
+      source: 'https://www.google.com/finance/quote/.IXIC:INDEXNASDAQ',
       updatedAt: new Date().toISOString(),
     },
   ];

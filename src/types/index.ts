@@ -43,10 +43,36 @@ export interface WorldNews {
   imageUrl?: string;
 }
 
+export interface GlobalHotspot {
+  id: string;
+  lat: number;
+  lng: number;
+  country: string;
+  region: string;
+  eventCount: number;
+  topEvent: string;
+  category: 'conflict' | 'protest' | 'disaster' | 'politics' | 'economy';
+  intensity: number; // 1-10 scale
+  sources: string[];
+  url?: string;
+}
+
+export interface AIResearch {
+  id: string;
+  title: string;
+  authors: string[];
+  summary: string;
+  url: string;
+  category: string;
+  publishedAt: string;
+}
+
 export interface DashboardData {
   podcasts: PodcastEpisode[];
   economic: EconomicSignal[];
   trends: TechTrend[];
   news: WorldNews[];
+  hotspots: GlobalHotspot[];
+  research: AIResearch[];
   lastUpdated: string;
 }

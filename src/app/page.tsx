@@ -6,13 +6,17 @@ import { PodcastSection } from '@/components/podcasts/PodcastSection';
 import { EconomicSection } from '@/components/economic/EconomicSection';
 import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews } from '@/types';
+import { GlobeSection } from '@/components/globe/GlobeSection';
+import { ResearchSection } from '@/components/research/ResearchSection';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch } from '@/types';
 
 export default function Home() {
   const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
   const [economic, setEconomic] = useState<EconomicSignal[]>([]);
   const [trends, setTrends] = useState<TechTrend[]>([]);
   const [news, setNews] = useState<WorldNews[]>([]);
+  const [hotspots, setHotspots] = useState<GlobalHotspot[]>([]);
+  const [research, setResearch] = useState<AIResearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,11 +33,13 @@ export default function Home() {
     if (isRefresh) setRefreshing(true);
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes] = await Promise.all([
+      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes] = await Promise.all([
         fetch('/api/podcasts'),
         fetch('/api/economic'),
         fetch('/api/trends'),
         fetch('/api/news'),
+        fetch('/api/hotspots'),
+        fetch('/api/research'),
       ]);
 
       if (podcastsRes.ok) {
@@ -54,6 +60,16 @@ export default function Home() {
       if (newsRes.ok) {
         const data = await newsRes.json();
         setNews(data.news || []);
+      }
+
+      if (hotspotsRes.ok) {
+        const data = await hotspotsRes.json();
+        setHotspots(data.hotspots || []);
+      }
+
+      if (researchRes.ok) {
+        const data = await researchRes.json();
+        setResearch(data.research || []);
       }
 
       setLastRefresh(new Date());
@@ -92,7 +108,7 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-slate-800">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
               src="/images/icon.png"
@@ -114,7 +130,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-6">
         {/* Quick Summary with Last Refresh */}
         <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-slate-800/50 border border-amber-500/20">
           {loading ? (
@@ -123,7 +139,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <p className="text-sm text-slate-300">
                 <span className="text-amber-400 font-semibold">Today:</span>{' '}
-                {podcasts.length} podcasts • {news.length} news • {economic.length} signals • {trends.length} tech trends
+                {podcasts.length} podcasts • {news.length} news • {hotspots.length} hotspots • {research.length} AI papers
               </p>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-slate-500">
@@ -149,25 +165,34 @@ export default function Home() {
           )}
         </div>
 
+        {/* Global Hotspots - 3D Globe */}
+        <GlobeSection hotspots={hotspots} />
+
         {/* Podcasts Section */}
         <PodcastSection episodes={podcasts} />
 
         {/* World News Section */}
         <NewsSection news={news} />
 
-        {/* Economic Signals */}
-        <EconomicSection signals={economic} />
+        {/* Two Column Layout for smaller sections */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Economic Signals */}
+          <EconomicSection signals={economic} />
 
-        {/* Tech Trends */}
-        <TrendsSection trends={trends} />
+          {/* Tech Trends */}
+          <TrendsSection trends={trends} />
+        </div>
+
+        {/* AI Research Papers */}
+        <ResearchSection research={research} />
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-slate-800 text-center">
           <p className="text-xs text-slate-500">
-            DecisionUp • Data from RSS feeds, ECB, Hacker News
+            DecisionUp • Your personal intelligence feed
           </p>
           <p className="text-xs text-slate-600 mt-1">
-            Sources: Reuters, BBC, Guardian, NPR, Financial Times, TED, a16z
+            Sources: GDELT, Reuters, BBC, Guardian, ECB, Hacker News, arXiv
           </p>
           {lastRefresh && (
             <p className="text-xs text-slate-600 mt-2">
