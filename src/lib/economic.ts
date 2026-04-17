@@ -4,8 +4,14 @@ import { EconomicSignal } from '@/types';
 export async function fetchExchangeRates(): Promise<EconomicSignal[]> {
   try {
     const [todayRes, yesterdayRes] = await Promise.all([
-      fetch('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD,GBP'),
-      fetch(`https://api.frankfurter.app/${getYesterdayDate()}?from=EUR&to=CZK,USD,GBP`),
+      fetch('https://api.frankfurter.app/latest?from=EUR&to=CZK,USD,GBP', {
+        signal: AbortSignal.timeout(5000),
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      }),
+      fetch(`https://api.frankfurter.app/${getYesterdayDate()}?from=EUR&to=CZK,USD,GBP`, {
+        signal: AbortSignal.timeout(5000),
+        next: { revalidate: 86400 }, // Cache for 24 hours (yesterday's rates don't change)
+      }),
     ]);
 
     const today = await todayRes.json();

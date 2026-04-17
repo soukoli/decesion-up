@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { fetchAllNews } from '@/lib/news';
 
-export const dynamic = 'force-dynamic';
+// ISR - revalidate every 30 minutes
+export const revalidate = 1800;
 
 export async function GET() {
   try {

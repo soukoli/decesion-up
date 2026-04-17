@@ -14,12 +14,6 @@ interface RSSItem {
 // Quality RSS feeds from reliable sources (no API key needed)
 const NEWS_SOURCES = [
   {
-    id: 'reuters-world',
-    name: 'Reuters',
-    url: 'https://feeds.reuters.com/reuters/worldNews',
-    category: 'world' as const,
-  },
-  {
     id: 'bbc-world',
     name: 'BBC World',
     url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
@@ -44,9 +38,9 @@ const NEWS_SOURCES = [
     category: 'europe' as const,
   },
   {
-    id: 'reuters-business',
-    name: 'Reuters Business',
-    url: 'https://feeds.reuters.com/reuters/businessNews',
+    id: 'bbc-business',
+    name: 'BBC Business',
+    url: 'https://feeds.bbci.co.uk/news/business/rss.xml',
     category: 'business' as const,
   },
 ];
@@ -58,7 +52,8 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
       headers: {
         'User-Agent': 'DecisionUp/1.0',
       },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(5000), // Reduced timeout
+      next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
     if (!response.ok) {

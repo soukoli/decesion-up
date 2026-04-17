@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { fetchAllHotspots } from '@/lib/hotspots';
 
-export const dynamic = 'force-dynamic';
+// ISR - revalidate every 30 minutes
+export const revalidate = 1800;
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
       lastUpdated: new Date().toISOString(),
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800', // 15 min cache
+        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600', // 30 min cache
       },
     });
   } catch (error) {

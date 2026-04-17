@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchAIResearch } from '@/lib/research';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 1800;
 
 export async function GET() {
   try {

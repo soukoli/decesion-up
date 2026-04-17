@@ -3,7 +3,7 @@ import { PODCASTS, PodcastConfig } from './podcasts-config';
 import { PodcastEpisode } from '@/types';
 
 const parser = new Parser({
-  timeout: 10000, // 10 second timeout
+  timeout: 5000, // 5 second timeout (reduced from 10)
   customFields: {
     item: [
       ['itunes:duration', 'duration'],

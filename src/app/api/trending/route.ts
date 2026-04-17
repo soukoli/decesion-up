@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchSearchTrends } from '@/lib/search-trends';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 1800;
 
 export async function GET() {
   try {
