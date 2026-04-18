@@ -16,12 +16,13 @@ export interface SearchTrend {
   relatedQueries: string[];
   imageUrl?: string;
   pubDate: string;
-  source: 'google' | 'bing';
+  source: 'google-us' | 'google-cz';
+  region: 'global' | 'czech';
 }
 
 export interface TrendsData {
-  google: SearchTrend[];
-  bing: SearchTrend[];
+  global: SearchTrend[];
+  czech: SearchTrend[];
   period: string;
   periodLabel: string;
   lastUpdated: string;
@@ -51,7 +52,7 @@ function extractTag(xml: string, tag: string): string {
   return cdataMatch ? cdataMatch[1].trim() : content.trim();
 }
 
-async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
+async function fetchGoogleTrends(geo: string = 'US', region: 'global' | 'czech' = 'global'): Promise<SearchTrend[]> {
   try {
     // Google Trends RSS Feed - official endpoint
     const url = `https://trends.google.com/trending/rss?geo=${geo}`;
@@ -65,7 +66,7 @@ async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
     });
     
     if (!response.ok) {
-      console.error(`Google Trends API error: ${response.status}`);
+      console.error(`Google Trends API error for ${geo}: ${response.status}`);
       return [];
     }
     
@@ -76,6 +77,7 @@ async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let itemMatch;
     let rank = 0;
+    const sourceId = geo === 'CZ' ? 'google-cz' : 'google-us';
     
     while ((itemMatch = itemRegex.exec(xml)) !== null && rank < 10) {
       const itemXml = itemMatch[1];
@@ -109,7 +111,7 @@ async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
       
       if (title) {
         trends.push({
-          id: `google-${rank}`,
+          id: `${sourceId}-${rank}`,
           rank,
           title,
           traffic: traffic || '10K+',
@@ -119,7 +121,8 @@ async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
           relatedQueries: [],
           imageUrl: picture || undefined,
           pubDate: pubDate || new Date().toISOString(),
-          source: 'google',
+          source: sourceId,
+          region,
         });
       }
     }
@@ -130,71 +133,21 @@ async function fetchGoogleTrends(geo: string = 'US'): Promise<SearchTrend[]> {
       .slice(0, 10)
       .map((t, i) => ({ ...t, rank: i + 1 }));
   } catch (error) {
-    console.error('Error fetching Google Trends:', error);
+    console.error(`Error fetching Google Trends for ${geo}:`, error);
     return [];
   }
 }
 
-async function fetchBingTrends(): Promise<SearchTrend[]> {
-  try {
-    // Try multiple Bing endpoints for trending topics
-    const endpoints = [
-      'https://www.bing.com/HPImageArchive.aspx?format=rss&idx=0&n=10&mkt=en-US',
-      'https://www.bing.com/news/search?format=rss&q=trending+news&count=10',
-    ];
-    
-    // Try DuckDuckGo News as alternative (also privacy-focused search engine)
-    const duckDuckGoUrl = 'https://duckduckgo.com/?q=trending&format=json&t=h_';
-    
-    // For now, use curated trending topics based on news categories
-    // These represent what's typically trending on Bing/DuckDuckGo
-    return getDynamicBingTrends();
-  } catch (error) {
-    console.error('Error fetching Bing Trends:', error);
-    return getDynamicBingTrends();
-  }
-}
-
-function getDynamicBingTrends(): SearchTrend[] {
-  // Dynamic trending topics - mix of evergreen and timely topics
-  // Updated periodically based on typical search patterns
-  const trendingCategories = [
-    { title: 'AI News Today', category: 'tech' },
-    { title: 'Stock Market Update', category: 'finance' },
-    { title: 'Climate News', category: 'environment' },
-    { title: 'Electric Vehicles', category: 'tech' },
-    { title: 'Cryptocurrency Prices', category: 'finance' },
-    { title: 'Space Exploration', category: 'science' },
-    { title: 'Health & Wellness', category: 'health' },
-    { title: 'Renewable Energy', category: 'environment' },
-    { title: 'Cybersecurity News', category: 'tech' },
-    { title: 'Remote Work Trends', category: 'business' },
-  ];
-  
-  return trendingCategories.map((topic, index) => ({
-    id: `bing-${index + 1}`,
-    rank: index + 1,
-    title: topic.title,
-    traffic: '',
-    trafficNumber: 10000 - index * 100,
-    url: `https://www.bing.com/search?q=${encodeURIComponent(topic.title)}`,
-    newsItems: [],
-    relatedQueries: [],
-    pubDate: new Date().toISOString(),
-    source: 'bing' as const,
-  }));
-}
-
 export async function fetchSearchTrends(): Promise<TrendsData> {
-  // Fetch trends from Google and Bing in parallel
-  const [googleTrends, bingTrends] = await Promise.all([
-    fetchGoogleTrends('US'),
-    fetchBingTrends(),
+  // Fetch trends from Google for both US (global) and Czech Republic
+  const [globalTrends, czechTrends] = await Promise.all([
+    fetchGoogleTrends('US', 'global'),
+    fetchGoogleTrends('CZ', 'czech'),
   ]);
   
   return {
-    google: googleTrends,
-    bing: bingTrends,
+    global: globalTrends,
+    czech: czechTrends,
     period: '1d',
     periodLabel: 'Today',
     lastUpdated: new Date().toISOString(),
@@ -204,5 +157,5 @@ export async function fetchSearchTrends(): Promise<TrendsData> {
 // Legacy export for backward compatibility
 export async function fetchSearchTrendsLegacy(): Promise<SearchTrend[]> {
   const data = await fetchSearchTrends();
-  return data.google;
+  return data.global;
 }

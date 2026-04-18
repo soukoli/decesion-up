@@ -8,10 +8,12 @@ export async function GET() {
     const trendsData = await fetchSearchTrends();
     
     return NextResponse.json({
-      google: trendsData.google,
-      bing: trendsData.bing,
-      // Also keep 'trending' for backward compatibility
-      trending: trendsData.google,
+      global: trendsData.global,
+      czech: trendsData.czech,
+      // Legacy compatibility
+      google: trendsData.global,
+      bing: trendsData.czech,
+      trending: trendsData.global,
       period: trendsData.period,
       periodLabel: trendsData.periodLabel,
       lastUpdated: trendsData.lastUpdated,
@@ -25,6 +27,8 @@ export async function GET() {
     return NextResponse.json(
       { 
         error: 'Failed to fetch search trends', 
+        global: [],
+        czech: [],
         google: [],
         bing: [],
         trending: [],

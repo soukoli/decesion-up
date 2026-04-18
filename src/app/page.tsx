@@ -95,8 +95,8 @@ export default function Home() {
 
       if (trendingRes.ok) {
         const data = await trendingRes.json();
-        setTrendingGoogle(data.google || data.trending || []);
-        setTrendingBing(data.bing || []);
+        setTrendingGoogle(data.global || data.google || data.trending || []);
+        setTrendingBing(data.czech || data.bing || []);
       }
 
       if (stocksRes.ok) {
@@ -212,7 +212,7 @@ export default function Home() {
         <GlobeSection hotspots={hotspots} />
 
         {/* What the World is Searching */}
-        <TrendingSection trending={trendingGoogle} google={trendingGoogle} bing={trendingBing} />
+        <TrendingSection trending={trendingGoogle} global={trendingGoogle} czech={trendingBing} />
 
         {/* World News Section */}
         <NewsSection news={news} />

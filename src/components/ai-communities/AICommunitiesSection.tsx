@@ -21,25 +21,19 @@ export function AICommunitiesSection({ communities }: AICommunitiesSectionProps)
 
   return (
     <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="text-2xl">🤖</span>
-          {language === 'cs' ? 'AI Diskuze & Komunity' : 'AI Discussions & Communities'}
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-white">
+          {language === 'cs' ? 'AI Zdroje & Komunity' : 'AI Sources & Communities'}
         </h2>
-        <span className="text-sm text-slate-400">
-          {language === 'cs' ? 'Top 3 zdroje' : 'Top 3 sources'}
-        </span>
+        <p className="text-xs text-slate-500">
+          {language === 'cs' 
+            ? 'Nejlepší zdroje pro sledování AI trendů a novinek'
+            : 'Best sources for following AI trends and news'}
+        </p>
       </div>
-      
-      {/* Description */}
-      <p className="text-sm text-slate-400 mb-4">
-        {language === 'cs' 
-          ? 'Nejlepší zdroje pro sledování AI trendů, workshopů a novinek ze světa umělé inteligence.'
-          : 'Best sources for following AI trends, workshops, and news from the world of artificial intelligence.'}
-      </p>
 
       {/* Grid - 1 column on mobile, 3 on larger screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {communities.map((community) => (
           <AICommunityCard key={community.id} community={community} />
         ))}

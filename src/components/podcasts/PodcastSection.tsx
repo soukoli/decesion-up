@@ -42,14 +42,21 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
   return (
     <section className="mb-8">
       {/* Header with tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="text-2xl">🎧</span>
-          {language === 'cs' ? 'Podcasty' : 'Podcasts'}
-        </h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white">
+            {language === 'cs' ? 'Podcasty' : 'Podcasts'}
+          </h2>
+          <p className="text-xs text-slate-500">
+            {activeTab === 'global' 
+              ? (language === 'cs' ? 'Světové podcasty o tech, vědě a byznysu' : 'Global podcasts on tech, science & business')
+              : (language === 'cs' ? 'České podcasty' : 'Czech podcasts')
+            }
+          </p>
+        </div>
         
         {/* Tabs */}
-        <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700">
+        <div className="flex bg-slate-800/50 rounded-lg p-0.5 border border-slate-700">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -58,33 +65,19 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
                 setExpanded(false);
               }}
               className={`
-                flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all
+                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all
                 ${activeTab === tab.id
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'text-slate-400 hover:text-white border border-transparent'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:text-white'
                 }
               `}
             >
-              {tab.id === 'czech' && <span>🇨🇿</span>}
-              {tab.id === 'global' && <span>🌍</span>}
+              <span className="text-xs">{tab.id === 'czech' ? '🇨🇿' : '🌍'}</span>
               {language === 'cs' ? tab.labelCS : tab.labelEN}
-              <span className="text-xs opacity-60">({tab.count})</span>
             </button>
           ))}
         </div>
       </div>
-      
-      {/* Description */}
-      <p className="text-xs text-slate-500 mb-4">
-        {activeTab === 'global' 
-          ? (language === 'cs' 
-              ? 'Nejlepší světové podcasty o technologiích, vědě a aktuálním dění.' 
-              : 'Top global podcasts about technology, science, and current events.')
-          : (language === 'cs'
-              ? 'Populární české podcasty o byznysu, zprávách a lifestylu.'
-              : 'Popular Czech podcasts about business, news, and lifestyle.')
-        }
-      </p>
 
       {/* Grid - 2 columns on mobile, 4 on desktop */}
       {displayedEpisodes.length > 0 ? (
@@ -95,7 +88,6 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
         </div>
       ) : (
         <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-xl border border-slate-700">
-          <span className="text-3xl mb-2 block">🎙️</span>
           <p className="text-sm">
             {language === 'cs' 
               ? 'Žádné podcasty k zobrazení' 
