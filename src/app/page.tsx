@@ -43,16 +43,20 @@ export default function Home() {
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     
+    // For refresh, add cache-busting timestamp to bypass CDN cache
+    const cacheBuster = isRefresh ? `?_t=${Date.now()}` : '';
+    const fetchOptions = isRefresh ? { cache: 'no-store' as RequestCache } : {};
+    
     try {
       const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes, stocksRes] = await Promise.all([
-        fetch('/api/podcasts'),
-        fetch('/api/economic'),
-        fetch('/api/trends'),
-        fetch('/api/news'),
-        fetch('/api/hotspots'),
-        fetch('/api/research'),
-        fetch('/api/trending'),
-        fetch('/api/stocks?period=5d'),
+        fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
+        fetch(`/api/economic${cacheBuster}`, fetchOptions),
+        fetch(`/api/trends${cacheBuster}`, fetchOptions),
+        fetch(`/api/news${cacheBuster}`, fetchOptions),
+        fetch(`/api/hotspots${cacheBuster}`, fetchOptions),
+        fetch(`/api/research${cacheBuster}`, fetchOptions),
+        fetch(`/api/trending${cacheBuster}`, fetchOptions),
+        fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
       ]);
 
       if (podcastsRes.ok) {

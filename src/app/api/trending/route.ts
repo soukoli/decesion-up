@@ -8,7 +8,7 @@ export async function GET() {
     const trends = await fetchSearchTrends();
     
     return NextResponse.json({
-      trends,
+      trending: trends, // Changed from 'trends' to 'trending' to match client expectation
       source: 'Google Trends',
       lastUpdated: new Date().toISOString(),
     }, {
@@ -19,7 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching search trends:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch search trends', trends: [] },
+      { error: 'Failed to fetch search trends', trending: [] },
       { status: 500 }
     );
   }
