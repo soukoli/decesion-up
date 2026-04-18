@@ -205,6 +205,9 @@ export default function Home() {
           )}
         </div>
 
+        {/* Podcasts Section - MOVED TO TOP */}
+        <PodcastSection episodes={podcasts} />
+
         {/* Global Hotspots - 3D Globe */}
         <GlobeSection hotspots={hotspots} />
 
@@ -213,9 +216,6 @@ export default function Home() {
 
         {/* World News Section */}
         <NewsSection news={news} />
-
-        {/* Podcasts Section */}
-        <PodcastSection episodes={podcasts} />
 
         {/* Market Indices with Charts */}
         <StocksSection initialStocks={stocks} />
