@@ -105,6 +105,24 @@ export interface StockIndex {
   historicalData: StockDataPoint[];
 }
 
+export interface AICommunity {
+  id: string;
+  name: string;
+  nameCS: string;
+  description: string;
+  descriptionCS: string;
+  type: 'podcast' | 'newsletter' | 'community' | 'youtube';
+  url: string;
+  language: 'cs' | 'en' | 'both';
+  author?: string;
+  frequency?: string;
+  frequencyCS?: string;
+  imageUrl?: string;
+  subscribers?: string;
+  topics: string[];
+  topicsCS: string[];
+}
+
 export interface DashboardData {
   podcasts: PodcastEpisode[];
   economic: EconomicSignal[];
@@ -114,5 +132,6 @@ export interface DashboardData {
   research: AIResearch[];
   trending: TrendingTopic[];
   stocks: StockIndex[];
+  aiCommunities: AICommunity[];
   lastUpdated: string;
 }

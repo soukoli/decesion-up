@@ -10,9 +10,10 @@ import { GlobeSection } from '@/components/globe/GlobeSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
 import { TrendingSection, SearchTrend } from '@/components/trending/TrendingSection';
 import { StocksSection } from '@/components/stocks';
+import { AICommunitiesSection } from '@/components/ai-communities';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTranslation } from '@/lib/translation';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex } from '@/types';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity } from '@/types';
 
 export default function Home() {
   const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
@@ -21,8 +22,10 @@ export default function Home() {
   const [news, setNews] = useState<WorldNews[]>([]);
   const [hotspots, setHotspots] = useState<GlobalHotspot[]>([]);
   const [research, setResearch] = useState<AIResearch[]>([]);
-  const [trending, setTrending] = useState<SearchTrend[]>([]);
+  const [trendingGoogle, setTrendingGoogle] = useState<SearchTrend[]>([]);
+  const [trendingBing, setTrendingBing] = useState<SearchTrend[]>([]);
   const [stocks, setStocks] = useState<StockIndex[]>([]);
+  const [aiCommunities, setAICommunities] = useState<AICommunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,7 +51,7 @@ export default function Home() {
     const fetchOptions = isRefresh ? { cache: 'no-store' as RequestCache } : {};
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes, stocksRes] = await Promise.all([
+      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes, stocksRes, aiCommunitiesRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/economic${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
@@ -57,6 +60,7 @@ export default function Home() {
         fetch(`/api/research${cacheBuster}`, fetchOptions),
         fetch(`/api/trending${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
+        fetch(`/api/ai-communities${cacheBuster}`, fetchOptions),
       ]);
 
       if (podcastsRes.ok) {
@@ -91,12 +95,18 @@ export default function Home() {
 
       if (trendingRes.ok) {
         const data = await trendingRes.json();
-        setTrending(data.trending || []);
+        setTrendingGoogle(data.google || data.trending || []);
+        setTrendingBing(data.bing || []);
       }
 
       if (stocksRes.ok) {
         const data = await stocksRes.json();
         setStocks(data || []);
+      }
+
+      if (aiCommunitiesRes.ok) {
+        const data = await aiCommunitiesRes.json();
+        setAICommunities(data.communities || []);
       }
 
       setLastRefresh(new Date());
@@ -169,7 +179,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <p className="text-sm text-slate-300">
                 <span className="text-amber-400 font-semibold">Today:</span>{' '}
-                {hotspots.length} hotspots • {news.length} news • {trending.length} trending • {research.length} AI papers
+                {hotspots.length} hotspots • {news.length} news • {trendingGoogle.length} trending • {research.length} AI papers
               </p>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-slate-500">
@@ -199,7 +209,7 @@ export default function Home() {
         <GlobeSection hotspots={hotspots} />
 
         {/* What the World is Searching */}
-        <TrendingSection trending={trending} />
+        <TrendingSection trending={trendingGoogle} google={trendingGoogle} bing={trendingBing} />
 
         {/* World News Section */}
         <NewsSection news={news} />
@@ -221,6 +231,9 @@ export default function Home() {
 
         {/* AI Research Papers */}
         <ResearchSection research={research} />
+
+        {/* AI Communities & Discussions */}
+        <AICommunitiesSection communities={aiCommunities} />
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-slate-800 text-center">

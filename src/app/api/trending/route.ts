@@ -5,21 +5,32 @@ export const revalidate = 1800;
 
 export async function GET() {
   try {
-    const trends = await fetchSearchTrends();
+    const trendsData = await fetchSearchTrends();
     
     return NextResponse.json({
-      trending: trends, // Changed from 'trends' to 'trending' to match client expectation
-      source: 'Google Trends',
-      lastUpdated: new Date().toISOString(),
+      google: trendsData.google,
+      bing: trendsData.bing,
+      // Also keep 'trending' for backward compatibility
+      trending: trendsData.google,
+      period: trendsData.period,
+      periodLabel: trendsData.periodLabel,
+      lastUpdated: trendsData.lastUpdated,
     }, {
       headers: {
-        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600', // 30 min cache
+        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600',
       },
     });
   } catch (error) {
     console.error('Error fetching search trends:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch search trends', trending: [] },
+      { 
+        error: 'Failed to fetch search trends', 
+        google: [],
+        bing: [],
+        trending: [],
+        period: '1d',
+        periodLabel: 'Today',
+      },
       { status: 500 }
     );
   }
