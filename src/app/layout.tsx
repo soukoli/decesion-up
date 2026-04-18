@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AnimatedBackground } from "@/components/background/AnimatedBackground";
 import { TranslationProvider } from "@/lib/translation";
+import { FloatingLanguageToggle } from "@/components/ui/FloatingLanguageToggle";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <AnimatedBackground />
         <TranslationProvider>
           {children}
+          <FloatingLanguageToggle />
         </TranslationProvider>
       </body>
     </html>
