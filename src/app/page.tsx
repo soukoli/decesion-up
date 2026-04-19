@@ -208,6 +208,9 @@ export default function Home() {
         {/* Podcasts Section - MOVED TO TOP */}
         <PodcastSection episodes={podcasts} />
 
+        {/* AI Communities & Discussions - Moved up */}
+        <AICommunitiesSection communities={aiCommunities} />
+
         {/* Global Hotspots - 3D Globe */}
         <GlobeSection hotspots={hotspots} />
 
@@ -231,9 +234,6 @@ export default function Home() {
 
         {/* AI Research Papers */}
         <ResearchSection research={research} />
-
-        {/* AI Communities & Discussions */}
-        <AICommunitiesSection communities={aiCommunities} />
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-slate-800 text-center">

@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { GlobalHotspot } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 // Dynamic import to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), {
@@ -148,46 +149,39 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
 
   if (hotspots.length === 0) {
     return (
-      <section className="mb-8">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-          <span className="text-2xl">*</span>
-          {language === 'cs' ? 'Globální události' : 'Global Hotspots'}
-        </h2>
+      <CollapsibleSection
+        title={language === 'cs' ? 'Globální události' : 'Global Hotspots'}
+        subtitle={language === 'cs' ? 'Načítám...' : 'Loading...'}
+      >
         <div className="w-full h-[300px] flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700">
           <p className="text-slate-400">{language === 'cs' ? 'Načítám globální události...' : 'Loading global events...'}</p>
         </div>
-      </section>
+      </CollapsibleSection>
     );
   }
 
-  return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="text-2xl">*</span>
-          {language === 'cs' ? 'Globální události' : 'Global Hotspots'}
-          {isTranslating && (
-            <span className="ml-2 text-xs text-amber-400 flex items-center gap-1">
-              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            </span>
-          )}
-        </h2>
-        <div className="flex items-center gap-2 text-xs">
-          {Object.entries(categoryColors).slice(0, 4).map(([cat, color]) => (
-            <span key={cat} className="flex items-center gap-1">
-              <span 
-                className="w-2 h-2 rounded-full" 
-                style={{ backgroundColor: color }}
-              />
-              <span className="text-slate-400">{categoryLabels[cat as GlobalHotspot['category']]}</span>
-            </span>
-          ))}
-        </div>
-      </div>
+  // Legend for categories
+  const legendContent = (
+    <div className="flex items-center gap-2 text-xs">
+      {Object.entries(categoryColors).slice(0, 4).map(([cat, color]) => (
+        <span key={cat} className="flex items-center gap-1">
+          <span 
+            className="w-2 h-2 rounded-full" 
+            style={{ backgroundColor: color }}
+          />
+          <span className="text-slate-400 hidden sm:inline">{categoryLabels[cat as GlobalHotspot['category']]}</span>
+        </span>
+      ))}
+    </div>
+  );
 
+  return (
+    <CollapsibleSection
+      title={language === 'cs' ? 'Globální události' : 'Global Hotspots'}
+      subtitle={`${hotspots.length} events`}
+      badge={hotspots.length}
+      rightContent={legendContent}
+    >
       <div className="relative">
         {/* Globe Container */}
         <div 
@@ -321,6 +315,6 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
           </button>
         ))}
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

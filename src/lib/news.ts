@@ -133,29 +133,68 @@ export async function fetchAllNews(): Promise<WorldNews[]> {
     }
   });
   
-  // Sort by date (newest first) and remove duplicates by title similarity
+  // Sort by date (newest first) and remove duplicates
   const sorted = allNews.sort((a, b) => 
     new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
   );
   
-  // Simple deduplication - remove very similar titles
+  // Enhanced deduplication - check both URL and title similarity
   const unique: WorldNews[] = [];
+  const seenUrls = new Set<string>();
+  const seenTitleWords = new Map<string, number>(); // Track title word frequency
+  
   for (const item of sorted) {
-    const isDuplicate = unique.some(existing => 
-      similarity(existing.title.toLowerCase(), item.title.toLowerCase()) > 0.7
-    );
-    if (!isDuplicate) {
+    // Skip if we've seen this exact URL
+    const normalizedUrl = normalizeUrl(item.url);
+    if (seenUrls.has(normalizedUrl)) {
+      continue;
+    }
+    
+    // Check title similarity against existing items
+    const normalizedTitle = item.title.toLowerCase().trim();
+    const isDuplicateTitle = unique.some(existing => {
+      const existingTitle = existing.title.toLowerCase().trim();
+      // Check exact match first
+      if (normalizedTitle === existingTitle) return true;
+      // Check similarity score
+      return similarity(existingTitle, normalizedTitle) > 0.6;
+    });
+    
+    if (!isDuplicateTitle) {
       unique.push(item);
+      seenUrls.add(normalizedUrl);
     }
   }
   
   return unique.slice(0, 15); // Return top 15 news items
 }
 
+// Normalize URL for comparison (remove query params, trailing slashes, etc.)
+function normalizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    // Remove common tracking parameters
+    parsed.searchParams.delete('utm_source');
+    parsed.searchParams.delete('utm_medium');
+    parsed.searchParams.delete('utm_campaign');
+    parsed.searchParams.delete('ref');
+    // Return path without trailing slash
+    return `${parsed.hostname}${parsed.pathname.replace(/\/$/, '')}`;
+  } catch {
+    return url.toLowerCase();
+  }
+}
+
 // Simple string similarity (Jaccard index on words)
 function similarity(a: string, b: string): number {
-  const wordsA = new Set(a.split(/\s+/));
-  const wordsB = new Set(b.split(/\s+/));
+  // Remove common stop words for better comparison
+  const stopWords = new Set(['the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'and', 'or', 'is', 'are', 'was', 'were', 'as', 'by', 'with']);
+  
+  const wordsA = new Set(a.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w)));
+  const wordsB = new Set(b.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w)));
+  
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+  
   const intersection = new Set([...wordsA].filter(x => wordsB.has(x)));
   const union = new Set([...wordsA, ...wordsB]);
   return intersection.size / union.size;

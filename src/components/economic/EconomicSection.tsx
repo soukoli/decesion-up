@@ -1,6 +1,7 @@
 'use client';
 
 import { EconomicSignal } from '@/types';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface SignalCardProps {
   signal: EconomicSignal;
@@ -94,13 +95,11 @@ export function EconomicSection({ signals }: EconomicSectionProps) {
   const indices = signals.filter(s => s.source.startsWith('http'));
 
   return (
-    <section className="mb-8">
-      <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-        <span className="text-2xl">*</span>
-        Economic Signals
-        <span className="text-xs text-slate-500 font-normal ml-2">ECB rates</span>
-      </h2>
-
+    <CollapsibleSection
+      title="Economic Signals"
+      subtitle="ECB rates"
+      badge={signals.length}
+    >
       {/* Currency Rates */}
       <div className="grid grid-cols-3 gap-3 mb-3">
         {currencies.map((signal) => (
@@ -116,6 +115,6 @@ export function EconomicSection({ signals }: EconomicSectionProps) {
           ))}
         </div>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }

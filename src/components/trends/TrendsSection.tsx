@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { TechTrend } from '@/types';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface TrendsSectionProps {
   trends: TechTrend[];
@@ -21,13 +22,11 @@ export function TrendsSection({ trends }: TrendsSectionProps) {
   }
 
   return (
-    <section className="mb-8">
-      <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-        <span className="text-2xl">🔥</span>
-        Tech Trends
-        <span className="text-xs text-slate-500 font-normal ml-2">from Hacker News</span>
-      </h2>
-
+    <CollapsibleSection
+      title="Tech Trends"
+      subtitle="Hacker News"
+      badge={trends.length}
+    >
       <div className="bg-slate-800/50 rounded-xl border border-slate-700 divide-y divide-slate-700">
         {displayedTrends.map((trend, index) => (
           <a
@@ -75,6 +74,6 @@ export function TrendsSection({ trends }: TrendsSectionProps) {
           {expanded ? 'Show Less' : `Show ${trends.length - 5} More`}
         </button>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }

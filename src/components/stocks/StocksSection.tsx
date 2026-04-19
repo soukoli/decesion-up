@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { StockIndex } from '@/types';
 import { StockChart } from './StockChart';
 import { Period } from '@/lib/stocks';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface StockCardProps {
   stock: StockIndex;
@@ -108,34 +109,32 @@ export function StocksSection({ initialStocks = [] }: StocksSectionProps) {
     );
   }
 
-  return (
-    <section className="mb-8">
-      {/* Header with period selector */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="text-2xl">📈</span>
-          Market Indices
-        </h2>
-        
-        {/* Period Selector */}
-        <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
-          {periods.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => handlePeriodChange(p.value)}
-              disabled={loading}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                period === p.value
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+  const periodSelector = (
+    <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1">
+      {periods.map((p) => (
+        <button
+          key={p.value}
+          onClick={() => handlePeriodChange(p.value)}
+          disabled={loading}
+          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+            period === p.value
+              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+          } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
 
+  return (
+    <CollapsibleSection
+      title="Market Indices"
+      subtitle="Yahoo Finance"
+      badge={stocks.length}
+      rightContent={periodSelector}
+    >
       {/* Loading overlay */}
       <div className={`relative ${loading ? 'opacity-50' : ''}`}>
         {loading && (
@@ -154,8 +153,8 @@ export function StocksSection({ initialStocks = [] }: StocksSectionProps) {
       
       {/* Source attribution */}
       <p className="text-xs text-slate-600 mt-3 text-center">
-        Data from Yahoo Finance • Delayed 15-20 min
+        Data from Yahoo Finance - Delayed 15-20 min
       </p>
-    </section>
+    </CollapsibleSection>
   );
 }

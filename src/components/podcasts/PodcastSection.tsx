@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PodcastEpisode } from '@/types';
 import { PodcastCard } from './PodcastCard';
 import { useTranslation } from '@/lib/translation';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface PodcastSectionProps {
   episodes: PodcastEpisode[];
@@ -27,58 +28,44 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
   const displayedEpisodes = expanded ? currentEpisodes : mainEpisodes;
 
   if (episodes.length === 0) {
-    return (
-      <div className="text-center py-8 text-slate-400">
-        <p>{language === 'cs' ? 'Načítám podcasty...' : 'Loading podcasts...'}</p>
-      </div>
-    );
+    return null;
   }
 
-  const tabs: { id: TabType; labelEN: string; labelCS: string; count: number }[] = [
-    { id: 'global', labelEN: 'Global', labelCS: 'Světové', count: globalEpisodes.length },
-    { id: 'czech', labelEN: 'Czech', labelCS: 'České', count: czechEpisodes.length },
-  ];
+  const tabs = (
+    <div className="flex bg-slate-800/50 rounded-lg p-0.5 border border-slate-700">
+      {(['global', 'czech'] as TabType[]).map((tabId) => (
+        <button
+          key={tabId}
+          onClick={() => {
+            setActiveTab(tabId);
+            setExpanded(false);
+          }}
+          className={`
+            flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all
+            ${activeTab === tabId
+              ? 'bg-slate-700 text-white'
+              : 'text-slate-400 hover:text-white'
+            }
+          `}
+        >
+          <span className="text-xs">{tabId === 'czech' ? '🇨🇿' : '🌍'}</span>
+          {tabId === 'global' 
+            ? (language === 'cs' ? 'Světové' : 'Global')
+            : (language === 'cs' ? 'České' : 'Czech')
+          }
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <section className="mb-8">
-      {/* Header with tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-        <div>
-          <h2 className="text-lg font-semibold text-white">
-            {language === 'cs' ? 'Podcasty' : 'Podcasts'}
-          </h2>
-          <p className="text-xs text-slate-500">
-            {activeTab === 'global' 
-              ? (language === 'cs' ? 'Světové podcasty o tech, vědě a byznysu' : 'Global podcasts on tech, science & business')
-              : (language === 'cs' ? 'České podcasty' : 'Czech podcasts')
-            }
-          </p>
-        </div>
-        
-        {/* Tabs */}
-        <div className="flex bg-slate-800/50 rounded-lg p-0.5 border border-slate-700">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setExpanded(false);
-              }}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all
-                ${activeTab === tab.id
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-white'
-                }
-              `}
-            >
-              <span className="text-xs">{tab.id === 'czech' ? '🇨🇿' : '🌍'}</span>
-              {language === 'cs' ? tab.labelCS : tab.labelEN}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <CollapsibleSection
+      title={language === 'cs' ? 'Podcasty' : 'Podcasts'}
+      subtitle={`${episodes.length} ${language === 'cs' ? 'podcastů' : 'podcasts'}`}
+      badge={episodes.length}
+      rightContent={tabs}
+      defaultExpanded={true}
+    >
       {/* Grid - 2 columns on mobile, 4 on desktop */}
       {displayedEpisodes.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -87,11 +74,9 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-400 bg-slate-800/30 rounded-xl border border-slate-700">
+        <div className="text-center py-6 text-slate-500 bg-slate-800/30 rounded-lg border border-slate-700/50">
           <p className="text-sm">
-            {language === 'cs' 
-              ? 'Žádné podcasty k zobrazení' 
-              : 'No podcasts to display'}
+            {language === 'cs' ? 'Žádné podcasty' : 'No podcasts'}
           </p>
         </div>
       )}
@@ -100,27 +85,25 @@ export function PodcastSection({ episodes }: PodcastSectionProps) {
       {extraEpisodes.length > 0 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-4 w-full py-2 text-sm text-amber-400 hover:text-amber-300 border border-slate-700 hover:border-amber-500/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="mt-3 w-full py-2 text-xs text-slate-400 hover:text-white border border-slate-700/50 hover:border-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           {expanded ? (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
-              {language === 'cs' ? 'Zobrazit méně' : 'Show Less'}
+              {language === 'cs' ? 'Méně' : 'Less'}
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              {language === 'cs' 
-                ? `Zobrazit dalších ${extraEpisodes.length}` 
-                : `Show ${extraEpisodes.length} More`}
+              +{extraEpisodes.length} {language === 'cs' ? 'více' : 'more'}
             </>
           )}
         </button>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }

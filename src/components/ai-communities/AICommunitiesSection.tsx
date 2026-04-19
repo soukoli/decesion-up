@@ -3,6 +3,7 @@
 import { AICommunity } from '@/types';
 import { AICommunityCard } from './AICommunityCard';
 import { useTranslation } from '@/lib/translation';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface AICommunitiesSectionProps {
   communities: AICommunity[];
@@ -20,24 +21,17 @@ export function AICommunitiesSection({ communities }: AICommunitiesSectionProps)
   }
 
   return (
-    <section className="mb-8">
-      <div className="mb-3">
-        <h2 className="text-lg font-semibold text-white">
-          {language === 'cs' ? 'AI Zdroje & Komunity' : 'AI Sources & Communities'}
-        </h2>
-        <p className="text-xs text-slate-500">
-          {language === 'cs' 
-            ? 'Nejlepší zdroje pro sledování AI trendů a novinek'
-            : 'Best sources for following AI trends and news'}
-        </p>
-      </div>
-
+    <CollapsibleSection
+      title={language === 'cs' ? 'AI Zdroje & Komunity' : 'AI Sources & Communities'}
+      subtitle={language === 'cs' ? 'Nejlepší zdroje' : 'Best sources'}
+      badge={communities.length}
+    >
       {/* Grid - 1 column on mobile, 3 on larger screens */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {communities.map((community) => (
           <AICommunityCard key={community.id} community={community} />
         ))}
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }
