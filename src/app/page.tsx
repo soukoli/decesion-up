@@ -2,113 +2,112 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { PodcastSection } from '@/components/podcasts/PodcastSection';
-import { EconomicSection } from '@/components/economic/EconomicSection';
-import { TrendsSection } from '@/components/trends/TrendsSection';
-import { NewsSection } from '@/components/news/NewsSection';
-import { GlobeSection } from '@/components/globe/GlobeSection';
-import { ResearchSection } from '@/components/research/ResearchSection';
-import { TrendingSection, SearchTrend } from '@/components/trending/TrendingSection';
-import { StocksSection } from '@/components/stocks';
-import { AICommunitiesSection } from '@/components/ai-communities';
-import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { SplashScreen, useSplashScreen } from '@/components/SplashScreen';
+import { MobileLayout, AppData } from '@/components/mobile';
+import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
 import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity } from '@/types';
+import { SearchTrend } from '@/components/trending/TrendingSection';
 
 export default function Home() {
-  const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
-  const [economic, setEconomic] = useState<EconomicSignal[]>([]);
-  const [trends, setTrends] = useState<TechTrend[]>([]);
-  const [news, setNews] = useState<WorldNews[]>([]);
-  const [hotspots, setHotspots] = useState<GlobalHotspot[]>([]);
-  const [research, setResearch] = useState<AIResearch[]>([]);
-  const [trendingGoogle, setTrendingGoogle] = useState<SearchTrend[]>([]);
-  const [trendingBing, setTrendingBing] = useState<SearchTrend[]>([]);
-  const [stocks, setStocks] = useState<StockIndex[]>([]);
-  const [aiCommunities, setAICommunities] = useState<AICommunity[]>([]);
+  const [data, setData] = useState<AppData>({
+    podcasts: [],
+    economic: [],
+    trends: [],
+    news: [],
+    hotspots: [],
+    research: [],
+    stocks: [],
+    aiCommunities: [],
+  });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
+  const { showSplash, handleSplashComplete } = useSplashScreen(false); // Show splash every time for now
   const { language } = useTranslation();
-  
-  const now = new Date();
-  const greetingEN = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const greetingCZ = now.getHours() < 12 ? 'Dobré ráno' : now.getHours() < 18 ? 'Dobré odpoledne' : 'Dobrý večer';
-  const greeting = language === 'cs' ? greetingCZ : greetingEN;
-  
-  const dateStr = now.toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     
-    // For refresh, add cache-busting timestamp to bypass CDN cache
     const cacheBuster = isRefresh ? `?_t=${Date.now()}` : '';
     const fetchOptions = isRefresh ? { cache: 'no-store' as RequestCache } : {};
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, trendingRes, stocksRes, aiCommunitiesRes] = await Promise.all([
+      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, aiCommunitiesRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/economic${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
         fetch(`/api/hotspots${cacheBuster}`, fetchOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
-        fetch(`/api/trending${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
         fetch(`/api/ai-communities${cacheBuster}`, fetchOptions),
       ]);
 
+      const newData: AppData = {
+        podcasts: [],
+        economic: [],
+        trends: [],
+        news: [],
+        hotspots: [],
+        research: [],
+        stocks: [],
+        aiCommunities: [],
+      };
+
       if (podcastsRes.ok) {
-        const data = await podcastsRes.json();
-        setPodcasts(data.podcasts || []);
+        const d = await podcastsRes.json();
+        newData.podcasts = d.podcasts || [];
       }
 
       if (economicRes.ok) {
-        const data = await economicRes.json();
-        setEconomic(data.economic || []);
+        const d = await economicRes.json();
+        newData.economic = d.economic || [];
       }
 
       if (trendsRes.ok) {
-        const data = await trendsRes.json();
-        setTrends(data.trends || []);
+        const d = await trendsRes.json();
+        newData.trends = d.trends || [];
       }
 
       if (newsRes.ok) {
-        const data = await newsRes.json();
-        setNews(data.news || []);
+        const d = await newsRes.json();
+        newData.news = d.news || [];
       }
 
       if (hotspotsRes.ok) {
-        const data = await hotspotsRes.json();
-        setHotspots(data.hotspots || []);
+        const d = await hotspotsRes.json();
+        newData.hotspots = d.hotspots || [];
       }
 
       if (researchRes.ok) {
-        const data = await researchRes.json();
-        setResearch(data.research || []);
-      }
-
-      if (trendingRes.ok) {
-        const data = await trendingRes.json();
-        setTrendingGoogle(data.global || data.google || data.trending || []);
-        setTrendingBing(data.czech || data.bing || []);
+        const d = await researchRes.json();
+        newData.research = d.research || [];
       }
 
       if (stocksRes.ok) {
-        const data = await stocksRes.json();
-        setStocks(data || []);
+        const d = await stocksRes.json();
+        newData.stocks = d || [];
       }
 
       if (aiCommunitiesRes.ok) {
-        const data = await aiCommunitiesRes.json();
-        setAICommunities(data.communities || []);
+        const d = await aiCommunitiesRes.json();
+        newData.aiCommunities = d.communities || [];
       }
 
+      setData(newData);
       setLastRefresh(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -122,134 +121,48 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
-  const formatLastRefresh = (date: Date | null): string => {
-    if (!date) return '';
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    
-    if (diffMins < 1) return 'just now';
-    if (diffMins === 1) return '1 min ago';
-    if (diffMins < 60) return `${diffMins} mins ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return '1 hour ago';
-    return `${diffHours} hours ago`;
-  };
-
   const handleRefresh = () => {
     fetchData(true);
   };
 
+  // Show splash screen
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} duration={2500} />;
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-400 text-sm">
+            {language === 'cs' ? 'Načítám data...' : 'Loading data...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <MobileLayout
+        data={data}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        lastRefresh={lastRefresh}
+      />
+    );
+  }
+
+  // Desktop layout
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-slate-900/80 border-b border-slate-800">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/images/icon.png"
-              alt="DecisionUp"
-              width={40}
-              height={40}
-              className="rounded-xl"
-            />
-            <div>
-              <h1 className="text-lg font-bold text-white">DecisionUp</h1>
-              <p className="text-xs text-slate-400">Signal, not noise</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageToggle />
-            <div className="text-right">
-              <p className="text-sm text-slate-300">{greeting}</p>
-              <p className="text-xs text-slate-500">{dateStr}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        {/* Quick Summary with Last Refresh */}
-        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-slate-800/50 border border-amber-500/20">
-          {loading ? (
-            <p className="text-sm text-slate-400">Loading your daily intelligence...</p>
-          ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <p className="text-sm text-slate-300">
-                <span className="text-amber-400 font-semibold">Today:</span>{' '}
-                {hotspots.length} hotspots • {news.length} news • {trendingGoogle.length} trending • {research.length} AI papers
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-500">
-                  Updated {formatLastRefresh(lastRefresh)}
-                </span>
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg 
-                    className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {refreshing ? 'Refreshing...' : 'Refresh'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Podcasts Section - MOVED TO TOP */}
-        <PodcastSection episodes={podcasts} />
-
-        {/* AI Communities & Discussions - Moved up */}
-        <AICommunitiesSection communities={aiCommunities} />
-
-        {/* Global Hotspots - 3D Globe */}
-        <GlobeSection hotspots={hotspots} />
-
-        {/* What the World is Searching */}
-        <TrendingSection trending={trendingGoogle} global={trendingGoogle} czech={trendingBing} />
-
-        {/* World News Section */}
-        <NewsSection news={news} />
-
-        {/* Market Indices with Charts */}
-        <StocksSection initialStocks={stocks} />
-
-        {/* Two Column Layout for smaller sections */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Economic Signals */}
-          <EconomicSection signals={economic} />
-
-          {/* Tech Trends */}
-          <TrendsSection trends={trends} />
-        </div>
-
-        {/* AI Research Papers */}
-        <ResearchSection research={research} />
-
-        {/* Footer */}
-        <footer className="mt-12 pt-6 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500">
-            DecisionUp • Your personal intelligence feed
-          </p>
-          <p className="text-xs text-slate-600 mt-1">
-            Sources: GDELT, Google Trends, Reuters, BBC, Guardian, Yahoo Finance, ECB, Hacker News, arXiv
-          </p>
-          {lastRefresh && (
-            <p className="text-xs text-slate-600 mt-2">
-              Last updated: {lastRefresh.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          )}
-        </footer>
-      </main>
-    </div>
+    <DesktopLayout
+      data={data}
+      onRefresh={handleRefresh}
+      refreshing={refreshing}
+      lastRefresh={lastRefresh}
+    />
   );
 }

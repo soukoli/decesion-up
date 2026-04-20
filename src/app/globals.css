@@ -6,6 +6,11 @@
   --accent: #d4a84b;
   --card-bg: #1e293b;
   --card-border: #334155;
+  /* Safe area insets for iOS */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
 @theme inline {
@@ -13,6 +18,7 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-bebas);
 }
 
 body {
@@ -20,6 +26,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   /* Fallback gradient for when JS is disabled or loading */
   background-image: linear-gradient(
     180deg,
@@ -32,6 +39,14 @@ body {
     #0f172a 100%
   );
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* GTA-style headers with Bebas Neue */
+h1, h2, .font-display {
+  font-family: var(--font-bebas), var(--font-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
 }
 
 /* Ensure content is above animated background */
@@ -43,6 +58,19 @@ main, header, footer {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Safe area padding utilities */
+.pt-safe-area {
+  padding-top: var(--safe-area-inset-top);
+}
+
+.pb-safe-area {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.safe-area-inset-bottom {
+  padding-bottom: var(--safe-area-inset-bottom);
 }
 
 /* Custom scrollbar */
@@ -61,4 +89,26 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 168, 75, 0.5);
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  * {
+    scrollbar-width: none;
+  }
+}
+
+/* Swiper customization */
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
