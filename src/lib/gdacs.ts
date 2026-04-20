@@ -52,8 +52,14 @@ export async function fetchGDACSData(): Promise<GlobalHotspot[]> {
     const xmlText = await response.text();
     const events = parseGDACSXml(xmlText);
 
+    // Filter to only Orange and Red alerts (significant disasters)
+    // Green alerts are minor events that would overwhelm the map
+    const significantEvents = events.filter(event => 
+      event.alertLevel === 'Orange' || event.alertLevel === 'Red'
+    );
+
     // Convert to hotspots
-    const hotspots: GlobalHotspot[] = events.map(event => ({
+    const hotspots: GlobalHotspot[] = significantEvents.map(event => ({
       id: `gdacs-${event.eventId}`,
       lat: event.lat,
       lng: event.lng,

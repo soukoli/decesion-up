@@ -79,14 +79,14 @@ export async function fetchUSGSData(): Promise<GlobalHotspot[]> {
     const endTime = new Date().toISOString();
     const startTime = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // API parameters
+    // API parameters - M5.5+ are significant earthquakes
     const params = new URLSearchParams({
       format: 'geojson',
       starttime: startTime.split('T')[0],
       endtime: endTime.split('T')[0],
-      minmagnitude: '4.5', // Only significant earthquakes
+      minmagnitude: '5.5', // Only truly significant earthquakes
       orderby: 'magnitude',
-      limit: '50',
+      limit: '20', // Limit to top 20
     });
 
     const response = await fetch(
