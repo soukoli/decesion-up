@@ -24,11 +24,12 @@ export function CollapsibleSection({
   return (
     <section className="mb-6">
       {/* Header - always visible */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between gap-3 py-2 group"
-      >
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="w-full flex items-center justify-between gap-3 py-2">
+        {/* Clickable area for expand/collapse */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-3 min-w-0 group"
+        >
           {/* Expand/Collapse icon */}
           <svg
             className={`w-4 h-4 text-slate-500 transition-transform flex-shrink-0 ${
@@ -57,10 +58,10 @@ export function CollapsibleSection({
               {badge}
             </span>
           )}
-        </div>
+        </button>
 
-        {/* Right side content (tabs, etc.) - only show when expanded */}
-        <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right side content (tabs, etc.) - separate from the toggle button */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isExpanded && rightContent}
           
           {/* Subtitle - show when collapsed */}
@@ -70,7 +71,7 @@ export function CollapsibleSection({
             </span>
           )}
         </div>
-      </button>
+      </div>
 
       {/* Content - collapsible */}
       <div
