@@ -11,6 +11,7 @@ interface MarketsSectionProps {
 }
 
 type CategoryFilter = 'all' | 'currency' | 'index' | 'crypto' | 'macro';
+type TimeRange = '1d' | '7d' | '1m';
 
 const categoryLabels: Record<CategoryFilter, { en: string; cs: string }> = {
   all: { en: 'All', cs: 'Vše' },
@@ -20,10 +21,17 @@ const categoryLabels: Record<CategoryFilter, { en: string; cs: string }> = {
   macro: { en: 'Macro', cs: 'Makro' },
 };
 
+const timeRangeLabels: Record<TimeRange, { en: string; cs: string }> = {
+  '1d': { en: '1D', cs: '1D' },
+  '7d': { en: '7D', cs: '7D' },
+  '1m': { en: '1M', cs: '1M' },
+};
+
 export function MarketsSection({ initialMarkets = [] }: MarketsSectionProps) {
   const [markets, setMarkets] = useState<MarketSignal[]>(initialMarkets);
   const [loading, setLoading] = useState(initialMarkets.length === 0);
   const [filter, setFilter] = useState<CategoryFilter>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('7d');
   const { language } = useTranslation();
 
   useEffect(() => {
@@ -32,10 +40,16 @@ export function MarketsSection({ initialMarkets = [] }: MarketsSectionProps) {
     }
   }, []);
 
+  // Refetch when time range changes
+  useEffect(() => {
+    fetchMarkets();
+  }, [timeRange]);
+
   const fetchMarkets = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/markets');
+      const period = timeRange === '1d' ? '1d' : timeRange === '7d' ? '5d' : '1mo';
+      const response = await fetch(`/api/markets?period=${period}`);
       if (response.ok) {
         const data = await response.json();
         setMarkets(data.markets || []);
@@ -66,23 +80,43 @@ export function MarketsSection({ initialMarkets = [] }: MarketsSectionProps) {
   };
 
   const filterTabs = (
-    <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1 overflow-x-auto">
-      {(Object.keys(categoryLabels) as CategoryFilter[]).map((cat) => (
-        <button
-          key={cat}
-          onClick={() => setFilter(cat)}
-          className={`px-2 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-            filter === cat
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-          }`}
-        >
-          {categoryLabels[cat][language]}
-          {counts[cat] > 0 && (
-            <span className="ml-1 text-[10px] opacity-70">({counts[cat]})</span>
-          )}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      {/* Time range filter */}
+      <div className="flex items-center bg-slate-800/50 rounded-lg p-0.5">
+        {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
+          <button
+            key={range}
+            onClick={() => setTimeRange(range)}
+            className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${
+              timeRange === range
+                ? 'bg-amber-500/30 text-amber-400'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {timeRangeLabels[range][language]}
+          </button>
+        ))}
+      </div>
+      
+      {/* Category filter */}
+      <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-1 overflow-x-auto">
+        {(Object.keys(categoryLabels) as CategoryFilter[]).map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`px-2 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+              filter === cat
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
+          >
+            {categoryLabels[cat][language]}
+            {counts[cat] > 0 && (
+              <span className="ml-1 text-[10px] opacity-70">({counts[cat]})</span>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
@@ -114,7 +148,7 @@ export function MarketsSection({ initialMarkets = [] }: MarketsSectionProps) {
       {/* Grid of market cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredMarkets.map((market) => (
-          <MarketCard key={market.id} signal={market} />
+          <MarketCard key={market.id} signal={market} language={language} />
         ))}
       </div>
 

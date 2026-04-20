@@ -1,6 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { MarketSignal } from '@/types';
+
+// Macro indicator explanations
+const macroHelp: Record<string, { en: string; cs: string }> = {
+  Inflation: {
+    en: 'Consumer price inflation (CPI). Higher inflation erodes purchasing power. Central banks target ~2% inflation.',
+    cs: 'Spotřebitelská inflace (CPI). Vyšší inflace snižuje kupní sílu. Centrální banky cílí ~2% inflaci.',
+  },
+  'GDP Growth': {
+    en: 'Annual economic growth. Positive = economy expanding. Negative = recession. Healthy growth is 2-3% annually.',
+    cs: 'Roční růst ekonomiky. Kladný = ekonomika roste. Záporný = recese. Zdravý růst je 2-3% ročně.',
+  },
+  Unemployment: {
+    en: 'Percentage of labor force without jobs. Lower is better. Natural rate is typically 4-5%.',
+    cs: 'Procento pracovní síly bez zaměstnání. Nižší je lepší. Přirozená míra je typicky 4-5%.',
+  },
+};
 
 interface SparklineProps {
   data: number[];
@@ -46,9 +63,11 @@ export function Sparkline({ data, width = 60, height = 24, color }: SparklinePro
 interface MarketCardProps {
   signal: MarketSignal;
   compact?: boolean;
+  language?: 'en' | 'cs';
 }
 
-export function MarketCard({ signal, compact = false }: MarketCardProps) {
+export function MarketCard({ signal, compact = false, language = 'en' }: MarketCardProps) {
+  const [showHelp, setShowHelp] = useState(false);
   const isPositive = signal.trend === 'up';
   const isNegative = signal.trend === 'down';
   
@@ -82,13 +101,26 @@ export function MarketCard({ signal, compact = false }: MarketCardProps) {
     return `${sign}${signal.changePercent.toFixed(2)}%`;
   };
 
+  // Determine if this is a macro indicator that needs help
+  const getMacroHelpKey = (): string | null => {
+    if (signal.category !== 'macro') return null;
+    if (signal.name.includes('Inflation')) return 'Inflation';
+    if (signal.name.includes('GDP')) return 'GDP Growth';
+    if (signal.name.includes('Unemployment')) return 'Unemployment';
+    return null;
+  };
+
+  const helpKey = getMacroHelpKey();
+  const helpText = helpKey ? macroHelp[helpKey]?.[language] : null;
+
   return (
-    <a
-      href={signal.sourceUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`block rounded-xl p-3 border transition-all ${bgColor}`}
-    >
+    <div className="relative">
+      <a
+        href={signal.sourceUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`block rounded-xl p-3 border transition-all ${bgColor}`}
+      >
       {/* Header: Icon + Name + Change */}
       <div className="flex items-start justify-between gap-2 mb-1">
         <div className="flex items-center gap-2 min-w-0">
@@ -143,5 +175,61 @@ export function MarketCard({ signal, compact = false }: MarketCardProps) {
         </div>
       </div>
     </a>
+
+      {/* Help button for macro indicators */}
+      {helpText && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowHelp(!showHelp);
+          }}
+          className="absolute top-2 right-2 w-5 h-5 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-10"
+          title={language === 'cs' ? 'Nápověda' : 'Help'}
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      )}
+
+      {/* Help tooltip */}
+      {showHelp && helpText && (
+        <div 
+          className="absolute top-10 right-0 z-20 w-64 p-3 bg-slate-800 border border-slate-600 rounded-lg shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <span className="text-xs font-semibold text-amber-400">
+              {helpKey}
+            </span>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="text-slate-400 hover:text-white"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            {helpText}
+          </p>
+          
+          {/* Quick interpretation */}
+          <div className="mt-2 pt-2 border-t border-slate-700">
+            <p className="text-[10px] text-slate-400">
+              {signal.trend === 'up' && helpKey === 'Inflation' && (language === 'cs' ? '⚠️ Inflace roste - sledujte' : '⚠️ Rising inflation - watch closely')}
+              {signal.trend === 'down' && helpKey === 'Inflation' && (language === 'cs' ? '✓ Inflace klesá - pozitivní' : '✓ Falling inflation - positive')}
+              {signal.trend === 'up' && helpKey === 'GDP Growth' && (language === 'cs' ? '✓ Ekonomika roste' : '✓ Economy growing')}
+              {signal.trend === 'down' && helpKey === 'GDP Growth' && (language === 'cs' ? '⚠️ Zpomalení růstu' : '⚠️ Growth slowing')}
+              {signal.trend === 'up' && helpKey === 'Unemployment' && (language === 'cs' ? '⚠️ Nezaměstnanost roste' : '⚠️ Unemployment rising')}
+              {signal.trend === 'down' && helpKey === 'Unemployment' && (language === 'cs' ? '✓ Nezaměstnanost klesá' : '✓ Unemployment falling')}
+              {signal.trend === 'stable' && (language === 'cs' ? '→ Stabilní trend' : '→ Stable trend')}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

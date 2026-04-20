@@ -1,26 +1,31 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { MarketSignal } from '@/types';
 import { fetchExchangeRates } from '@/lib/economic';
-import { fetchStockData } from '@/lib/stocks';
+import { fetchStockData, Period } from '@/lib/stocks';
 import { fetchAllMacroIndicators } from '@/lib/worldbank';
 import { fetchECBRates, getFallbackECBRates } from '@/lib/ecb';
 import { fetchCryptoPrices, formatCryptoPrice, formatLargeNumber } from '@/lib/coingecko';
 
-// ISR - revalidate every 15 minutes
-export const revalidate = 900;
+// Dynamic route - needs to read query params
+export const dynamic = 'force-dynamic';
 
 // Get current EUR/CZK rate for conversions
 let eurCzkRate = 25.0; // Default fallback
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Get period from query params (default to 5d)
+    const { searchParams } = new URL(request.url);
+    const periodParam = searchParams.get('period') || '5d';
+    const period: Period = ['1d', '5d', '1mo'].includes(periodParam) ? periodParam as Period : '5d';
+
     // Fetch all data in parallel
     const [exchangeRates, stocks, macroIndicators, ecbRates, cryptoPrices] = await Promise.all([
       fetchExchangeRates().catch(err => {
         console.error('Exchange rates fetch failed:', err);
         return [];
       }),
-      fetchStockData('5d').catch(err => {
+      fetchStockData(period).catch(err => {
         console.error('Stocks fetch failed:', err);
         return [];
       }),
