@@ -103,13 +103,35 @@ export async function GET() {
       const isGDP = indicator.name === 'GDP Growth';
       const isUnemployment = indicator.name === 'Unemployment';
 
+      // Build more informative explanation with year-over-year context
       let explanation = '';
+      let trend: 'up' | 'down' | 'stable' = 'stable';
+      
       if (isInflation) {
-        explanation = `Annual inflation rate (${indicator.year})`;
+        explanation = `Inflation ${indicator.year}`;
+        if (indicator.previousValue !== null) {
+          explanation += ` (${indicator.previousYear}: ${indicator.previousValue.toFixed(1)}%)`;
+        }
+        // For inflation, lower is generally better
+        trend = indicator.change !== null 
+          ? (indicator.change > 0.1 ? 'up' : indicator.change < -0.1 ? 'down' : 'stable')
+          : 'stable';
       } else if (isGDP) {
-        explanation = `Annual GDP growth rate (${indicator.year})`;
+        explanation = `GDP growth ${indicator.year}`;
+        if (indicator.previousValue !== null) {
+          explanation += ` (${indicator.previousYear}: ${indicator.previousValue.toFixed(1)}%)`;
+        }
+        // For GDP, use the actual value to determine trend (positive growth = up)
+        trend = indicator.value > 0.5 ? 'up' : indicator.value < 0 ? 'down' : 'stable';
       } else if (isUnemployment) {
-        explanation = `Unemployment rate (${indicator.year})`;
+        explanation = `Unemployment ${indicator.year}`;
+        if (indicator.previousValue !== null) {
+          explanation += ` (${indicator.previousYear}: ${indicator.previousValue.toFixed(1)}%)`;
+        }
+        // For unemployment, lower is better
+        trend = indicator.change !== null 
+          ? (indicator.change > 0.1 ? 'up' : indicator.change < -0.1 ? 'down' : 'stable')
+          : 'stable';
       }
 
       const countryFlag = 
@@ -117,17 +139,18 @@ export async function GET() {
         indicator.countryCode === 'USA' ? '🇺🇸' :
         indicator.countryCode === 'EUU' ? '🇪🇺' : '';
 
+      // For macro indicators, show year-over-year change in absolute terms (not percent of percent)
+      const absChange = indicator.change !== null ? indicator.change : null;
+
       markets.push({
         id: indicator.id,
         name: `${countryFlag} ${indicator.country} ${indicator.name}`,
         category: 'macro',
         value: indicator.value,
         valueFormatted: `${indicator.value.toFixed(1)}%`,
-        change: indicator.change,
-        changePercent: indicator.changePercent,
-        trend: indicator.change !== null 
-          ? (indicator.change > 0 ? 'up' : indicator.change < 0 ? 'down' : 'stable')
-          : 'stable',
+        change: absChange,
+        changePercent: absChange, // Use absolute change for display (e.g., +0.3pp not +15%)
+        trend,
         explanation,
         source: 'World Bank',
         sourceUrl: indicator.sourceUrl,
@@ -186,11 +209,28 @@ export async function GET() {
     }
 
     // Sort by category order: currency, index, crypto, rate, macro
+    // Within macro, sort by indicator type then country
     const categoryOrder = ['currency', 'index', 'crypto', 'rate', 'macro'];
+    const macroTypeOrder = ['Inflation', 'GDP Growth', 'Unemployment'];
+    const countryOrder = ['CZE', 'USA', 'EUU'];
+    
     markets.sort((a, b) => {
       const orderA = categoryOrder.indexOf(a.category);
       const orderB = categoryOrder.indexOf(b.category);
-      return orderA - orderB;
+      if (orderA !== orderB) return orderA - orderB;
+      
+      // For macro indicators, sort by type then country
+      if (a.category === 'macro' && b.category === 'macro') {
+        const typeA = a.name.includes('Inflation') ? 0 : a.name.includes('GDP') ? 1 : 2;
+        const typeB = b.name.includes('Inflation') ? 0 : b.name.includes('GDP') ? 1 : 2;
+        if (typeA !== typeB) return typeA - typeB;
+        
+        const countryA = countryOrder.findIndex(c => a.name.includes(c === 'CZE' ? 'Czech' : c === 'EUU' ? 'European' : 'USA'));
+        const countryB = countryOrder.findIndex(c => b.name.includes(c === 'CZE' ? 'Czech' : c === 'EUU' ? 'European' : 'USA'));
+        return countryA - countryB;
+      }
+      
+      return 0;
     });
 
     console.log(`Fetched markets: currencies=${exchangeRates.length}, stocks=${stocks.length}, macro=${macroIndicators.length}, ecb=${ecbRates.length}, crypto=${cryptoPrices.length}`);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AIResearch } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface ResearchSectionProps {
@@ -36,9 +37,11 @@ interface TranslatedPaper {
 export function ResearchSection({ research }: ResearchSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const { language, translate, isTranslating } = useTranslation();
+  const { fontSize } = useSettings();
   const [translations, setTranslations] = useState<Record<string, TranslatedPaper>>({});
   
   const displayedResearch = expanded ? research : research.slice(0, 4);
+  const fontConfig = FONT_SIZE_CONFIG[fontSize];
 
   useEffect(() => {
     if (language === 'cs' && research.length > 0) {
@@ -139,11 +142,11 @@ export function ResearchSection({ research }: ResearchSectionProps) {
               </span>
             </div>
             
-            <h3 className="text-base font-medium text-slate-200 group-hover:text-white transition-colors mb-1 line-clamp-2">
+            <h3 className={`${fontConfig.titleClass} font-medium text-slate-200 group-hover:text-white transition-colors mb-1 line-clamp-2`}>
               {getTitle(paper)}
             </h3>
             
-            <p className="text-sm text-slate-400 line-clamp-2 mb-2">
+            <p className={`${fontConfig.bodyClass} text-slate-400 line-clamp-2 mb-2`}>
               {getSummary(paper)}
             </p>
             

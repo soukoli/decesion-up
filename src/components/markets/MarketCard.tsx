@@ -69,6 +69,15 @@ export function MarketCard({ signal, compact = false }: MarketCardProps) {
 
   const formatChange = () => {
     if (signal.changePercent === null) return null;
+    
+    // For macro indicators, show change in percentage points (pp)
+    if (signal.category === 'macro') {
+      const sign = signal.changePercent >= 0 ? '+' : '';
+      const absValue = Math.abs(signal.changePercent);
+      if (absValue < 0.05) return null; // Don't show tiny changes
+      return `${sign}${signal.changePercent.toFixed(1)}pp`;
+    }
+    
     const sign = signal.changePercent >= 0 ? '+' : '';
     return `${sign}${signal.changePercent.toFixed(2)}%`;
   };

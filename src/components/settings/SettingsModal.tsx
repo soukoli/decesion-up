@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { useSettings } from '@/lib/settings';
+import { useSettings, FONT_SIZE_CONFIG, FontSize } from '@/lib/settings';
 import { useTranslation } from '@/lib/translation';
 
 export function SettingsModal() {
@@ -16,6 +16,8 @@ export function SettingsModal() {
     setAcledTokens,
     isAcledConfigured,
     isAcledTokenValid,
+    fontSize,
+    setFontSize,
   } = useSettings();
   const { language } = useTranslation();
 
@@ -232,6 +234,68 @@ export function SettingsModal() {
                       {language === 'cs' ? 'Odhlásit' : 'Logout'}
                     </button>
                   )}
+                </div>
+              </div>
+
+              {/* Font Size Section */}
+              <div className="pt-4 border-t border-slate-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-semibold text-white">
+                    {language === 'cs' ? 'Velikost textu' : 'Text Size'}
+                  </h3>
+                </div>
+
+                {/* Segmented Control */}
+                <div className="relative bg-slate-800 rounded-xl p-1 flex">
+                  {/* Animated background indicator */}
+                  <motion.div
+                    className="absolute inset-y-1 bg-amber-500/20 rounded-lg border border-amber-500/30"
+                    initial={false}
+                    animate={{
+                      left: fontSize === 'small' ? '4px' : fontSize === 'medium' ? 'calc(33.333% + 2px)' : 'calc(66.666% + 0px)',
+                      width: 'calc(33.333% - 4px)',
+                    }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                  
+                  {(['small', 'medium', 'large'] as FontSize[]).map((size) => {
+                    const config = FONT_SIZE_CONFIG[size];
+                    return (
+                      <button
+                        key={size}
+                        onClick={() => setFontSize(size)}
+                        className={`
+                          relative z-10 flex-1 py-2.5 px-2 rounded-lg text-center transition-colors
+                          ${fontSize === size ? 'text-amber-400' : 'text-slate-400 hover:text-slate-300'}
+                        `}
+                      >
+                        <span className={`block font-medium ${
+                          size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                        }`}>
+                          {config.label[language]}
+                        </span>
+                        <span className="block text-[10px] mt-0.5 opacity-60">
+                          {size === 'small' ? 'Aa' : size === 'medium' ? 'Aa' : 'Aa'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Preview */}
+                <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                  <p className="text-[10px] text-slate-500 mb-2">
+                    {language === 'cs' ? 'Náhled' : 'Preview'}
+                  </p>
+                  <p className={`text-white ${FONT_SIZE_CONFIG[fontSize].titleClass} font-medium`}>
+                    {language === 'cs' ? 'Nadpis článku' : 'Article Title'}
+                  </p>
+                  <p className={`text-slate-400 ${FONT_SIZE_CONFIG[fontSize].bodyClass} mt-1`}>
+                    {language === 'cs' 
+                      ? 'Toto je ukázkový text, který ukazuje jak bude vypadat obsah.'
+                      : 'This is sample text showing how content will appear.'
+                    }
+                  </p>
                 </div>
               </div>
 

@@ -2,6 +2,7 @@
 
 import { AIResearch } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 
 interface MobileResearchPageProps {
   research: AIResearch[];
@@ -9,6 +10,8 @@ interface MobileResearchPageProps {
 
 export function MobileResearchPage({ research }: MobileResearchPageProps) {
   const { language } = useTranslation();
+  const { fontSize } = useSettings();
+  const fontConfig = FONT_SIZE_CONFIG[fontSize];
 
   return (
     <div className="h-full overflow-y-auto bg-slate-950 px-4 pt-safe-area">
@@ -35,10 +38,10 @@ export function MobileResearchPage({ research }: MobileResearchPageProps) {
             <span className="inline-block px-2 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-400 rounded-full mb-2">
               {paper.category}
             </span>
-            <h3 className="text-base font-semibold text-white line-clamp-2 mb-2">
+            <h3 className={`${fontConfig.titleClass} font-semibold text-white line-clamp-2 mb-2`}>
               {paper.title}
             </h3>
-            <p className="text-sm text-slate-400 line-clamp-3 mb-3">
+            <p className={`${fontConfig.bodyClass} text-slate-400 line-clamp-3 mb-3`}>
               {paper.summary}
             </p>
             <div className="flex items-center justify-between text-xs text-slate-500">

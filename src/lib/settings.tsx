@@ -13,6 +13,30 @@ interface ACLEDTokens {
   expiresAt: number; // timestamp
 }
 
+// Font size options
+export type FontSize = 'small' | 'medium' | 'large';
+
+export const FONT_SIZE_CONFIG = {
+  small: {
+    label: { en: 'Compact', cs: 'Kompaktní' },
+    titleClass: 'text-sm',
+    bodyClass: 'text-xs',
+    scale: 0.875,
+  },
+  medium: {
+    label: { en: 'Default', cs: 'Výchozí' },
+    titleClass: 'text-base',
+    bodyClass: 'text-sm',
+    scale: 1,
+  },
+  large: {
+    label: { en: 'Large', cs: 'Velké' },
+    titleClass: 'text-lg',
+    bodyClass: 'text-base',
+    scale: 1.125,
+  },
+} as const;
+
 interface SettingsContextType {
   // ACLED
   acledCredentials: ACLEDCredentials | null;
@@ -21,6 +45,10 @@ interface SettingsContextType {
   setAcledTokens: (tokens: ACLEDTokens | null) => void;
   isAcledConfigured: boolean;
   isAcledTokenValid: boolean;
+  
+  // Font size
+  fontSize: FontSize;
+  setFontSize: (size: FontSize) => void;
   
   // Settings UI
   isSettingsOpen: boolean;
@@ -32,6 +60,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 const STORAGE_KEY_CREDENTIALS = 'decisionup_acled_creds';
 const STORAGE_KEY_TOKENS = 'decisionup_acled_tokens';
+const STORAGE_KEY_FONT_SIZE = 'decisionup_font_size';
 
 // Simple obfuscation (not real encryption, but better than plaintext)
 function encode(str: string): string {
@@ -49,6 +78,7 @@ function decode(str: string): string {
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [acledCredentials, setAcledCredentialsState] = useState<ACLEDCredentials | null>(null);
   const [acledTokens, setAcledTokensState] = useState<ACLEDTokens | null>(null);
+  const [fontSize, setFontSizeState] = useState<FontSize>('medium');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -65,6 +95,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (storedTokens) {
         const decoded = JSON.parse(decode(storedTokens));
         setAcledTokensState(decoded);
+      }
+
+      const storedFontSize = localStorage.getItem(STORAGE_KEY_FONT_SIZE);
+      if (storedFontSize && ['small', 'medium', 'large'].includes(storedFontSize)) {
+        setFontSizeState(storedFontSize as FontSize);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -88,6 +123,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.removeItem(STORAGE_KEY_TOKENS);
     }
+  };
+
+  const setFontSize = (size: FontSize) => {
+    setFontSizeState(size);
+    localStorage.setItem(STORAGE_KEY_FONT_SIZE, size);
   };
 
   const isAcledConfigured = Boolean(acledCredentials?.email && acledCredentials?.password);
@@ -115,6 +155,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setAcledTokens,
         isAcledConfigured,
         isAcledTokenValid,
+        fontSize,
+        setFontSize,
         isSettingsOpen,
         openSettings,
         closeSettings,

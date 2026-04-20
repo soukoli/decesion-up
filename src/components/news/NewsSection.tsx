@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { WorldNews } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface NewsSectionProps {
@@ -62,10 +63,12 @@ interface TranslatedNews {
 export function NewsSection({ news }: NewsSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const { language, translate, isTranslating } = useTranslation();
+  const { fontSize } = useSettings();
   const [translations, setTranslations] = useState<Record<string, TranslatedNews>>({});
   
   const displayedNews = expanded ? news : news.slice(0, 6);
   const categoryLabels = language === 'cs' ? categoryLabelsCZ : categoryLabelsEN;
+  const fontConfig = FONT_SIZE_CONFIG[fontSize];
 
   // Translate news when language changes to Czech
   useEffect(() => {
@@ -167,12 +170,12 @@ export function NewsSection({ news }: NewsSectionProps) {
               </span>
             </div>
             
-            <h3 className="text-base font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1">
+            <h3 className={`${fontConfig.titleClass} font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1`}>
               {getTitle(item)}
             </h3>
             
             {item.description && (
-              <p className="text-sm text-slate-400 line-clamp-2 mb-2">
+              <p className={`${fontConfig.bodyClass} text-slate-400 line-clamp-2 mb-2`}>
                 {getDescription(item)}
               </p>
             )}

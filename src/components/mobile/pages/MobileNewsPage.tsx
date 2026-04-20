@@ -2,6 +2,7 @@
 
 import { WorldNews } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 
 interface MobileNewsPageProps {
   news: WorldNews[];
@@ -9,6 +10,8 @@ interface MobileNewsPageProps {
 
 export function MobileNewsPage({ news }: MobileNewsPageProps) {
   const { language } = useTranslation();
+  const { fontSize } = useSettings();
+  const fontConfig = FONT_SIZE_CONFIG[fontSize];
 
   const categoryColors: Record<string, string> = {
     world: 'bg-blue-500/20 text-blue-400',
@@ -54,10 +57,10 @@ export function MobileNewsPage({ news }: MobileNewsPageProps) {
               </span>
               <span className="text-[10px] text-slate-500">{item.source}</span>
             </div>
-            <h3 className="text-base font-semibold text-white line-clamp-2 mb-2">
+            <h3 className={`${fontConfig.titleClass} font-semibold text-white line-clamp-2 mb-2`}>
               {item.title}
             </h3>
-            <p className="text-sm text-slate-400 line-clamp-2">
+            <p className={`${fontConfig.bodyClass} text-slate-400 line-clamp-2`}>
               {item.description}
             </p>
             <p className="text-xs text-slate-500 mt-2">
