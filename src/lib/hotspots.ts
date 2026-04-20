@@ -1,4 +1,6 @@
 import { GlobalHotspot } from '@/types';
+import { fetchGDACSData } from './gdacs';
+import { fetchUSGSData } from './usgs';
 
 // Fallback hotspots when APIs fail - major ongoing events
 const FALLBACK_HOTSPOTS: GlobalHotspot[] = [
@@ -116,32 +118,113 @@ export async function fetchReliefWebCrises(): Promise<GlobalHotspot[]> {
   }
 }
 
-// Fetch ACLED conflict data (fast API)
-export async function fetchConflictData(): Promise<GlobalHotspot[]> {
-  // ACLED requires API key, so we'll use a simple fallback approach
-  // Return empty - we'll rely on ReliefWeb + fallback
-  return [];
+// Fetch ACLED conflict data with provided token
+export async function fetchACLEDWithToken(accessToken: string): Promise<GlobalHotspot[]> {
+  // Import dynamically to avoid circular deps
+  const { fetchACLEDData } = await import('./acled');
+  return fetchACLEDData(accessToken);
 }
 
-export async function fetchAllHotspots(): Promise<GlobalHotspot[]> {
+// Combine all data sources
+export async function fetchAllHotspots(acledToken?: string): Promise<GlobalHotspot[]> {
   try {
-    const reliefHotspots = await fetchReliefWebCrises();
-    
-    if (reliefHotspots.length > 0) {
-      // Combine with some fallback hotspots for major regions not covered
-      const coveredCountries = new Set(reliefHotspots.map(h => h.country));
-      const additionalHotspots = FALLBACK_HOTSPOTS.filter(
-        h => !coveredCountries.has(h.country)
-      ).slice(0, 3); // Add up to 3 fallback hotspots
+    // Fetch from all sources in parallel
+    const [gdacsHotspots, usgsHotspots, reliefHotspots] = await Promise.all([
+      fetchGDACSData().catch(err => {
+        console.error('GDACS fetch failed:', err);
+        return [];
+      }),
+      fetchUSGSData().catch(err => {
+        console.error('USGS fetch failed:', err);
+        return [];
+      }),
+      fetchReliefWebCrises().catch(err => {
+        console.error('ReliefWeb fetch failed:', err);
+        return [];
+      }),
+    ]);
+
+    // Optionally fetch ACLED if token is provided
+    let acledHotspots: GlobalHotspot[] = [];
+    if (acledToken) {
+      try {
+        acledHotspots = await fetchACLEDWithToken(acledToken);
+      } catch (err) {
+        console.error('ACLED fetch failed:', err);
+      }
+    }
+
+    // Combine all hotspots
+    const allHotspots = [
+      ...gdacsHotspots,
+      ...usgsHotspots,
+      ...reliefHotspots,
+      ...acledHotspots,
+    ];
+
+    console.log(`Fetched hotspots: GDACS=${gdacsHotspots.length}, USGS=${usgsHotspots.length}, ReliefWeb=${reliefHotspots.length}, ACLED=${acledHotspots.length}`);
+
+    if (allHotspots.length > 0) {
+      // Deduplicate by proximity (within ~100km)
+      const deduped = deduplicateByProximity(allHotspots);
       
-      return [...reliefHotspots, ...additionalHotspots].sort((a, b) => b.intensity - a.intensity);
+      // Sort by intensity and return
+      return deduped.sort((a, b) => b.intensity - a.intensity);
     }
     
-    // If ReliefWeb fails, return fallback data
+    // If all APIs fail, return fallback data
     console.log('Using fallback hotspots data');
     return FALLBACK_HOTSPOTS;
   } catch (error) {
     console.error('Error fetching hotspots:', error);
     return FALLBACK_HOTSPOTS;
   }
+}
+
+// Deduplicate hotspots that are close to each other (same event from multiple sources)
+function deduplicateByProximity(hotspots: GlobalHotspot[], thresholdKm: number = 100): GlobalHotspot[] {
+  const result: GlobalHotspot[] = [];
+  
+  for (const hotspot of hotspots) {
+    // Check if there's already a hotspot nearby
+    const existing = result.find(h => 
+      getDistanceKm(h.lat, h.lng, hotspot.lat, hotspot.lng) < thresholdKm
+    );
+    
+    if (existing) {
+      // Merge: keep the one with higher intensity, add sources
+      if (hotspot.intensity > existing.intensity) {
+        // Replace with higher intensity
+        const idx = result.indexOf(existing);
+        hotspot.sources = [...new Set([...existing.sources, ...hotspot.sources])];
+        hotspot.eventCount = Math.max(existing.eventCount, hotspot.eventCount);
+        result[idx] = hotspot;
+      } else {
+        // Just add sources to existing
+        existing.sources = [...new Set([...existing.sources, ...hotspot.sources])];
+        existing.eventCount = Math.max(existing.eventCount, hotspot.eventCount);
+      }
+    } else {
+      result.push(hotspot);
+    }
+  }
+  
+  return result;
+}
+
+// Haversine formula to calculate distance between two points
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(deg: number): number {
+  return deg * (Math.PI / 180);
 }

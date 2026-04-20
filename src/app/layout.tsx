@@ -6,6 +6,8 @@ import "swiper/css/pagination";
 import "swiper/css/effect-creative";
 import { AnimatedBackground } from "@/components/background/AnimatedBackground";
 import { TranslationProvider } from "@/lib/translation";
+import { SettingsProvider } from "@/lib/settings";
+import { SettingsModal } from "@/components/settings";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,7 +48,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans relative">
         <AnimatedBackground />
         <TranslationProvider>
-          {children}
+          <SettingsProvider>
+            {children}
+            <SettingsModal />
+          </SettingsProvider>
         </TranslationProvider>
       </body>
     </html>
