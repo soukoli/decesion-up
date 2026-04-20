@@ -45,6 +45,11 @@ function formatDuration(duration: string | undefined): string {
 }
 
 export async function fetchPodcastEpisode(config: PodcastConfig): Promise<PodcastEpisode | null> {
+  // If no RSS URL, return fallback immediately (Czech podcasts with unreliable RSS)
+  if (!config.rssUrl) {
+    return createFallbackEpisode(config);
+  }
+
   try {
     const feed = await parser.parseURL(config.rssUrl);
     
@@ -91,12 +96,42 @@ export async function fetchPodcastEpisode(config: PodcastConfig): Promise<Podcas
   }
 }
 
+// Czech podcast descriptions for fallback data
+const czechPodcastDescriptions: Record<string, { title: string; description: string }> = {
+  'vinohradska': {
+    title: 'Aktuální díl',
+    description: 'Denní podcast Českého rozhlasu o aktuálním dění',
+  },
+  'kecy-politika': {
+    title: 'Nový díl',
+    description: 'Podcast o české politice s Petrem Honzejkem a Bohumilem Pečinkou',
+  },
+  'studio-n': {
+    title: 'Poslední epizoda',
+    description: 'Podcast Deníku N o aktuálních tématech a investigativní žurnalistice',
+  },
+  'imperativ': {
+    title: 'Nejnovější díl',
+    description: 'Podcast o technologiích, startupu a byznysu',
+  },
+  'uspesna-firma': {
+    title: 'Nová epizoda',
+    description: 'Podcast pro podnikatele a manažery o řízení firmy',
+  },
+  'behind-the-scenes': {
+    title: 'Latest Episode',
+    description: 'Behind the scenes of Czech startups and business',
+  },
+};
+
 function createFallbackEpisode(config: PodcastConfig): PodcastEpisode {
+  const czechInfo = czechPodcastDescriptions[config.id];
+  
   return {
     id: `${config.id}-fallback`,
     podcastName: config.name,
-    title: 'Latest Episode',
-    description: `Listen to the latest episode of ${config.name}`,
+    title: czechInfo?.title || 'Latest Episode',
+    description: czechInfo?.description || `Listen to the latest episode of ${config.name}`,
     duration: '~30 min',
     pubDate: new Date().toISOString(),
     imageUrl: '',
