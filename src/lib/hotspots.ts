@@ -2,129 +2,20 @@ import { GlobalHotspot } from '@/types';
 import { fetchGDACSData } from './gdacs';
 import { fetchUSGSData } from './usgs';
 
-// Core geopolitical hotspots - these are ALWAYS included
-// These represent ongoing major conflicts and crises that should always be visible
-const GEOPOLITICAL_HOTSPOTS: GlobalHotspot[] = [
+// Minimal fallback when ALL APIs fail - just to show something on the map
+// These are NOT primary sources - ACLED is the primary source for conflicts
+const FALLBACK_HOTSPOTS: GlobalHotspot[] = [
   {
-    id: 'geo-ukraine',
-    lat: 48.3794,
-    lng: 31.1656,
-    country: 'Ukraine',
-    region: 'Eastern Europe',
-    eventCount: 50,
-    topEvent: 'Russia-Ukraine war: Ongoing military conflict since 2022',
-    category: 'conflict',
-    intensity: 10,
-    sources: ['BBC', 'Reuters', 'AP', 'UN'],
-    url: 'https://www.bbc.com/news/world-europe-56720589',
-  },
-  {
-    id: 'geo-gaza',
-    lat: 31.3547,
-    lng: 34.3088,
-    country: 'Palestine',
-    region: 'Gaza Strip',
-    eventCount: 45,
-    topEvent: 'Israel-Gaza conflict: Humanitarian crisis continues',
-    category: 'conflict',
-    intensity: 10,
-    sources: ['BBC', 'Guardian', 'UN OCHA', 'Reuters'],
-    url: 'https://www.bbc.com/news/world-middle-east',
-  },
-  {
-    id: 'geo-sudan',
-    lat: 15.5007,
-    lng: 32.5599,
-    country: 'Sudan',
-    region: 'East Africa',
-    eventCount: 30,
-    topEvent: 'Sudan civil war: RSF-military conflict causes mass displacement',
-    category: 'conflict',
-    intensity: 9,
-    sources: ['Reuters', 'UN', 'Al Jazeera'],
-    url: 'https://www.aljazeera.com/tag/sudan/',
-  },
-  {
-    id: 'geo-myanmar',
-    lat: 21.9162,
-    lng: 95.956,
-    country: 'Myanmar',
-    region: 'Southeast Asia',
-    eventCount: 25,
-    topEvent: 'Myanmar civil war: Military junta faces widespread resistance',
-    category: 'conflict',
-    intensity: 8,
-    sources: ['BBC', 'Reuters', 'Myanmar Now'],
-    url: 'https://www.bbc.com/news/world-asia-pacific-11685977',
-  },
-  {
-    id: 'geo-yemen',
-    lat: 15.5527,
-    lng: 48.5164,
-    country: 'Yemen',
-    region: 'Middle East',
-    eventCount: 20,
-    topEvent: 'Yemen conflict: Red Sea tensions and Houthi attacks',
-    category: 'conflict',
-    intensity: 8,
-    sources: ['BBC', 'Al Jazeera', 'Reuters'],
-    url: 'https://www.aljazeera.com/tag/yemen/',
-  },
-  {
-    id: 'geo-haiti',
-    lat: 18.9712,
-    lng: -72.2852,
-    country: 'Haiti',
-    region: 'Caribbean',
-    eventCount: 15,
-    topEvent: 'Haiti gang crisis: Violence and humanitarian emergency',
-    category: 'conflict',
-    intensity: 8,
-    sources: ['Reuters', 'AP', 'UN'],
-    url: 'https://www.reuters.com/world/americas/haiti/',
-  },
-  {
-    id: 'geo-drc',
-    lat: -4.0383,
-    lng: 21.7587,
-    country: 'DR Congo',
-    region: 'Central Africa',
-    eventCount: 20,
-    topEvent: 'DRC conflict: M23 rebels and regional tensions in eastern Congo',
-    category: 'conflict',
-    intensity: 8,
-    sources: ['UN', 'Reuters', 'Al Jazeera'],
-    url: 'https://www.aljazeera.com/tag/democratic-republic-of-congo/',
-  },
-];
-
-// Fallback disaster hotspots - used only when APIs completely fail
-const FALLBACK_DISASTERS: GlobalHotspot[] = [
-  {
-    id: 'fallback-usa',
-    lat: 39.8283,
-    lng: -98.5795,
-    country: 'USA',
-    region: 'United States',
-    eventCount: 10,
-    topEvent: 'US: Political developments and economic policy',
+    id: 'fallback-notice',
+    lat: 0,
+    lng: 0,
+    country: 'Notice',
+    region: 'Data Loading',
+    eventCount: 0,
+    topEvent: 'Configure ACLED credentials in Settings for live conflict data',
     category: 'politics',
-    intensity: 6,
-    sources: ['NPR', 'BBC', 'Reuters'],
-    url: 'https://www.npr.org/sections/politics/',
-  },
-  {
-    id: 'fallback-china',
-    lat: 35.8617,
-    lng: 104.1954,
-    country: 'China',
-    region: 'China',
-    eventCount: 10,
-    topEvent: 'China: Economic shifts and trade relations',
-    category: 'economy',
-    intensity: 6,
-    sources: ['Reuters', 'BBC'],
-    url: 'https://www.bbc.com/news/world-asia-china',
+    intensity: 1,
+    sources: ['System'],
   },
 ];
 
@@ -211,28 +102,30 @@ export async function fetchAllHotspots(acledToken?: string): Promise<GlobalHotsp
       }
     }
 
-    // ALWAYS start with core geopolitical hotspots (wars, conflicts)
-    // These are the most important events that should always be visible
+    // Combine all hotspots - ACLED conflicts are primary, disasters are supplementary
     const allHotspots = [
-      ...GEOPOLITICAL_HOTSPOTS,
-      ...gdacsHotspots,
-      ...usgsHotspots,
-      ...reliefHotspots,
-      ...acledHotspots,
+      ...acledHotspots,      // ACLED conflicts first (primary source)
+      ...gdacsHotspots,      // Significant disasters (Orange/Red alerts only)
+      ...usgsHotspots,       // Major earthquakes (M5.5+)
+      ...reliefHotspots,     // Humanitarian crises
     ];
 
-    console.log(`Fetched hotspots: Geopolitical=${GEOPOLITICAL_HOTSPOTS.length}, GDACS=${gdacsHotspots.length}, USGS=${usgsHotspots.length}, ReliefWeb=${reliefHotspots.length}, ACLED=${acledHotspots.length}`);
+    console.log(`Fetched hotspots: ACLED=${acledHotspots.length}, GDACS=${gdacsHotspots.length}, USGS=${usgsHotspots.length}, ReliefWeb=${reliefHotspots.length}`);
 
-    // Deduplicate by proximity (within ~100km)
-    // This will merge any API data that overlaps with geopolitical hotspots
-    const deduped = deduplicateByProximity(allHotspots);
-    
-    // Sort by intensity and return
-    return deduped.sort((a, b) => b.intensity - a.intensity);
+    if (allHotspots.length > 0) {
+      // Deduplicate by proximity (within ~100km)
+      const deduped = deduplicateByProximity(allHotspots);
+      
+      // Sort by intensity and return
+      return deduped.sort((a, b) => b.intensity - a.intensity);
+    }
+
+    // If ALL APIs return nothing (no data or all failed), return fallback
+    console.log('No hotspots data available - showing notice');
+    return FALLBACK_HOTSPOTS;
   } catch (error) {
     console.error('Error fetching hotspots:', error);
-    // If everything fails, still return geopolitical + fallback
-    return [...GEOPOLITICAL_HOTSPOTS, ...FALLBACK_DISASTERS];
+    return FALLBACK_HOTSPOTS;
   }
 }
 

@@ -266,10 +266,11 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
               pointRadius={0.5}
               pointLabel={(d: object) => {
                 const point = d as GlobalHotspot & { color: string };
+                const description = point.topEvent?.slice(0, 60) || 'No description';
                 return `
                   <div style="background: rgba(15,23,42,0.95); padding: 8px 12px; border-radius: 8px; border: 1px solid #334155;">
-                    <div style="font-weight: bold; color: white;">${point.region}</div>
-                    <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">${point.topEvent?.slice(0, 60)}...</div>
+                    <div style="font-weight: bold; color: white;">${point.region || point.country || 'Unknown'}</div>
+                    <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">${description}...</div>
                   </div>
                 `;
               }}
@@ -306,7 +307,9 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
                     >
                       {categoryLabels[selectedHotspot.category]}
                     </span>
-                    <h3 className="text-lg font-bold text-white mt-2">{selectedHotspot.region}</h3>
+                    <h3 className="text-lg font-bold text-white mt-2">
+                      {selectedHotspot.region || selectedHotspot.country || 'Unknown'}
+                    </h3>
                   </div>
                   <button 
                     onClick={handleCloseDetail}
@@ -317,24 +320,26 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
                     </svg>
                   </button>
                 </div>
-                <p className="text-sm text-slate-300 mb-3">{selectedHotspot.topEvent}</p>
+                <p className="text-sm text-slate-300 mb-3">
+                  {selectedHotspot.topEvent || 'No description available'}
+                </p>
                 <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>{selectedHotspot.eventCount} {language === 'cs' ? 'událostí' : 'events'}</span>
+                  <span>{selectedHotspot.eventCount ?? 0} {language === 'cs' ? 'událostí' : 'events'}</span>
                   <div className="flex items-center gap-2">
                     <span 
                       className="px-2 py-0.5 rounded-full text-[10px] font-medium"
                       style={{
-                        backgroundColor: selectedHotspot.intensity >= 8 ? 'rgba(239,68,68,0.2)' : 
-                                        selectedHotspot.intensity >= 5 ? 'rgba(245,158,11,0.2)' : 'rgba(100,116,139,0.2)',
-                        color: selectedHotspot.intensity >= 8 ? '#ef4444' : 
-                               selectedHotspot.intensity >= 5 ? '#f59e0b' : '#94a3b8',
+                        backgroundColor: (selectedHotspot.intensity ?? 0) >= 8 ? 'rgba(239,68,68,0.2)' : 
+                                        (selectedHotspot.intensity ?? 0) >= 5 ? 'rgba(245,158,11,0.2)' : 'rgba(100,116,139,0.2)',
+                        color: (selectedHotspot.intensity ?? 0) >= 8 ? '#ef4444' : 
+                               (selectedHotspot.intensity ?? 0) >= 5 ? '#f59e0b' : '#94a3b8',
                       }}
                     >
-                      {selectedHotspot.intensity >= 8 ? (language === 'cs' ? 'Kritické' : 'Critical') :
-                       selectedHotspot.intensity >= 5 ? (language === 'cs' ? 'Vysoké' : 'High') :
+                      {(selectedHotspot.intensity ?? 0) >= 8 ? (language === 'cs' ? 'Kritické' : 'Critical') :
+                       (selectedHotspot.intensity ?? 0) >= 5 ? (language === 'cs' ? 'Vysoké' : 'High') :
                        (language === 'cs' ? 'Střední' : 'Medium')}
                     </span>
-                    <span>{selectedHotspot.intensity}/10</span>
+                    <span>{selectedHotspot.intensity ?? 0}/10</span>
                   </div>
                 </div>
                 {selectedHotspot.url && (
@@ -426,7 +431,7 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium text-white truncate">
-                                  {hotspot.region}
+                                  {hotspot.region || hotspot.country || 'Unknown'}
                                 </span>
                                 {hotspot.intensity >= 8 && (
                                   <span className="px-1.5 py-0.5 text-[10px] font-medium bg-red-500/20 text-red-400 rounded">
@@ -435,15 +440,15 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
                                 )}
                               </div>
                               <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                                {hotspot.topEvent}
+                                {hotspot.topEvent || 'No description available'}
                               </p>
                             </div>
-                            <div className="flex flex-col items-end ml-2">
+                            <div className="flex flex-col items-end ml-2 shrink-0">
                               <span className="text-xs text-slate-500">
-                                {hotspot.intensity}/10
+                                {hotspot.intensity ?? 0}/10
                               </span>
                               <span className="text-[10px] text-slate-600">
-                                {hotspot.eventCount} {language === 'cs' ? 'udál.' : 'events'}
+                                {hotspot.eventCount ?? 0} {language === 'cs' ? 'udál.' : 'events'}
                               </span>
                             </div>
                           </div>

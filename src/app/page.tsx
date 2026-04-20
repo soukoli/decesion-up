@@ -6,6 +6,7 @@ import { SplashScreen, useSplashScreen } from '@/components/SplashScreen';
 import { MobileLayout, AppData } from '@/components/mobile';
 import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
+import { useSettings } from '@/lib/settings';
 import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity } from '@/types';
 import { SearchTrend } from '@/components/trending/TrendingSection';
 
@@ -27,6 +28,7 @@ export default function Home() {
   
   const { showSplash, handleSplashComplete } = useSplashScreen(false); // Show splash every time for now
   const { language } = useTranslation();
+  const { acledTokens, isAcledTokenValid } = useSettings();
 
   // Detect mobile
   useEffect(() => {
@@ -42,7 +44,16 @@ export default function Home() {
     if (isRefresh) setRefreshing(true);
     
     const cacheBuster = isRefresh ? `?_t=${Date.now()}` : '';
-    const fetchOptions = isRefresh ? { cache: 'no-store' as RequestCache } : {};
+    const fetchOptions: RequestInit = isRefresh ? { cache: 'no-store' as RequestCache } : {};
+    
+    // Add ACLED token to hotspots request if available and valid
+    const acledToken = isAcledTokenValid ? acledTokens?.accessToken : null;
+    const hotspotsOptions: RequestInit = {
+      ...fetchOptions,
+      ...(acledToken ? {
+        headers: { 'Authorization': `Bearer ${acledToken}` }
+      } : {})
+    };
     
     try {
       const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, aiCommunitiesRes] = await Promise.all([
@@ -50,7 +61,7 @@ export default function Home() {
         fetch(`/api/economic${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
-        fetch(`/api/hotspots${cacheBuster}`, fetchOptions),
+        fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
         fetch(`/api/ai-communities${cacheBuster}`, fetchOptions),
@@ -115,7 +126,7 @@ export default function Home() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [acledTokens, isAcledTokenValid]);
 
   useEffect(() => {
     fetchData();
