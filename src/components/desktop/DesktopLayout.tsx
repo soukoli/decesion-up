@@ -9,11 +9,10 @@ import { GlobeModal } from '@/components/mobile/GlobeModal';
 
 // Import existing section components
 import { PodcastSection } from '@/components/podcasts/PodcastSection';
-import { EconomicSection } from '@/components/economic/EconomicSection';
 import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
-import { StocksSection } from '@/components/stocks';
+import { MarketsSection } from '@/components/markets';
 import { AICommunitiesSection } from '@/components/ai-communities';
 
 interface DesktopLayoutProps {
@@ -108,12 +107,7 @@ export function DesktopLayout({ data, onRefresh, refreshing, lastRefresh }: Desk
           </div>
         );
       case 'markets':
-        return (
-          <div className="space-y-6">
-            <StocksSection initialStocks={data.stocks} />
-            <EconomicSection signals={data.economic} />
-          </div>
-        );
+        return <MarketsSection initialMarkets={data.markets} />;
       case 'trends':
         return <TrendsSection trends={data.trends} />;
       case 'research':

@@ -26,6 +26,28 @@ export interface EconomicSignal {
   updatedAt: string;
 }
 
+// New unified Market Signal type for the Markets section
+export interface MarketSignal {
+  id: string;
+  name: string;
+  symbol?: string;
+  category: 'currency' | 'index' | 'macro' | 'rate' | 'crypto';
+  value: number;
+  valueFormatted: string;
+  valueCZK?: number;
+  valueCZKFormatted?: string;
+  change: number | null;
+  changePercent: number | null;
+  trend: 'up' | 'down' | 'stable';
+  sparkline?: number[];
+  explanation: string;
+  source: string;
+  sourceUrl: string;
+  updatedAt: string;
+  country?: string;
+  unit?: string;
+}
+
 export interface TechTrend {
   id: string;
   title: string;
@@ -130,6 +152,7 @@ export interface AICommunity {
 export interface DashboardData {
   podcasts: PodcastEpisode[];
   economic: EconomicSignal[];
+  markets: MarketSignal[];
   trends: TechTrend[];
   news: WorldNews[];
   hotspots: GlobalHotspot[];

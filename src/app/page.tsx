@@ -7,13 +7,14 @@ import { MobileLayout, AppData } from '@/components/mobile';
 import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity } from '@/types';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity, MarketSignal } from '@/types';
 import { SearchTrend } from '@/components/trending/TrendingSection';
 
 export default function Home() {
   const [data, setData] = useState<AppData>({
     podcasts: [],
     economic: [],
+    markets: [],
     trends: [],
     news: [],
     hotspots: [],
@@ -56,9 +57,10 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, economicRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, aiCommunitiesRes] = await Promise.all([
+      const [podcastsRes, economicRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, aiCommunitiesRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/economic${cacheBuster}`, fetchOptions),
+        fetch(`/api/markets${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
         fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
@@ -70,6 +72,7 @@ export default function Home() {
       const newData: AppData = {
         podcasts: [],
         economic: [],
+        markets: [],
         trends: [],
         news: [],
         hotspots: [],
@@ -86,6 +89,11 @@ export default function Home() {
       if (economicRes.ok) {
         const d = await economicRes.json();
         newData.economic = d.economic || [];
+      }
+
+      if (marketsRes.ok) {
+        const d = await marketsRes.json();
+        newData.markets = d.markets || [];
       }
 
       if (trendsRes.ok) {

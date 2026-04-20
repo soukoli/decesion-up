@@ -1,36 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { StockIndex, EconomicSignal } from '@/types';
+import { MarketSignal } from '@/types';
+import { MarketCard } from '@/components/markets/MarketCard';
 import { useTranslation } from '@/lib/translation';
-import { Period } from '@/lib/stocks';
 
 interface MobileMarketsPageProps {
-  stocks: StockIndex[];
-  economic: EconomicSignal[];
+  markets: MarketSignal[];
 }
 
-export function MobileMarketsPage({ stocks, economic }: MobileMarketsPageProps) {
-  const [tab, setTab] = useState<'stocks' | 'economic'>('stocks');
-  const [period, setPeriod] = useState<Period>('5d');
-  const [loading, setLoading] = useState(false);
-  const [stocksData, setStocksData] = useState(stocks);
+type CategoryFilter = 'all' | 'currency' | 'index' | 'crypto' | 'macro';
+
+const categoryLabels: Record<CategoryFilter, { en: string; cs: string; icon: string }> = {
+  all: { en: 'All', cs: 'Vše', icon: '🔥' },
+  currency: { en: 'Currencies', cs: 'Měny', icon: '💱' },
+  index: { en: 'Indices', cs: 'Indexy', icon: '📈' },
+  crypto: { en: 'Crypto', cs: 'Krypto', icon: '₿' },
+  macro: { en: 'Macro', cs: 'Makro', icon: '🏛️' },
+};
+
+export function MobileMarketsPage({ markets }: MobileMarketsPageProps) {
+  const [filter, setFilter] = useState<CategoryFilter>('all');
   const { language } = useTranslation();
 
-  const fetchStocks = async (newPeriod: Period) => {
-    setLoading(true);
-    setPeriod(newPeriod);
-    try {
-      const response = await fetch(`/api/stocks?period=${newPeriod}`);
-      if (response.ok) {
-        const data = await response.json();
-        setStocksData(data);
-      }
-    } catch (error) {
-      console.error('Error fetching stocks:', error);
-    } finally {
-      setLoading(false);
-    }
+  const filteredMarkets = filter === 'all' 
+    ? markets 
+    : markets.filter(m => {
+        if (filter === 'macro') {
+          return m.category === 'macro' || m.category === 'rate';
+        }
+        return m.category === filter;
+      });
+
+  // Count by category
+  const counts: Record<CategoryFilter, number> = {
+    all: markets.length,
+    currency: markets.filter(m => m.category === 'currency').length,
+    index: markets.filter(m => m.category === 'index').length,
+    crypto: markets.filter(m => m.category === 'crypto').length,
+    macro: markets.filter(m => m.category === 'macro' || m.category === 'rate').length,
   };
 
   return (
@@ -41,135 +49,65 @@ export function MobileMarketsPage({ stocks, economic }: MobileMarketsPageProps) 
           {language === 'cs' ? 'Trhy' : 'Markets'}
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          {language === 'cs' ? 'Akcie a ekonomické ukazatele' : 'Stocks and economic indicators'}
+          {language === 'cs' 
+            ? `${markets.length} signálů z globálních trhů` 
+            : `${markets.length} signals from global markets`}
         </p>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={() => setTab('stocks')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              tab === 'stocks'
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-                : 'bg-slate-800/50 text-slate-400 border border-slate-700'
-            }`}
-          >
-            {language === 'cs' ? 'Indexy' : 'Indices'}
-          </button>
-          <button
-            onClick={() => setTab('economic')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              tab === 'economic'
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
-                : 'bg-slate-800/50 text-slate-400 border border-slate-700'
-            }`}
-          >
-            {language === 'cs' ? 'Ekonomika' : 'Economic'}
-          </button>
+        {/* Category Filter Pills */}
+        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          {(Object.keys(categoryLabels) as CategoryFilter[]).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                filter === cat
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50'
+                  : 'bg-slate-800/50 text-slate-400 border border-slate-700'
+              }`}
+            >
+              <span>{categoryLabels[cat].icon}</span>
+              <span>{categoryLabels[cat][language]}</span>
+              {counts[cat] > 0 && (
+                <span className={`text-xs ${filter === cat ? 'text-amber-400/70' : 'text-slate-500'}`}>
+                  {counts[cat]}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
+      </header>
 
-        {/* Period selector for stocks */}
-        {tab === 'stocks' && (
-          <div className="flex gap-2 mt-3">
-            {(['1d', '5d', '1mo'] as Period[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => fetchStocks(p)}
-                disabled={loading}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                  period === p
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-500 hover:text-white'
-                } ${loading ? 'opacity-50' : ''}`}
-              >
-                {p.toUpperCase()}
-              </button>
+      {/* Market Cards Grid */}
+      <div className="pb-32 pt-2">
+        {filteredMarkets.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <p>{language === 'cs' ? 'Žádná data k zobrazení' : 'No data to display'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {filteredMarkets.map((market) => (
+              <MarketCard key={market.id} signal={market} />
             ))}
           </div>
         )}
-      </header>
 
-      {/* Content */}
-      <div className="pb-32 space-y-3">
-        {tab === 'stocks' && stocksData.map((stock) => (
-          <StockCard key={stock.symbol} stock={stock} loading={loading} />
-        ))}
-        
-        {tab === 'economic' && economic.map((signal) => (
-          <EconomicCard key={signal.id} signal={signal} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StockCard({ stock, loading }: { stock: StockIndex; loading: boolean }) {
-  const isPositive = stock.change >= 0;
-  
-  return (
-    <div className={`p-4 rounded-xl border transition-all ${loading ? 'opacity-50' : ''} ${
-      isPositive 
-        ? 'bg-green-500/10 border-green-500/30' 
-        : 'bg-red-500/10 border-red-500/30'
-    }`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-white">{stock.name}</h3>
-          <p className="text-xs text-slate-400">{stock.symbol}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xl font-bold text-white">
-            ${stock.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
-          <p className={`text-sm font-medium ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-            {isPositive ? '+' : ''}{stock.change.toFixed(2)} ({isPositive ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+        {/* Legend */}
+        <div className="mt-6 pt-4 border-t border-slate-800/50">
+          <div className="flex flex-wrap gap-3 text-[10px] text-slate-600">
+            <span>💱 {language === 'cs' ? 'Měny' : 'Currencies'}</span>
+            <span>📈 {language === 'cs' ? 'Indexy' : 'Indices'}</span>
+            <span>₿ Crypto</span>
+            <span>🏛️ {language === 'cs' ? 'Makro' : 'Macro'}</span>
+            <span>🏦 {language === 'cs' ? 'Sazby' : 'Rates'}</span>
+          </div>
+          <p className="text-[10px] text-slate-600 mt-2">
+            {language === 'cs' 
+              ? 'Zdroje: ECB, World Bank, Yahoo Finance, CoinGecko'
+              : 'Sources: ECB, World Bank, Yahoo Finance, CoinGecko'}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
-        <span>H: ${stock.dayHigh.toFixed(2)}</span>
-        <span>L: ${stock.dayLow.toFixed(2)}</span>
-      </div>
     </div>
   );
-}
-
-function EconomicCard({ signal }: { signal: EconomicSignal }) {
-  const trendColors = {
-    up: 'text-green-400',
-    down: 'text-red-400',
-    stable: 'text-slate-400',
-  };
-
-  const bgColors = {
-    up: 'bg-green-500/10 border-green-500/30',
-    down: 'bg-red-500/10 border-red-500/30',
-    stable: 'bg-slate-500/10 border-slate-500/30',
-  };
-
-  const isLink = signal.source.startsWith('http');
-
-  const content = (
-    <div className={`p-4 rounded-xl border ${bgColors[signal.trend]}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-slate-400">{signal.title}</span>
-        <span className={`text-lg font-bold ${trendColors[signal.trend]}`}>
-          {signal.trend === 'up' ? '↑' : signal.trend === 'down' ? '↓' : '→'}
-        </span>
-      </div>
-      <p className="text-xl font-bold text-white">{signal.value}</p>
-      <p className={`text-sm font-medium ${trendColors[signal.trend]}`}>{signal.change}</p>
-      <p className="text-xs text-slate-500 mt-2">{signal.detail}</p>
-    </div>
-  );
-
-  if (isLink) {
-    return (
-      <a href={signal.source} target="_blank" rel="noopener noreferrer" className="block">
-        {content}
-      </a>
-    );
-  }
-
-  return content;
 }
