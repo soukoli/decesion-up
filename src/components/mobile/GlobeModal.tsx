@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls, PanInfo } from 'framer-motion';
 import { GlobalHotspot } from '@/types';
 import { useTranslation } from '@/lib/translation';
 
@@ -31,37 +31,81 @@ const categoryColors: Record<GlobalHotspot['category'], string> = {
 };
 
 const categoryLabelsEN: Record<GlobalHotspot['category'], string> = {
-  conflict: 'Conflict',
-  protest: 'Protest',
-  disaster: 'Disaster',
+  conflict: 'Conflicts',
+  protest: 'Protests',
+  disaster: 'Disasters',
   politics: 'Politics',
   economy: 'Economy',
 };
 
 const categoryLabelsCZ: Record<GlobalHotspot['category'], string> = {
-  conflict: 'Konflikt',
-  protest: 'Protest',
-  disaster: 'Katastrofa',
+  conflict: 'Konflikty',
+  protest: 'Protesty',
+  disaster: 'Katastrofy',
   politics: 'Politika',
   economy: 'Ekonomika',
 };
+
+const categoryOrder: GlobalHotspot['category'][] = ['conflict', 'disaster', 'protest', 'politics', 'economy'];
+
+// Bottom sheet snap points (percentage of screen height)
+const SHEET_COLLAPSED = 60; // Just the handle visible (px)
+const SHEET_HALF = 40; // 40% of screen
+const SHEET_FULL = 85; // 85% of screen
+
+type SheetState = 'collapsed' | 'half' | 'full';
 
 export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
   const globeRef = useRef<any>(null);
   const [selectedHotspot, setSelectedHotspot] = useState<GlobalHotspot | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [sheetState, setSheetState] = useState<SheetState>('collapsed');
   const { language } = useTranslation();
+  const dragControls = useDragControls();
   
   const categoryLabels = language === 'cs' ? categoryLabelsCZ : categoryLabelsEN;
+
+  // Group hotspots by category and sort by intensity
+  const groupedHotspots = useMemo(() => {
+    const groups: Record<GlobalHotspot['category'], GlobalHotspot[]> = {
+      conflict: [],
+      protest: [],
+      disaster: [],
+      politics: [],
+      economy: [],
+    };
+    
+    hotspots.forEach(h => {
+      groups[h.category].push(h);
+    });
+    
+    // Sort each group by intensity (highest first)
+    Object.keys(groups).forEach(key => {
+      groups[key as GlobalHotspot['category']].sort((a, b) => b.intensity - a.intensity);
+    });
+    
+    return groups;
+  }, [hotspots]);
+
+  // Calculate sheet height based on state
+  const getSheetHeight = (state: SheetState): number => {
+    switch (state) {
+      case 'collapsed': return SHEET_COLLAPSED;
+      case 'half': return (dimensions.height * SHEET_HALF) / 100;
+      case 'full': return (dimensions.height * SHEET_FULL) / 100;
+      default: return SHEET_COLLAPSED;
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight - 100,
+        height: window.innerHeight,
       });
-      // Lock body scroll
       document.body.style.overflow = 'hidden';
+      setSheetState('collapsed');
+      setSelectedHotspot(null);
     }
     return () => {
       document.body.style.overflow = '';
@@ -82,6 +126,7 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
 
   const handlePointClick = useCallback((point: GlobalHotspot) => {
     setSelectedHotspot(point);
+    setSheetState('collapsed'); // Collapse sheet when viewing detail
     if (globeRef.current) {
       globeRef.current.pointOfView(
         { lat: point.lat, lng: point.lng, altitude: 1.5 },
@@ -96,6 +141,36 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
     if (globeRef.current) {
       globeRef.current.controls().autoRotate = true;
       globeRef.current.pointOfView({ lat: 30, lng: 0, altitude: 2.2 }, 1000);
+    }
+  };
+
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    const velocity = info.velocity.y;
+    const offset = info.offset.y;
+    
+    // Determine new state based on drag direction and velocity
+    if (velocity > 500 || offset > 100) {
+      // Dragging down fast - collapse
+      if (sheetState === 'full') {
+        setSheetState('half');
+      } else {
+        setSheetState('collapsed');
+      }
+    } else if (velocity < -500 || offset < -100) {
+      // Dragging up fast - expand
+      if (sheetState === 'collapsed') {
+        setSheetState('half');
+      } else {
+        setSheetState('full');
+      }
+    }
+  };
+
+  const handleSheetToggle = () => {
+    if (sheetState === 'collapsed') {
+      setSheetState('half');
+    } else {
+      setSheetState('collapsed');
     }
   };
 
@@ -114,6 +189,9 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
     color: categoryColors[h.category],
   }));
 
+  // Count high-intensity events
+  const criticalCount = hotspots.filter(h => h.intensity >= 8).length;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -124,13 +202,18 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
           className="fixed inset-0 z-50 bg-slate-950"
         >
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-slate-950 to-transparent">
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-slate-950 via-slate-950/80 to-transparent">
             <div>
               <h2 className="text-xl font-bold text-white">
                 {language === 'cs' ? 'Globální Události' : 'Global Hotspots'}
               </h2>
               <p className="text-xs text-slate-400">
-                {hotspots.length} {language === 'cs' ? 'aktivních událostí' : 'active events'}
+                {hotspots.length} {language === 'cs' ? 'událostí' : 'events'}
+                {criticalCount > 0 && (
+                  <span className="ml-2 text-red-400">
+                    • {criticalCount} {language === 'cs' ? 'kritických' : 'critical'}
+                  </span>
+                )}
               </p>
             </div>
             <button
@@ -143,15 +226,28 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
             </button>
           </div>
 
-          {/* Legend */}
-          <div className="absolute top-20 left-4 z-10 flex flex-wrap gap-2">
-            {Object.entries(categoryColors).map(([cat, color]) => (
-              <span key={cat} className="flex items-center gap-1 px-2 py-1 bg-slate-800/80 rounded-full text-xs">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-slate-300">{categoryLabels[cat as GlobalHotspot['category']]}</span>
-              </span>
-            ))}
-          </div>
+          {/* Legend - only show when sheet is collapsed */}
+          <AnimatePresence>
+            {sheetState === 'collapsed' && !selectedHotspot && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-20 left-4 z-10 flex flex-wrap gap-2"
+              >
+                {Object.entries(categoryColors).map(([cat, color]) => {
+                  const count = groupedHotspots[cat as GlobalHotspot['category']].length;
+                  if (count === 0) return null;
+                  return (
+                    <span key={cat} className="flex items-center gap-1 px-2 py-1 bg-slate-800/80 rounded-full text-xs">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="text-slate-300">{count}</span>
+                    </span>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Globe */}
           <div className="w-full h-full">
@@ -190,14 +286,14 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
             />
           </div>
 
-          {/* Selected Hotspot Detail */}
+          {/* Selected Hotspot Detail - shows above bottom sheet */}
           <AnimatePresence>
             {selectedHotspot && (
               <motion.div
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
-                className="absolute bottom-4 left-4 right-4 bg-slate-800/95 backdrop-blur-sm rounded-xl border border-slate-600 p-4 shadow-xl"
+                className="absolute bottom-20 left-4 right-4 z-20 bg-slate-800/95 backdrop-blur-sm rounded-xl border border-slate-600 p-4 shadow-xl"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -224,7 +320,22 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
                 <p className="text-sm text-slate-300 mb-3">{selectedHotspot.topEvent}</p>
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>{selectedHotspot.eventCount} {language === 'cs' ? 'událostí' : 'events'}</span>
-                  <span>{language === 'cs' ? 'Intenzita' : 'Intensity'}: {selectedHotspot.intensity}/10</span>
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                      style={{
+                        backgroundColor: selectedHotspot.intensity >= 8 ? 'rgba(239,68,68,0.2)' : 
+                                        selectedHotspot.intensity >= 5 ? 'rgba(245,158,11,0.2)' : 'rgba(100,116,139,0.2)',
+                        color: selectedHotspot.intensity >= 8 ? '#ef4444' : 
+                               selectedHotspot.intensity >= 5 ? '#f59e0b' : '#94a3b8',
+                      }}
+                    >
+                      {selectedHotspot.intensity >= 8 ? (language === 'cs' ? 'Kritické' : 'Critical') :
+                       selectedHotspot.intensity >= 5 ? (language === 'cs' ? 'Vysoké' : 'High') :
+                       (language === 'cs' ? 'Střední' : 'Medium')}
+                    </span>
+                    <span>{selectedHotspot.intensity}/10</span>
+                  </div>
                 </div>
                 {selectedHotspot.url && (
                   <a
@@ -239,6 +350,114 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Bottom Sheet */}
+          <motion.div
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            animate={{ 
+              height: getSheetHeight(sheetState),
+              transition: { type: 'spring', damping: 30, stiffness: 300 }
+            }}
+            className="absolute bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-xl rounded-t-3xl border-t border-slate-700 overflow-hidden"
+          >
+            {/* Handle */}
+            <div 
+              className="flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+              onPointerDown={(e) => dragControls.start(e)}
+              onClick={handleSheetToggle}
+            >
+              <div className="w-12 h-1 bg-slate-600 rounded-full" />
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-slate-400">
+                  {sheetState === 'collapsed' 
+                    ? (language === 'cs' ? 'Zobrazit seznam' : 'Show list')
+                    : (language === 'cs' ? 'Skrýt seznam' : 'Hide list')
+                  }
+                </span>
+                <svg 
+                  className={`w-4 h-4 text-slate-400 transition-transform ${sheetState !== 'collapsed' ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Sheet Content */}
+            <div className="h-full overflow-y-auto pb-safe-area px-4">
+              {categoryOrder.map(category => {
+                const items = groupedHotspots[category];
+                if (items.length === 0) return null;
+                
+                return (
+                  <div key={category} className="mb-4">
+                    {/* Category Header */}
+                    <div className="flex items-center gap-2 mb-2 sticky top-0 bg-slate-900/95 py-2">
+                      <span 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: categoryColors[category] }}
+                      />
+                      <h3 className="text-sm font-semibold text-white">
+                        {categoryLabels[category]}
+                      </h3>
+                      <span className="text-xs text-slate-500">({items.length})</span>
+                    </div>
+                    
+                    {/* Items */}
+                    <div className="space-y-2">
+                      {items.map(hotspot => (
+                        <button
+                          key={hotspot.id}
+                          onClick={() => handlePointClick(hotspot)}
+                          className={`w-full text-left p-3 rounded-xl border transition-all ${
+                            selectedHotspot?.id === hotspot.id
+                              ? 'bg-slate-700 border-amber-500'
+                              : 'bg-slate-800/50 border-slate-700 hover:border-slate-500'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-white truncate">
+                                  {hotspot.region}
+                                </span>
+                                {hotspot.intensity >= 8 && (
+                                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-red-500/20 text-red-400 rounded">
+                                    {language === 'cs' ? 'KRITICKÉ' : 'CRITICAL'}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                                {hotspot.topEvent}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end ml-2">
+                              <span className="text-xs text-slate-500">
+                                {hotspot.intensity}/10
+                              </span>
+                              <span className="text-[10px] text-slate-600">
+                                {hotspot.eventCount} {language === 'cs' ? 'udál.' : 'events'}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Bottom padding for safe area */}
+              <div className="h-8" />
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
