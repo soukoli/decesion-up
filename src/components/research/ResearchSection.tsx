@@ -139,11 +139,11 @@ export function ResearchSection({ research }: ResearchSectionProps) {
               </span>
             </div>
             
-            <h3 className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors mb-1 line-clamp-2">
+            <h3 className="text-base font-medium text-slate-200 group-hover:text-white transition-colors mb-1 line-clamp-2">
               {getTitle(paper)}
             </h3>
             
-            <p className="text-xs text-slate-500 line-clamp-2 mb-2">
+            <p className="text-sm text-slate-400 line-clamp-2 mb-2">
               {getSummary(paper)}
             </p>
             

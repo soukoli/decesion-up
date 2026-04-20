@@ -54,10 +54,10 @@ export function MobileNewsPage({ news }: MobileNewsPageProps) {
               </span>
               <span className="text-[10px] text-slate-500">{item.source}</span>
             </div>
-            <h3 className="text-sm font-semibold text-white line-clamp-2 mb-2">
+            <h3 className="text-base font-semibold text-white line-clamp-2 mb-2">
               {item.title}
             </h3>
-            <p className="text-xs text-slate-400 line-clamp-2">
+            <p className="text-sm text-slate-400 line-clamp-2">
               {item.description}
             </p>
             <p className="text-xs text-slate-500 mt-2">

@@ -167,12 +167,12 @@ export function NewsSection({ news }: NewsSectionProps) {
               </span>
             </div>
             
-            <h3 className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1">
+            <h3 className="text-base font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1">
               {getTitle(item)}
             </h3>
             
             {item.description && (
-              <p className="text-xs text-slate-500 line-clamp-2 mb-2">
+              <p className="text-sm text-slate-400 line-clamp-2 mb-2">
                 {getDescription(item)}
               </p>
             )}
