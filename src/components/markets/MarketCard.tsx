@@ -68,8 +68,18 @@ interface MarketCardProps {
 
 export function MarketCard({ signal, compact = false, language = 'en' }: MarketCardProps) {
   const [showHelp, setShowHelp] = useState(false);
-  const isPositive = signal.trend === 'up';
-  const isNegative = signal.trend === 'down';
+  
+  // For unemployment and inflation, "down" is good (green), "up" is bad (red)
+  // These are "inverted" indicators where lower values are better
+  const isInvertedIndicator = signal.name.includes('Unemployment') || signal.name.includes('Inflation');
+  
+  // Determine visual trend (for colors) - inverted for unemployment/inflation
+  const visualTrend = isInvertedIndicator
+    ? (signal.trend === 'up' ? 'down' : signal.trend === 'down' ? 'up' : 'stable')
+    : signal.trend;
+  
+  const isPositive = visualTrend === 'up';
+  const isNegative = visualTrend === 'down';
   
   const trendColor = isPositive ? 'text-green-400' : isNegative ? 'text-red-400' : 'text-slate-400';
   const bgColor = isPositive 
