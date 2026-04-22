@@ -7,7 +7,7 @@ import { MobileLayout, AppData } from '@/components/mobile';
 import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity, MarketSignal } from '@/types';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
 import { SearchTrend } from '@/components/trending/TrendingSection';
 
 export default function Home() {
@@ -20,7 +20,6 @@ export default function Home() {
     hotspots: [],
     research: [],
     stocks: [],
-    aiCommunities: [],
   });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -57,7 +56,7 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, economicRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, aiCommunitiesRes] = await Promise.all([
+      const [podcastsRes, economicRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/economic${cacheBuster}`, fetchOptions),
         fetch(`/api/markets${cacheBuster}`, fetchOptions),
@@ -66,7 +65,6 @@ export default function Home() {
         fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
-        fetch(`/api/ai-communities${cacheBuster}`, fetchOptions),
       ]);
 
       const newData: AppData = {
@@ -78,7 +76,6 @@ export default function Home() {
         hotspots: [],
         research: [],
         stocks: [],
-        aiCommunities: [],
       };
 
       if (podcastsRes.ok) {
@@ -119,11 +116,6 @@ export default function Home() {
       if (stocksRes.ok) {
         const d = await stocksRes.json();
         newData.stocks = d || [];
-      }
-
-      if (aiCommunitiesRes.ok) {
-        const d = await aiCommunitiesRes.json();
-        newData.aiCommunities = d.communities || [];
       }
 
       setData(newData);

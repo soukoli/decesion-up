@@ -1,5 +1,5 @@
 import Parser from 'rss-parser';
-import { PODCASTS, PodcastConfig, GLOBAL_PODCASTS, CZECH_PODCASTS } from './podcasts-config';
+import { PODCASTS, PodcastConfig } from './podcasts-config';
 import { PodcastEpisode } from '@/types';
 
 const parser = new Parser({
@@ -45,16 +45,10 @@ function formatDuration(duration: string | undefined): string {
 }
 
 export async function fetchPodcastEpisode(config: PodcastConfig): Promise<PodcastEpisode | null> {
-  // If no RSS URL, return fallback immediately (Czech podcasts with unreliable RSS)
-  if (!config.rssUrl) {
-    return createFallbackEpisode(config);
-  }
-
   try {
     const feed = await parser.parseURL(config.rssUrl);
     
     if (!feed.items || feed.items.length === 0) {
-      // Return fallback if no items
       return createFallbackEpisode(config);
     }
     
@@ -81,67 +75,30 @@ export async function fetchPodcastEpisode(config: PodcastConfig): Promise<Podcas
       duration: formatDuration(item.duration),
       pubDate: item.pubDate || new Date().toISOString(),
       imageUrl,
-      spotifyUrl: config.spotifyShowUrl,
       appleUrl: config.appleUrl,
       webUrl: config.webUrl,
       category: config.category,
       categoryColor: config.categoryColor,
-      region: config.region,
-      language: config.language,
     };
   } catch (error) {
     console.error(`Error fetching podcast ${config.name}:`, error);
-    // Return fallback data instead of null
     return createFallbackEpisode(config);
   }
 }
 
-// Czech podcast descriptions for fallback data
-const czechPodcastDescriptions: Record<string, { title: string; description: string }> = {
-  'vinohradska': {
-    title: 'Aktuální díl',
-    description: 'Denní podcast Českého rozhlasu o aktuálním dění',
-  },
-  'kecy-politika': {
-    title: 'Nový díl',
-    description: 'Podcast o české politice s Petrem Honzejkem a Bohumilem Pečinkou',
-  },
-  'studio-n': {
-    title: 'Poslední epizoda',
-    description: 'Podcast Deníku N o aktuálních tématech a investigativní žurnalistice',
-  },
-  'imperativ': {
-    title: 'Nejnovější díl',
-    description: 'Podcast o technologiích, startupu a byznysu',
-  },
-  'uspesna-firma': {
-    title: 'Nová epizoda',
-    description: 'Podcast pro podnikatele a manažery o řízení firmy',
-  },
-  'behind-the-scenes': {
-    title: 'Latest Episode',
-    description: 'Behind the scenes of Czech startups and business',
-  },
-};
-
 function createFallbackEpisode(config: PodcastConfig): PodcastEpisode {
-  const czechInfo = czechPodcastDescriptions[config.id];
-  
   return {
     id: `${config.id}-fallback`,
     podcastName: config.name,
-    title: czechInfo?.title || 'Latest Episode',
-    description: czechInfo?.description || `Listen to the latest episode of ${config.name}`,
+    title: 'Latest Episode',
+    description: `Listen to the latest episode of ${config.name}`,
     duration: '~30 min',
     pubDate: new Date().toISOString(),
     imageUrl: '',
-    spotifyUrl: config.spotifyShowUrl,
     appleUrl: config.appleUrl,
     webUrl: config.webUrl,
     category: config.category,
     categoryColor: config.categoryColor,
-    region: config.region,
-    language: config.language,
   };
 }
 
@@ -160,41 +117,8 @@ export async function fetchAllPodcasts(): Promise<PodcastEpisode[]> {
     }
   });
   
-  return episodes;
-}
-
-export async function fetchGlobalPodcasts(): Promise<PodcastEpisode[]> {
-  const results = await Promise.allSettled(
-    GLOBAL_PODCASTS.map(config => fetchPodcastEpisode(config))
-  );
-  
-  const episodes: PodcastEpisode[] = [];
-  
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled' && result.value) {
-      episodes.push(result.value);
-    } else {
-      console.warn(`Failed to fetch global podcast: ${GLOBAL_PODCASTS[index].name}`);
-    }
-  });
-  
-  return episodes;
-}
-
-export async function fetchCzechPodcasts(): Promise<PodcastEpisode[]> {
-  const results = await Promise.allSettled(
-    CZECH_PODCASTS.map(config => fetchPodcastEpisode(config))
-  );
-  
-  const episodes: PodcastEpisode[] = [];
-  
-  results.forEach((result, index) => {
-    if (result.status === 'fulfilled' && result.value) {
-      episodes.push(result.value);
-    } else {
-      console.warn(`Failed to fetch Czech podcast: ${CZECH_PODCASTS[index].name}`);
-    }
-  });
+  // Sort by pubDate (newest first)
+  episodes.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   
   return episodes;
 }

@@ -13,7 +13,7 @@ import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
 import { MarketsSection } from '@/components/markets';
-import { AICommunitiesSection } from '@/components/ai-communities';
+
 
 interface DesktopLayoutProps {
   data: AppData;
@@ -100,12 +100,7 @@ export function DesktopLayout({ data, onRefresh, refreshing, lastRefresh }: Desk
   const renderContent = () => {
     switch (activeSection) {
       case 'podcasts':
-        return (
-          <div className="space-y-6">
-            <PodcastSection episodes={data.podcasts} />
-            <AICommunitiesSection communities={data.aiCommunities} />
-          </div>
-        );
+        return <PodcastSection initialEpisodes={data.podcasts} />;
       case 'markets':
         return <MarketsSection initialMarkets={data.markets} />;
       case 'trends':

@@ -11,7 +11,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-creative';
 
 import { useTranslation } from '@/lib/translation';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, AICommunity, MarketSignal } from '@/types';
+import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
 
 // Section components (will be simplified versions for mobile)
 import { MobilePodcastsPage } from './pages/MobilePodcastsPage';
@@ -31,7 +31,6 @@ export interface AppData {
   hotspots: GlobalHotspot[];
   research: AIResearch[];
   stocks: StockIndex[];
-  aiCommunities: AICommunity[];
 }
 
 interface MobileLayoutProps {
@@ -95,10 +94,7 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
           resistanceRatio={0.85}
         >
           <SwiperSlide>
-            <MobilePodcastsPage 
-              podcasts={data.podcasts} 
-              aiCommunities={data.aiCommunities}
-            />
+            <MobilePodcastsPage podcasts={data.podcasts} />
           </SwiperSlide>
           
           <SwiperSlide>

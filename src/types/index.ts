@@ -6,13 +6,10 @@ export interface PodcastEpisode {
   duration: string;
   pubDate: string;
   imageUrl: string;
-  spotifyUrl: string;
-  appleUrl?: string;
+  appleUrl: string;
   webUrl?: string;
   category: string;
   categoryColor: string;
-  region: 'global' | 'czech';
-  language: 'en' | 'cs';
 }
 
 export interface EconomicSignal {
