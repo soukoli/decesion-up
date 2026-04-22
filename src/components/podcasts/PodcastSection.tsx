@@ -48,11 +48,10 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
   // Category labels for UI
   const categoryLabels: Record<CategoryFilter, { en: string; cs: string }> = {
     'All': { en: 'All', cs: 'Vše' },
-    'News': { en: 'News', cs: 'Zprávy' },
+    'Tech': { en: 'Tech & AI', cs: 'Tech & AI' },
     'Science': { en: 'Science', cs: 'Věda' },
-    'Tech': { en: 'Tech', cs: 'Tech' },
     'Business': { en: 'Business', cs: 'Byznys' },
-    'Ideas': { en: 'Ideas', cs: 'Nápady' },
+    'Czech': { en: 'Czech', cs: 'České' },
   };
 
   if (loading) {
@@ -126,8 +125,8 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
       <div className="mt-4 pt-3 border-t border-slate-800">
         <p className="text-[10px] text-slate-600 text-center">
           {language === 'cs' 
-            ? 'Klikni pro otevření v Apple Podcasts'
-            : 'Click to open in Apple Podcasts'}
+            ? 'Klikni pro otevření ve Spotify'
+            : 'Click to open in Spotify'}
         </p>
       </div>
     </CollapsibleSection>

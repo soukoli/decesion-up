@@ -36,7 +36,8 @@ function formatRelativeTime(dateStr: string, lang: 'en' | 'cs'): string {
 export function PodcastCard({ episode }: PodcastCardProps) {
   const { language } = useTranslation();
   
-  const primaryLink = episode.appleUrl || episode.webUrl || '#';
+  // Primary link is Spotify, fallback to YouTube, then web
+  const primaryLink = episode.spotifyUrl || episode.youtubeUrl || episode.webUrl || '#';
   const freshness = formatRelativeTime(episode.pubDate, language);
   
   // Determine freshness color
@@ -47,6 +48,10 @@ export function PodcastCard({ episode }: PodcastCardProps) {
     : hoursAgo < 24 
       ? 'text-amber-400' 
       : 'text-slate-500';
+
+  // Determine platform indicator
+  const platform = episode.spotifyUrl ? 'Spotify' : episode.youtubeUrl ? 'YouTube' : 'Web';
+  const platformColor = platform === 'Spotify' ? '#1DB954' : platform === 'YouTube' ? '#FF0000' : '#9ca3af';
 
   return (
     <a
@@ -95,7 +100,7 @@ export function PodcastCard({ episode }: PodcastCardProps) {
           {episode.title}
         </p>
         
-        {/* Duration + Apple Podcasts link indicator */}
+        {/* Duration + Platform indicator */}
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,12 +108,37 @@ export function PodcastCard({ episode }: PodcastCardProps) {
             </svg>
             {episode.duration}
           </span>
-          <span className="flex items-center gap-1 text-slate-600">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
-            </svg>
-            Apple Podcasts
+          <span className="flex items-center gap-1" style={{ color: platformColor }}>
+            {platform === 'Spotify' ? (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+            ) : platform === 'YouTube' ? (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            ) : (
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+            )}
+            {platform}
           </span>
+          {/* Show YouTube as secondary option if available */}
+          {episode.spotifyUrl && episode.youtubeUrl && (
+            <a 
+              href={episode.youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 hover:text-red-400 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              YT
+            </a>
+          )}
         </div>
       </div>
 

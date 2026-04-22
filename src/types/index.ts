@@ -6,7 +6,8 @@ export interface PodcastEpisode {
   duration: string;
   pubDate: string;
   imageUrl: string;
-  appleUrl: string;
+  spotifyUrl: string;
+  youtubeUrl?: string;
   webUrl?: string;
   category: string;
   categoryColor: string;
