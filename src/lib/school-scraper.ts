@@ -11,7 +11,7 @@ export const SCHOOL_CATEGORY_COLORS = {
   Družina: '#f97316',  // orange-500
 };
 
-// Parse Czech date format: "úterý, 21 duben 2026 13:45"
+// Parse Czech date format: "úterý, 21 duben 2026 13:45" or "20.01.2026"
 function parseCzechDate(dateStr: string): string {
   const months: Record<string, string> = {
     'leden': '01', 'únor': '02', 'březen': '03', 'duben': '04',
@@ -20,148 +20,31 @@ function parseCzechDate(dateStr: string): string {
   };
   
   try {
-    // Extract: "21 duben 2026 13:45"
-    const match = dateStr.match(/(\d{1,2})\s+(\w+)\s+(\d{4})\s+(\d{2}):(\d{2})/);
+    // Try format: "DD.MM.YYYY" 
+    const dotMatch = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (dotMatch) {
+      const [, day, month, year] = dotMatch;
+      return `${year}-${month}-${day}T00:00:00`;
+    }
+    
+    // Try format: "dayname, DD monthname YYYY HH:MM"
+    // Use [^\s,]+ instead of \w+ for Czech chars
+    const match = dateStr.match(/(\d{1,2})\s+([^\s,]+)\s+(\d{4})\s+(\d{2}):(\d{2})/);
     if (match) {
       const [, day, monthName, year, hour, minute] = match;
-      const month = months[monthName.toLowerCase()] || '01';
-      return `${year}-${month}-${day.padStart(2, '0')}T${hour}:${minute}:00`;
+      const month = months[monthName.toLowerCase()];
+      if (month) {
+        return `${year}-${month}-${day.padStart(2, '0')}T${hour}:${minute}:00`;
+      }
     }
-  } catch {
-    // fallback
+  } catch (e) {
+    console.error('Date parse error:', e);
   }
   return new Date().toISOString();
 }
 
-// Scrape articles from a page
-async function scrapeArticles(
-  url: string, 
-  category: 'Novinky' | 'Družina'
-): Promise<SchoolArticle[]> {
-  const articles: SchoolArticle[] = [];
-  
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; DecisionUp/1.0)',
-        'Accept': 'text/html',
-      },
-      next: { revalidate: 1800 }, // 30 min cache
-    });
-    
-    if (!response.ok) {
-      console.error(`Failed to fetch ${url}: ${response.status}`);
-      return articles;
-    }
-    
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    
-    // Different selectors for each page
-    if (category === 'Novinky') {
-      // /o-skole page structure
-      $('div.catItemView, div[class*="itemView"]').each((i, el) => {
-        const $el = $(el);
-        
-        // Get title and link
-        const $titleLink = $el.find('h3 a, .catItemTitle a, .itemTitle a').first();
-        const title = $titleLink.text().trim() || $el.find('h3').first().text().trim();
-        let articlePath = $titleLink.attr('href') || '';
-        
-        // Skip if no title
-        if (!title || title === 'Doporučený') return;
-        
-        // Get date
-        const dateText = $el.text();
-        const dateMatch = dateText.match(/\w+,\s*\d{1,2}\s+\w+\s+\d{4}\s+\d{2}:\d{2}/);
-        const pubDate = dateMatch ? parseCzechDate(dateMatch[0]) : new Date().toISOString();
-        
-        // Get image
-        let imageUrl: string | null = null;
-        const $img = $el.find('img').first();
-        if ($img.length) {
-          const src = $img.attr('src');
-          if (src && !src.includes('icon') && !src.includes('button')) {
-            imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
-          }
-        }
-        
-        // Get description
-        const description = $el.find('.catItemIntroText, .itemIntroText, p').first().text().trim().slice(0, 200);
-        
-        // Build full URL
-        const articleUrl = articlePath.startsWith('http') 
-          ? articlePath 
-          : `${BASE_URL}${articlePath}`;
-        
-        if (title && articlePath) {
-          articles.push({
-            id: `novinky-${i}-${Date.now()}`,
-            title: title.replace('Doporučený', '').trim(),
-            description,
-            pubDate,
-            imageUrl,
-            articleUrl,
-            category: 'Novinky',
-            categoryColor: SCHOOL_CATEGORY_COLORS.Novinky,
-          });
-        }
-      });
-    } else {
-      // /druzina page structure - different layout
-      $('div.catItemView, div[class*="itemContainer"], .itemList > div').each((i, el) => {
-        const $el = $(el);
-        
-        const $titleLink = $el.find('h3 a, .catItemTitle a, a[href*="/druzina/item/"]').first();
-        const title = $titleLink.text().trim();
-        let articlePath = $titleLink.attr('href') || '';
-        
-        if (!title) return;
-        
-        // Get date from text content
-        const dateText = $el.text();
-        const dateMatch = dateText.match(/\w+,\s*\d{1,2}\s+\w+\s+\d{4}\s+\d{2}:\d{2}/);
-        const pubDate = dateMatch ? parseCzechDate(dateMatch[0]) : new Date().toISOString();
-        
-        // Get image
-        let imageUrl: string | null = null;
-        const $img = $el.find('img').first();
-        if ($img.length) {
-          const src = $img.attr('src');
-          if (src && !src.includes('icon') && !src.includes('button')) {
-            imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
-          }
-        }
-        
-        const description = $el.find('.catItemIntroText, p').first().text().trim().slice(0, 200);
-        
-        const articleUrl = articlePath.startsWith('http') 
-          ? articlePath 
-          : `${BASE_URL}${articlePath}`;
-        
-        if (title && articlePath) {
-          articles.push({
-            id: `druzina-${i}-${Date.now()}`,
-            title,
-            description,
-            pubDate,
-            imageUrl,
-            articleUrl,
-            category: 'Družina',
-            categoryColor: SCHOOL_CATEGORY_COLORS.Družina,
-          });
-        }
-      });
-    }
-  } catch (error) {
-    console.error(`Error scraping ${url}:`, error);
-  }
-  
-  return articles;
-}
-
-// Alternative simpler scraper using link patterns
-async function scrapeArticlesSimple(
+// Scrape articles using K2 CMS structure
+async function scrapeArticlesK2(
   url: string, 
   category: 'Novinky' | 'Družina'
 ): Promise<SchoolArticle[]> {
@@ -179,52 +62,48 @@ async function scrapeArticlesSimple(
     const html = await response.text();
     const $ = cheerio.load(html);
     
-    // Find all article links
-    const itemPattern = category === 'Novinky' ? '/o-skole/item/' : '/druzina/item/';
-    const seenUrls = new Set<string>();
-    
-    $(`a[href*="${itemPattern}"]`).each((i, el) => {
-      const $link = $(el);
-      const href = $link.attr('href');
-      if (!href || seenUrls.has(href)) return;
+    // K2 uses catItemView for each article card
+    $('.catItemView').each((i, el) => {
+      const $el = $(el);
       
-      const title = $link.text().trim();
-      if (!title || title.length < 3 || title === 'detail článku') return;
+      // Get title and link from h3.catItemTitle a
+      const $titleLink = $el.find('.catItemTitle a, h3 a').first();
+      let title = $titleLink.text().trim();
+      const href = $titleLink.attr('href');
       
-      seenUrls.add(href);
+      // Skip featured flag text
+      title = title.replace(/Doporučený/g, '').trim();
       
-      // Try to find parent container for more info
-      const $container = $link.closest('div[class*="item"], div[class*="cat"]');
+      if (!title || !href || title.length < 3) return;
       
-      // Get date from container or nearby text
-      let pubDate = new Date().toISOString();
-      const containerText = $container.text() || '';
-      const dateMatch = containerText.match(/\w+,\s*\d{1,2}\s+\w+\s+\d{4}\s+\d{2}:\d{2}/);
-      if (dateMatch) {
-        pubDate = parseCzechDate(dateMatch[0]);
-      }
+      // Get date from .catItemDateCreated - format: "čtvrtek, 09 duben 2026 22:00"
+      const dateText = $el.find('.catItemDateCreated').text().trim();
+      const pubDate = parseCzechDate(dateText);
       
-      // Get image
+      // Get image from .catItemImageBlock img
       let imageUrl: string | null = null;
-      const $img = $container.find('img').first();
+      const $img = $el.find('.catItemImageBlock img, .catItemImage img').first();
       if ($img.length) {
-        const src = $img.attr('src');
-        if (src && src.includes('/media/') && !src.includes('icon')) {
+        let src = $img.attr('src');
+        if (src) {
+          // Replace _S.jpg with _M.jpg for medium size
+          src = src.replace(/_S\.jpg$/, '_M.jpg');
           imageUrl = src.startsWith('http') ? src : `${BASE_URL}${src}`;
         }
       }
       
-      // Get description
+      // Get description from .catItemIntroText
       let description = '';
-      const $intro = $container.find('.catItemIntroText, .itemIntroText, p').first();
+      const $intro = $el.find('.catItemIntroText');
       if ($intro.length) {
         description = $intro.text().trim().slice(0, 200);
       }
       
       const articleUrl = href.startsWith('http') ? href : `${BASE_URL}${href}`;
+      const slug = href.split('/').pop() || `item-${i}`;
       
       articles.push({
-        id: `${category.toLowerCase()}-${i}-${href.split('/').pop()}`,
+        id: `${category.toLowerCase()}-${i}-${slug}`,
         title,
         description,
         pubDate,
@@ -238,7 +117,7 @@ async function scrapeArticlesSimple(
     console.error(`Error scraping ${url}:`, error);
   }
   
-  // Limit and dedupe
+  // Limit to 15 articles
   return articles.slice(0, 15);
 }
 
@@ -246,8 +125,8 @@ async function scrapeArticlesSimple(
 export async function fetchSchoolArticles(): Promise<SchoolArticle[]> {
   try {
     const [novinky, druzina] = await Promise.all([
-      scrapeArticlesSimple(NOVINKY_URL, 'Novinky'),
-      scrapeArticlesSimple(DRUZINA_URL, 'Družina'),
+      scrapeArticlesK2(NOVINKY_URL, 'Novinky'),
+      scrapeArticlesK2(DRUZINA_URL, 'Družina'),
     ]);
     
     // Combine and sort by date (newest first)
