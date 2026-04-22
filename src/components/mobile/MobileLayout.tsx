@@ -15,6 +15,7 @@ import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AI
 
 // Section components (will be simplified versions for mobile)
 import { MobilePodcastsPage } from './pages/MobilePodcastsPage';
+import { MobileSchoolPage } from './pages/MobileSchoolPage';
 import { MobileMarketsPage } from './pages/MobileMarketsPage';
 import { MobileTrendsPage } from './pages/MobileTrendsPage';
 import { MobileResearchPage } from './pages/MobileResearchPage';
@@ -40,10 +41,11 @@ interface MobileLayoutProps {
   lastRefresh: Date | null;
 }
 
-export type SectionId = 'podcasts' | 'markets' | 'trends' | 'research' | 'news';
+export type SectionId = 'podcasts' | 'school' | 'markets' | 'trends' | 'research' | 'news';
 
 const sections: { id: SectionId; label: string; labelCz: string; icon: string }[] = [
   { id: 'podcasts', label: 'Podcasts', labelCz: 'Podcasty', icon: 'mic' },
+  { id: 'school', label: 'Horáčkova', labelCz: 'Horáčkova', icon: 'school' },
   { id: 'markets', label: 'Markets', labelCz: 'Trhy', icon: 'chart' },
   { id: 'trends', label: 'Trends', labelCz: 'Trendy', icon: 'fire' },
   { id: 'research', label: 'Research', labelCz: 'Výzkum', icon: 'brain' },
@@ -95,6 +97,10 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
         >
           <SwiperSlide>
             <MobilePodcastsPage podcasts={data.podcasts} />
+          </SwiperSlide>
+          
+          <SwiperSlide>
+            <MobileSchoolPage />
           </SwiperSlide>
           
           <SwiperSlide>

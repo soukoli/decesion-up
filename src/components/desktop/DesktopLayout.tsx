@@ -9,6 +9,7 @@ import { GlobeModal } from '@/components/mobile/GlobeModal';
 
 // Import existing section components
 import { PodcastSection } from '@/components/podcasts/PodcastSection';
+import { SchoolSection } from '@/components/school';
 import { TrendsSection } from '@/components/trends/TrendsSection';
 import { NewsSection } from '@/components/news/NewsSection';
 import { ResearchSection } from '@/components/research/ResearchSection';
@@ -22,7 +23,7 @@ interface DesktopLayoutProps {
   lastRefresh: Date | null;
 }
 
-type DesktopSection = 'podcasts' | 'markets' | 'trends' | 'research' | 'news';
+type DesktopSection = 'podcasts' | 'school' | 'markets' | 'trends' | 'research' | 'news';
 
 const sections: { id: DesktopSection; label: string; labelCz: string; icon: React.ReactNode }[] = [
   { 
@@ -32,6 +33,16 @@ const sections: { id: DesktopSection; label: string; labelCz: string; icon: Reac
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+      </svg>
+    )
+  },
+  { 
+    id: 'school', 
+    label: 'Horáčkova', 
+    labelCz: 'Horáčkova',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
       </svg>
     )
   },
@@ -101,6 +112,8 @@ export function DesktopLayout({ data, onRefresh, refreshing, lastRefresh }: Desk
     switch (activeSection) {
       case 'podcasts':
         return <PodcastSection initialEpisodes={data.podcasts} />;
+      case 'school':
+        return <SchoolSection />;
       case 'markets':
         return <MarketsSection initialMarkets={data.markets} />;
       case 'trends':

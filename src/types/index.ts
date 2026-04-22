@@ -13,6 +13,17 @@ export interface PodcastEpisode {
   categoryColor: string;
 }
 
+export interface SchoolArticle {
+  id: string;
+  title: string;
+  description: string;
+  pubDate: string;
+  imageUrl: string | null;
+  articleUrl: string;
+  category: 'Novinky' | 'Družina';
+  categoryColor: string;
+}
+
 export interface EconomicSignal {
   id: string;
   title: string;
