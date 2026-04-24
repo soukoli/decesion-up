@@ -1,0 +1,1 @@
+export { EconomySection } from './EconomySection';

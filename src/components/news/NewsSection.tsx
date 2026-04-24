@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { WorldNews } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 interface NewsSectionProps {
   news: WorldNews[];
@@ -135,23 +134,20 @@ export function NewsSection({ news }: NewsSectionProps) {
     return null;
   }
 
-  const rightContent = isTranslating ? (
-    <span className="text-xs text-slate-500 flex items-center gap-1">
-      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-      </svg>
-    </span>
-  ) : null;
-
   return (
-    <CollapsibleSection
-      title={language === 'cs' ? 'Světové zprávy' : 'World News'}
-      subtitle="Reuters, BBC, Guardian"
-      badge={news.length}
-      rightContent={rightContent}
-      defaultExpanded={true}
-    >
+    <section className="space-y-4">
+      {/* Header with translation indicator */}
+      {isTranslating && (
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          {language === 'cs' ? 'Překládám...' : 'Translating...'}
+        </div>
+      )}
+
+      {/* News grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {displayedNews.map((item) => (
           <a
@@ -188,7 +184,7 @@ export function NewsSection({ news }: NewsSectionProps) {
       {news.length > 6 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-3 w-full py-2 text-xs text-slate-400 hover:text-white border border-slate-700/50 hover:border-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2 text-xs text-slate-400 hover:text-white border border-slate-700/50 hover:border-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
           {expanded ? (
             <>
@@ -207,6 +203,6 @@ export function NewsSection({ news }: NewsSectionProps) {
           )}
         </button>
       )}
-    </CollapsibleSection>
+    </section>
   );
 }

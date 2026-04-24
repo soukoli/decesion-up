@@ -7,13 +7,12 @@ import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
 import { GlobeModal } from '@/components/mobile/GlobeModal';
 
-// Import existing section components
+// Import section components
 import { PodcastSection } from '@/components/podcasts/PodcastSection';
 import { SchoolSection } from '@/components/school';
-import { TrendsSection } from '@/components/trends/TrendsSection';
+import { EconomySection } from '@/components/economy';
+import { AITechSection } from '@/components/ai-tech';
 import { NewsSection } from '@/components/news/NewsSection';
-import { ResearchSection } from '@/components/research/ResearchSection';
-import { MarketsSection } from '@/components/markets';
 
 
 interface DesktopLayoutProps {
@@ -23,7 +22,7 @@ interface DesktopLayoutProps {
   lastRefresh: Date | null;
 }
 
-type DesktopSection = 'podcasts' | 'school' | 'markets' | 'trends' | 'research' | 'news';
+type DesktopSection = 'podcasts' | 'school' | 'economy' | 'aitech' | 'news';
 
 const sections: { id: DesktopSection; label: string; labelCz: string; icon: React.ReactNode }[] = [
   { 
@@ -47,9 +46,9 @@ const sections: { id: DesktopSection; label: string; labelCz: string; icon: Reac
     )
   },
   { 
-    id: 'markets', 
-    label: 'Markets', 
-    labelCz: 'Trhy',
+    id: 'economy', 
+    label: 'Economy', 
+    labelCz: 'Ekonomika',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -57,22 +56,12 @@ const sections: { id: DesktopSection; label: string; labelCz: string; icon: Reac
     )
   },
   { 
-    id: 'trends', 
-    label: 'Trends', 
-    labelCz: 'Trendy',
+    id: 'aitech', 
+    label: 'AI & Tech', 
+    labelCz: 'AI & Tech',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
-      </svg>
-    )
-  },
-  { 
-    id: 'research', 
-    label: 'Research', 
-    labelCz: 'Výzkum',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A23.928 23.928 0 0112 21a23.93 23.93 0 01-7.935-1.287c-1.717-.293-2.3-2.379-1.067-3.61L5 14.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611l-.992.163a23.928 23.928 0 01-7.786 0l-.992-.163c-1.717-.293-2.3-2.379-1.067-3.61L10.8 15.3" />
       </svg>
     )
   },
@@ -114,12 +103,10 @@ export function DesktopLayout({ data, onRefresh, refreshing, lastRefresh }: Desk
         return <PodcastSection initialEpisodes={data.podcasts} />;
       case 'school':
         return <SchoolSection />;
-      case 'markets':
-        return <MarketsSection initialMarkets={data.markets} />;
-      case 'trends':
-        return <TrendsSection trends={data.trends} />;
-      case 'research':
-        return <ResearchSection research={data.research} />;
+      case 'economy':
+        return <EconomySection initialMarkets={data.markets} initialStocks={data.stocks} />;
+      case 'aitech':
+        return <AITechSection trends={data.trends} research={data.research} />;
       case 'news':
         return <NewsSection news={data.news} />;
       default:

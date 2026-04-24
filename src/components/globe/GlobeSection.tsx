@@ -4,7 +4,6 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { GlobalHotspot } from '@/types';
 import { useTranslation } from '@/lib/translation';
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 
 // Dynamic import to avoid SSR issues
 const Globe = dynamic(() => import('react-globe.gl'), {
@@ -149,14 +148,11 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
 
   if (hotspots.length === 0) {
     return (
-      <CollapsibleSection
-        title={language === 'cs' ? 'Globální události' : 'Global Hotspots'}
-        subtitle={language === 'cs' ? 'Načítám...' : 'Loading...'}
-      >
+      <section className="space-y-4">
         <div className="w-full h-[300px] flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700">
           <p className="text-slate-400">{language === 'cs' ? 'Načítám globální události...' : 'Loading global events...'}</p>
         </div>
-      </CollapsibleSection>
+      </section>
     );
   }
 
@@ -176,12 +172,13 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
   );
 
   return (
-    <CollapsibleSection
-      title={language === 'cs' ? 'Globální události' : 'Global Hotspots'}
-      subtitle={`${hotspots.length} events`}
-      badge={hotspots.length}
-      rightContent={legendContent}
-    >
+    <section className="space-y-4">
+      {/* Legend */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-500">{hotspots.length} {language === 'cs' ? 'událostí' : 'events'}</span>
+        {legendContent}
+      </div>
+
       <div className="relative">
         {/* Globe Container */}
         <div 
@@ -293,7 +290,7 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
       </div>
 
       {/* Hotspots List */}
-      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {hotspots.slice(0, 8).map((hotspot) => (
           <button
             key={hotspot.id}
@@ -315,6 +312,6 @@ export function GlobeSection({ hotspots }: GlobeSectionProps) {
           </button>
         ))}
       </div>
-    </CollapsibleSection>
+    </section>
   );
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { SchoolArticle } from '@/types';
 import { SchoolCard } from './SchoolCard';
 import { useTranslation } from '@/lib/translation';
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { SCHOOL_CATEGORY_COLORS, getSchoolCategories } from '@/lib/school-scraper';
 
 interface SchoolSectionProps {
@@ -70,30 +69,20 @@ export function SchoolSection({ initialArticles = [] }: SchoolSectionProps) {
 
   if (articles.length === 0) {
     return (
-      <CollapsibleSection
-        title="Horáčkova"
-        subtitle={language === 'cs' ? 'Aktuality ze školy' : 'School news'}
-        badge={0}
-        defaultExpanded={true}
-      >
+      <section className="space-y-4">
         <div className="text-center py-6 text-slate-500 bg-slate-800/30 rounded-lg border border-slate-700/50">
           <p className="text-sm">
             {language === 'cs' ? 'Nepodařilo se načíst aktuality' : 'Failed to load news'}
           </p>
         </div>
-      </CollapsibleSection>
+      </section>
     );
   }
 
   return (
-    <CollapsibleSection
-      title="Horáčkova"
-      subtitle={`${filteredArticles.length} ${language === 'cs' ? 'článků' : 'articles'}`}
-      badge={filteredArticles.length}
-      defaultExpanded={true}
-    >
+    <section className="space-y-4">
       {/* Category filter tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-800">
         {getSchoolCategories().map((category) => {
           const isActive = activeCategory === category;
           const color = categoryColors[category];
@@ -140,13 +129,13 @@ export function SchoolSection({ initialArticles = [] }: SchoolSectionProps) {
       )}
 
       {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-slate-800">
+      <div className="pt-3 border-t border-slate-800">
         <p className="text-[10px] text-slate-600 text-center">
           {language === 'cs' 
             ? 'Klikni pro otevření na webu školy'
             : 'Click to open on school website'}
         </p>
       </div>
-    </CollapsibleSection>
+    </section>
   );
 }

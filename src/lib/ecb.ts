@@ -73,7 +73,10 @@ async function fetchECBRate(
     });
 
     if (!response.ok) {
-      console.error(`ECB API error for ${seriesKey}:`, response.status);
+      // Silently fail for 400 errors - some series keys may not be available
+      if (response.status !== 400) {
+        console.error(`ECB API error for ${seriesKey}:`, response.status);
+      }
       return null;
     }
 

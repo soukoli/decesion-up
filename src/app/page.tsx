@@ -1,19 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { SplashScreen, useSplashScreen } from '@/components/SplashScreen';
 import { MobileLayout, AppData } from '@/components/mobile';
 import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
-import { SearchTrend } from '@/components/trending/TrendingSection';
+import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
 
 export default function Home() {
   const [data, setData] = useState<AppData>({
     podcasts: [],
-    economic: [],
     markets: [],
     trends: [],
     news: [],
@@ -26,7 +23,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  const { showSplash, handleSplashComplete } = useSplashScreen(false); // Show splash every time for now
+  const { showSplash, handleSplashComplete } = useSplashScreen(false);
   const { language } = useTranslation();
   const { acledTokens, isAcledTokenValid } = useSettings();
 
@@ -56,9 +53,8 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, economicRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes] = await Promise.all([
+      const [podcastsRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
-        fetch(`/api/economic${cacheBuster}`, fetchOptions),
         fetch(`/api/markets${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
@@ -69,7 +65,6 @@ export default function Home() {
 
       const newData: AppData = {
         podcasts: [],
-        economic: [],
         markets: [],
         trends: [],
         news: [],
@@ -81,11 +76,6 @@ export default function Home() {
       if (podcastsRes.ok) {
         const d = await podcastsRes.json();
         newData.podcasts = d.podcasts || [];
-      }
-
-      if (economicRes.ok) {
-        const d = await economicRes.json();
-        newData.economic = d.economic || [];
       }
 
       if (marketsRes.ok) {

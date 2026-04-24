@@ -82,7 +82,11 @@ export async function fetchPodcastEpisode(config: PodcastConfig): Promise<Podcas
       categoryColor: config.categoryColor,
     };
   } catch (error) {
-    console.error(`Error fetching podcast ${config.name}:`, error);
+    // Only log errors that aren't expected failures (like 404s for some podcasts)
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (!errorMessage.includes('404') && !errorMessage.includes('timed out')) {
+      console.error(`Error fetching podcast ${config.name}:`, error);
+    }
     return createFallbackEpisode(config);
   }
 }
@@ -114,9 +118,8 @@ export async function fetchAllPodcasts(): Promise<PodcastEpisode[]> {
   results.forEach((result, index) => {
     if (result.status === 'fulfilled' && result.value) {
       episodes.push(result.value);
-    } else {
-      console.warn(`Failed to fetch podcast: ${PODCASTS[index].name}`);
     }
+    // Silently handle failures - fallback episodes are used
   });
   
   // Sort by pubDate (newest first)

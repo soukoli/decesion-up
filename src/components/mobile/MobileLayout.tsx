@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, EffectCreative } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
@@ -11,21 +11,19 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-creative';
 
 import { useTranslation } from '@/lib/translation';
-import { PodcastEpisode, EconomicSignal, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
+import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
 
-// Section components (will be simplified versions for mobile)
+// Section components
 import { MobilePodcastsPage } from './pages/MobilePodcastsPage';
 import { MobileSchoolPage } from './pages/MobileSchoolPage';
-import { MobileMarketsPage } from './pages/MobileMarketsPage';
-import { MobileTrendsPage } from './pages/MobileTrendsPage';
-import { MobileResearchPage } from './pages/MobileResearchPage';
+import { MobileEconomyPage } from './pages/MobileEconomyPage';
+import { MobileAITechPage } from './pages/MobileAITechPage';
 import { MobileNewsPage } from './pages/MobileNewsPage';
 import { MobileNavigation } from './MobileNavigation';
 import { GlobeModal } from './GlobeModal';
 
 export interface AppData {
   podcasts: PodcastEpisode[];
-  economic: EconomicSignal[];
   markets: MarketSignal[];
   trends: TechTrend[];
   news: WorldNews[];
@@ -41,14 +39,13 @@ interface MobileLayoutProps {
   lastRefresh: Date | null;
 }
 
-export type SectionId = 'podcasts' | 'school' | 'markets' | 'trends' | 'research' | 'news';
+export type SectionId = 'podcasts' | 'school' | 'economy' | 'aitech' | 'news';
 
 const sections: { id: SectionId; label: string; labelCz: string; icon: string }[] = [
   { id: 'podcasts', label: 'Podcasts', labelCz: 'Podcasty', icon: 'mic' },
   { id: 'school', label: 'Horáčkova', labelCz: 'Horáčkova', icon: 'school' },
-  { id: 'markets', label: 'Markets', labelCz: 'Trhy', icon: 'chart' },
-  { id: 'trends', label: 'Trends', labelCz: 'Trendy', icon: 'fire' },
-  { id: 'research', label: 'Research', labelCz: 'Výzkum', icon: 'brain' },
+  { id: 'economy', label: 'Economy', labelCz: 'Ekonomika', icon: 'chart' },
+  { id: 'aitech', label: 'AI & Tech', labelCz: 'AI & Tech', icon: 'brain' },
   { id: 'news', label: 'News', labelCz: 'Zprávy', icon: 'news' },
 ];
 
@@ -104,15 +101,11 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileMarketsPage markets={data.markets} />
+            <MobileEconomyPage markets={data.markets} stocks={data.stocks} />
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileTrendsPage trends={data.trends} />
-          </SwiperSlide>
-          
-          <SwiperSlide>
-            <MobileResearchPage research={data.research} />
+            <MobileAITechPage trends={data.trends} research={data.research} />
           </SwiperSlide>
           
           <SwiperSlide>

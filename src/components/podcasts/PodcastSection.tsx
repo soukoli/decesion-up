@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { PodcastEpisode } from '@/types';
 import { PodcastCard } from './PodcastCard';
 import { useTranslation } from '@/lib/translation';
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { CATEGORY_COLORS, getCategories } from '@/lib/podcasts-config';
 
 interface PodcastSectionProps {
@@ -68,14 +67,9 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
   }
 
   return (
-    <CollapsibleSection
-      title={language === 'cs' ? 'Podcasty' : 'Podcasts'}
-      subtitle={`${filteredEpisodes.length} ${language === 'cs' ? 'epizod' : 'episodes'}`}
-      badge={filteredEpisodes.length}
-      defaultExpanded={true}
-    >
+    <section className="space-y-4">
       {/* Category filter tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-800">
         {getCategories().map((category) => {
           const isActive = activeCategory === category;
           const color = category === 'All' ? '#9ca3af' : CATEGORY_COLORS[category];
@@ -122,13 +116,13 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
       )}
 
       {/* Footer with last updated info */}
-      <div className="mt-4 pt-3 border-t border-slate-800">
+      <div className="pt-3 border-t border-slate-800">
         <p className="text-[10px] text-slate-600 text-center">
           {language === 'cs' 
             ? 'Klikni pro otevření ve Spotify'
             : 'Click to open in Spotify'}
         </p>
       </div>
-    </CollapsibleSection>
+    </section>
   );
 }

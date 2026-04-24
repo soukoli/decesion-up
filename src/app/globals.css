@@ -73,6 +73,10 @@ html {
   padding-bottom: var(--safe-area-inset-bottom);
 }
 
+.safe-area-bottom {
+  padding-bottom: max(var(--safe-area-inset-bottom), 8px);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
