@@ -1,5 +1,67 @@
 import { EconomicSignal } from '@/types';
 
+// Currency sparkline data structure
+export interface CurrencySparklineData {
+  id: string;
+  sparkline: number[];
+}
+
+// Frankfurter API v2 - fetch historical rates for sparkline charts
+export async function fetchCurrencySparklines(days: number = 7): Promise<CurrencySparklineData[]> {
+  try {
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    const fromStr = from.toISOString().split('T')[0];
+    
+    // Frankfurter API v2 returns array of rates
+    const url = `https://api.frankfurter.dev/v2/rates?base=EUR&quotes=CZK,USD,GBP&from=${fromStr}`;
+    
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
+
+    if (!res.ok) {
+      console.error('Frankfurter API v2 error:', res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    
+    // Data is array: [{date, base, quote, rate}, ...]
+    // Group by quote currency and extract rates
+    const grouped: Record<string, { date: string; rate: number }[]> = {
+      CZK: [],
+      USD: [],
+      GBP: [],
+    };
+    
+    for (const item of data) {
+      if (grouped[item.quote]) {
+        grouped[item.quote].push({ date: item.date, rate: item.rate });
+      }
+    }
+    
+    // Sort by date and extract just the rates for sparkline
+    const result: CurrencySparklineData[] = [];
+    
+    for (const [quote, rates] of Object.entries(grouped)) {
+      const sorted = rates.sort((a, b) => a.date.localeCompare(b.date));
+      result.push({
+        id: `eur-${quote.toLowerCase()}`,
+        sparkline: sorted.map(r => r.rate),
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error fetching currency sparklines:', error);
+    return [];
+  }
+}
+
+// Frankfurter API (ECB rates) - completely free, no auth
+
 // Frankfurter API (ECB rates) - completely free, no auth
 export async function fetchExchangeRates(): Promise<EconomicSignal[]> {
   try {

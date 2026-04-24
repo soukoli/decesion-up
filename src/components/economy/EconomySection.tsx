@@ -9,75 +9,120 @@ interface EconomySectionProps {
   initialStocks?: StockIndex[];
 }
 
-// Mini sparkline component
-function MiniSparkline({ data, trend }: { data: number[]; trend: 'up' | 'down' | 'stable' }) {
+// Sparkline component - responsive width
+function Sparkline({ 
+  data, 
+  trend, 
+  height = 32,
+  className = ''
+}: { 
+  data: number[]; 
+  trend: 'up' | 'down' | 'stable';
+  height?: number;
+  className?: string;
+}) {
   if (!data || data.length < 2) return null;
   
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const height = 24;
-  const width = 60;
+  const padding = 2;
   
+  // Create SVG path for the line
   const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((val - min) / range) * height;
+    const x = padding + (i / (data.length - 1)) * (100 - padding * 2);
+    const y = padding + (1 - (val - min) / range) * (height - padding * 2);
     return `${x},${y}`;
   }).join(' ');
   
+  // Create area path for gradient fill
+  const areaPath = `M ${padding},${height - padding} ` + 
+    data.map((val, i) => {
+      const x = padding + (i / (data.length - 1)) * (100 - padding * 2);
+      const y = padding + (1 - (val - min) / range) * (height - padding * 2);
+      return `L ${x},${y}`;
+    }).join(' ') + 
+    ` L ${100 - padding},${height - padding} Z`;
+  
   const color = trend === 'up' ? '#22c55e' : trend === 'down' ? '#ef4444' : '#94a3b8';
+  const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
   
   return (
-    <svg width={width} height={height} className="flex-shrink-0">
+    <svg 
+      viewBox={`0 0 100 ${height}`} 
+      preserveAspectRatio="none"
+      className={`w-full ${className}`}
+      style={{ height }}
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d={areaPath}
+        fill={`url(#${gradientId})`}
+      />
       <polyline
         points={points}
         fill="none"
         stroke={color}
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
 }
 
-// Currency card component
+// Currency card component - compact, side-by-side design
 function CurrencyCard({ signal, language }: { signal: MarketSignal; language: 'en' | 'cs' }) {
   const trendColor = signal.trend === 'up' ? 'text-green-400' : signal.trend === 'down' ? 'text-red-400' : 'text-slate-400';
+  const trendBg = signal.trend === 'up' ? 'bg-green-500/10' : signal.trend === 'down' ? 'bg-red-500/10' : 'bg-slate-500/10';
   const trendIcon = signal.trend === 'up' ? '↑' : signal.trend === 'down' ? '↓' : '→';
+  
+  // Format change for display
+  const changeDisplay = signal.changePercent !== null 
+    ? `${signal.changePercent > 0 ? '+' : ''}${signal.changePercent.toFixed(2)}%`
+    : '—';
   
   return (
     <a
       href={signal.sourceUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center justify-between p-3 bg-slate-800/40 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-all group"
+      className={`block p-3 ${trendBg} rounded-xl border border-slate-700/50 hover:border-slate-500 transition-all group`}
     >
-      <div className="flex items-center gap-3">
-        <span className="text-lg">💱</span>
-        <div>
-          <p className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors">
-            {signal.name}
-          </p>
-          <p className="text-xs text-slate-500">{signal.symbol}</p>
-        </div>
+      {/* Header: currency pair + change */}
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
+          {signal.name}
+        </span>
+        <span className={`text-xs font-semibold ${trendColor}`}>
+          {trendIcon} {changeDisplay}
+        </span>
       </div>
-      <div className="flex items-center gap-3">
-        {signal.sparkline && <MiniSparkline data={signal.sparkline} trend={signal.trend} />}
-        <div className="text-right">
-          <p className="text-sm font-bold text-white">{signal.valueFormatted}</p>
-          {signal.changePercent !== null && (
-            <p className={`text-xs font-medium ${trendColor}`}>
-              {trendIcon} {signal.changePercent > 0 ? '+' : ''}{signal.changePercent?.toFixed(2)}%
-            </p>
-          )}
-        </div>
-      </div>
+      
+      {/* Main value - large */}
+      <p className="text-xl font-bold text-white mb-2 group-hover:text-amber-400 transition-colors">
+        {signal.valueFormatted}
+      </p>
+      
+      {/* Sparkline - full width */}
+      {signal.sparkline && signal.sparkline.length > 0 && (
+        <Sparkline 
+          data={signal.sparkline} 
+          trend={signal.trend} 
+          height={28}
+        />
+      )}
     </a>
   );
 }
 
-// Stock index card - larger with graph
+// Stock index card - larger with more details
 function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'cs' }) {
   const isUp = stock.change >= 0;
   const trendColor = isUp ? 'text-green-400' : 'text-red-400';
@@ -91,7 +136,7 @@ function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'c
       href={`https://finance.yahoo.com/quote/${stock.symbol}`}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block p-4 bg-gradient-to-br ${bgGradient} to-transparent rounded-xl border border-slate-700/50 hover:border-slate-600 transition-all group`}
+      className={`block p-4 bg-gradient-to-br ${bgGradient} to-transparent rounded-xl border border-slate-700/50 hover:border-slate-500 transition-all group`}
     >
       <div className="flex items-start justify-between mb-3">
         <div>
@@ -116,8 +161,8 @@ function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'c
         
         {/* Mini chart */}
         {sparklineData.length > 0 && (
-          <div className="opacity-60 group-hover:opacity-100 transition-opacity">
-            <MiniSparkline data={sparklineData} trend={isUp ? 'up' : 'down'} />
+          <div className="w-16 opacity-60 group-hover:opacity-100 transition-opacity">
+            <Sparkline data={sparklineData} trend={isUp ? 'up' : 'down'} height={24} />
           </div>
         )}
       </div>
@@ -125,8 +170,8 @@ function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'c
       {/* Day range */}
       <div className="mt-3 pt-2 border-t border-slate-700/50">
         <div className="flex justify-between text-xs text-slate-500">
-          <span>{language === 'cs' ? 'Denní min' : 'Day Low'}: {stock.dayLow?.toFixed(2)}</span>
-          <span>{language === 'cs' ? 'Denní max' : 'Day High'}: {stock.dayHigh?.toFixed(2)}</span>
+          <span>{language === 'cs' ? 'Min' : 'Low'}: {stock.dayLow?.toFixed(2)}</span>
+          <span>{language === 'cs' ? 'Max' : 'High'}: {stock.dayHigh?.toFixed(2)}</span>
         </div>
       </div>
     </a>
@@ -169,7 +214,7 @@ export function EconomySection({ initialMarkets = [], initialStocks = [] }: Econ
     }
   };
 
-  // Filter only currencies we want: EUR/CZK, USD/CZK, GBP/CZK
+  // Filter only currencies we want: EUR/CZK, EUR/USD, EUR/GBP
   const currencies = markets.filter(m => 
     m.category === 'currency' && 
     (m.id.toLowerCase().includes('eur') || m.id.toLowerCase().includes('usd') || m.id.toLowerCase().includes('gbp'))
@@ -191,12 +236,12 @@ export function EconomySection({ initialMarkets = [], initialStocks = [] }: Econ
 
   return (
     <section className="space-y-6">
-      {/* Currency section - compact */}
+      {/* Currency section - 3 cards side by side */}
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
           {language === 'cs' ? 'Kurzy měn' : 'Exchange Rates'}
         </h3>
-        <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-2">
           {currencies.map((currency) => (
             <CurrencyCard key={currency.id} signal={currency} language={language} />
           ))}
@@ -219,8 +264,8 @@ export function EconomySection({ initialMarkets = [], initialStocks = [] }: Econ
       <div className="pt-3 border-t border-slate-800">
         <p className="text-[10px] text-slate-600 text-center">
           {language === 'cs' 
-            ? 'Data: ECB, Yahoo Finance. Klikněte pro detaily.'
-            : 'Data: ECB, Yahoo Finance. Click for details.'}
+            ? 'Data: ECB, Yahoo Finance • 7denní trend'
+            : 'Data: ECB, Yahoo Finance • 7-day trend'}
         </p>
       </div>
     </section>

@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { MarketSignal } from '@/types';
-import { fetchExchangeRates } from '@/lib/economic';
+import { fetchExchangeRates, fetchCurrencySparklines } from '@/lib/economic';
 import { fetchStockData, Period } from '@/lib/stocks';
 import { fetchAllMacroIndicators } from '@/lib/worldbank';
 import { fetchECBRates, getFallbackECBRates } from '@/lib/ecb';
@@ -20,9 +20,13 @@ export async function GET(request: NextRequest) {
     const period: Period = ['1d', '5d', '1mo'].includes(periodParam) ? periodParam as Period : '5d';
 
     // Fetch all data in parallel
-    const [exchangeRates, stocks, macroIndicators, ecbRates, cryptoPrices] = await Promise.all([
+    const [exchangeRates, currencySparklines, stocks, macroIndicators, ecbRates, cryptoPrices] = await Promise.all([
       fetchExchangeRates().catch(err => {
         console.error('Exchange rates fetch failed:', err);
+        return [];
+      }),
+      fetchCurrencySparklines(7).catch(err => {
+        console.error('Currency sparklines fetch failed:', err);
         return [];
       }),
       fetchStockData(period).catch(err => {
@@ -43,6 +47,9 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Create a map for currency sparklines
+    const sparklineMap = new Map(currencySparklines.map(s => [s.id, s.sparkline]));
+
     // Get EUR/CZK rate for conversions
     const eurCzkSignal = exchangeRates.find(r => r.id === 'eur-czk');
     if (eurCzkSignal) {
@@ -55,6 +62,8 @@ export async function GET(request: NextRequest) {
     // 1. Currency Exchange Rates
     for (const rate of exchangeRates) {
       const changeNum = parseFloat(rate.change.replace('%', '').replace('+', ''));
+      const sparkline = sparklineMap.get(rate.id) || [];
+      
       markets.push({
         id: rate.id,
         name: rate.title,
@@ -64,6 +73,7 @@ export async function GET(request: NextRequest) {
         change: changeNum,
         changePercent: changeNum,
         trend: rate.trend,
+        sparkline, // Add sparkline data
         explanation: rate.detail,
         source: 'ECB',
         sourceUrl: 'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html',
