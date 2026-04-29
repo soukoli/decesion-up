@@ -28,6 +28,7 @@ export interface AppData {
   markets: MarketSignal[];
   trends: TechTrend[];
   news: WorldNews[];
+  czechNews: WorldNews[]; // New: Czech/local news
   hotspots: GlobalHotspot[];
   research: AIResearch[];
   stocks: StockIndex[];
@@ -120,7 +121,7 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
           
           <SwiperSlide>
             <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileNewsPage news={data.news} />
+              <MobileNewsPage news={data.news} czechNews={data.czechNews} />
             </PullToRefresh>
           </SwiperSlide>
         </Swiper>

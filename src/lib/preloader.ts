@@ -63,11 +63,12 @@ export function usePreloader(options: PreloaderOptions = {}) {
       preloadMonitor.startTimer('api-calls');
       
       // Paralelní načítání všech API endpointů
-      const [podcastsRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
+      const [podcastsRes, marketsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
         fetch(`/api/podcasts`, fetchOptions),
         fetch(`/api/markets`, fetchOptions),
         fetch(`/api/trends`, fetchOptions),
         fetch(`/api/news`, fetchOptions),
+        fetch(`/api/news/czech`, fetchOptions),
         fetch(`/api/hotspots`, hotspotsOptions),
         fetch(`/api/research`, fetchOptions),
         fetch(`/api/stocks?period=5d`, fetchOptions),
@@ -82,6 +83,7 @@ export function usePreloader(options: PreloaderOptions = {}) {
         markets: [],
         trends: [],
         news: [],
+        czechNews: [],
         hotspots: [],
         research: [],
         stocks: [],
@@ -107,6 +109,11 @@ export function usePreloader(options: PreloaderOptions = {}) {
       if (newsRes.ok) {
         const d = await newsRes.json();
         newData.news = d.news || [];
+      }
+
+      if (czechNewsRes.ok) {
+        const d = await czechNewsRes.json();
+        newData.czechNews = d.news || [];
       }
 
       if (hotspotsRes.ok) {

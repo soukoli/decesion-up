@@ -17,6 +17,7 @@ export default function Home() {
     markets: [],
     trends: [],
     news: [],
+    czechNews: [],
     hotspots: [],
     research: [],
     stocks: [],
@@ -73,11 +74,12 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
+      const [podcastsRes, marketsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/markets${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
+        fetch(`/api/news/czech${cacheBuster}`, fetchOptions),
         fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
@@ -89,6 +91,7 @@ export default function Home() {
         markets: [],
         trends: [],
         news: [],
+        czechNews: [],
         hotspots: [],
         research: [],
         stocks: [],
@@ -113,6 +116,11 @@ export default function Home() {
       if (newsRes.ok) {
         const d = await newsRes.json();
         newData.news = d.news || [];
+      }
+
+      if (czechNewsRes.ok) {
+        const d = await czechNewsRes.json();
+        newData.czechNews = d.news || [];
       }
 
       if (hotspotsRes.ok) {

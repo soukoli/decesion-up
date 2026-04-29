@@ -75,9 +75,14 @@ export interface WorldNews {
   description: string;
   url: string;
   source: string;
-  category: 'world' | 'europe' | 'business' | 'science' | 'geopolitics';
+  category: 'world' | 'europe' | 'business' | 'science' | 'geopolitics' | 'domaci' | 'politika' | 'ekonomika' | 'region' | 'kultura';
   publishedAt: string;
   imageUrl?: string;
+  // Czech news specific fields
+  credibility?: number; // 0-100 score for source reliability
+  freshness?: 'hot' | 'fresh' | 'recent' | 'old'; // Time-based freshness indicator  
+  sourceType?: 'public' | 'private' | 'independent'; // Type of news organization
+  isLocal?: boolean; // True for Czech/local news, false for international
 }
 
 export interface GlobalHotspot {
