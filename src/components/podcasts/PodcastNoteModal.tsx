@@ -109,8 +109,17 @@ export function PodcastNoteModal({ isOpen, onClose, episode }: PodcastNoteModalP
     }
   };
 
-  const handleVoiceTranscript = (transcript: string) => {
-    setNote(transcript);
+  const handleVoiceTranscript = (transcript: string, isAppend?: boolean) => {
+    if (isAppend) {
+      // Append to existing note content
+      setNote(prev => {
+        const newText = prev ? prev + (prev.endsWith(' ') ? '' : ' ') + transcript : transcript;
+        return newText;
+      });
+    } else {
+      // Replace entire content (shouldn't happen with new implementation)
+      setNote(transcript);
+    }
   };
 
   const formatDate = (dateStr: string) => {

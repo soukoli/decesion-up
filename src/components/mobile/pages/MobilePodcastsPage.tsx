@@ -9,7 +9,7 @@ interface MobilePodcastsPageProps {
 
 export function MobilePodcastsPage({ podcasts }: MobilePodcastsPageProps) {
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 pt-safe-area pb-32">
+    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
       <PodcastSection initialEpisodes={podcasts} />
     </div>
   );

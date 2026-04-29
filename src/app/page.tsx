@@ -6,7 +6,10 @@ import { MobileLayout, AppData } from '@/components/mobile';
 import { DesktopLayout } from '@/components/desktop/DesktopLayout';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
+import { usePreloader } from '@/lib/preloader';
+import { PageSkeleton } from '@/components/Skeleton';
 import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
+import debugLog from '@/lib/debug';
 
 export default function Home() {
   const [data, setData] = useState<AppData>({
@@ -17,6 +20,7 @@ export default function Home() {
     hotspots: [],
     research: [],
     stocks: [],
+    school: [],
   });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -26,6 +30,7 @@ export default function Home() {
   const { showSplash, handleSplashComplete } = useSplashScreen(false);
   const { language } = useTranslation();
   const { acledTokens, isAcledTokenValid } = useSettings();
+  const { getPreloadedData, clearPreloadCache } = usePreloader({ acledTokens, isAcledTokenValid });
 
   // Detect mobile
   useEffect(() => {
@@ -38,7 +43,22 @@ export default function Home() {
   }, []);
 
   const fetchData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+    if (isRefresh) {
+      setRefreshing(true);
+      clearPreloadCache(); // Vymaž cache při refresh
+    }
+    
+    // Zkus nejprve použít předčasně načtená data
+    if (!isRefresh) {
+      const preloadedData = getPreloadedData();
+      if (preloadedData) {
+      debugLog.log('✅ Using preloaded data, skipping fetch');
+        setData(preloadedData);
+        setLastRefresh(new Date());
+        setLoading(false);
+        return;
+      }
+    }
     
     const cacheBuster = isRefresh ? `?_t=${Date.now()}` : '';
     const fetchOptions: RequestInit = isRefresh ? { cache: 'no-store' as RequestCache } : {};
@@ -53,7 +73,7 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes] = await Promise.all([
+      const [podcastsRes, marketsRes, trendsRes, newsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
         fetch(`/api/markets${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
@@ -61,6 +81,7 @@ export default function Home() {
         fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
         fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
+        fetch(`/api/school${cacheBuster}`, fetchOptions),
       ]);
 
       const newData: AppData = {
@@ -71,6 +92,7 @@ export default function Home() {
         hotspots: [],
         research: [],
         stocks: [],
+        school: [],
       };
 
       if (podcastsRes.ok) {
@@ -108,6 +130,11 @@ export default function Home() {
         newData.stocks = d || [];
       }
 
+      if (schoolRes.ok) {
+        const d = await schoolRes.json();
+        newData.school = d.articles || [];
+      }
+
       setData(newData);
       setLastRefresh(new Date());
     } catch (error) {
@@ -116,7 +143,7 @@ export default function Home() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [acledTokens, isAcledTokenValid]);
+  }, [acledTokens, isAcledTokenValid, getPreloadedData, clearPreloadCache]);
 
   useEffect(() => {
     fetchData();
@@ -131,18 +158,9 @@ export default function Home() {
     return <SplashScreen onComplete={handleSplashComplete} duration={2500} />;
   }
 
-  // Show loading state
+  // Show loading state with skeleton UI
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 text-sm">
-            {language === 'cs' ? 'Načítám data...' : 'Loading data...'}
-          </p>
-        </div>
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   // Mobile layout

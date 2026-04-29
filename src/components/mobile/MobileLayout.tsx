@@ -11,7 +11,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-creative';
 
 import { useTranslation } from '@/lib/translation';
-import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
+import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal, SchoolArticle } from '@/types';
 
 // Section components
 import { MobilePodcastsPage } from './pages/MobilePodcastsPage';
@@ -21,6 +21,7 @@ import { MobileAITechPage } from './pages/MobileAITechPage';
 import { MobileNewsPage } from './pages/MobileNewsPage';
 import { MobileNavigation } from './MobileNavigation';
 import { GlobeModal } from './GlobeModal';
+import { PullToRefresh } from '../PullToRefresh';
 
 export interface AppData {
   podcasts: PodcastEpisode[];
@@ -30,6 +31,7 @@ export interface AppData {
   hotspots: GlobalHotspot[];
   research: AIResearch[];
   stocks: StockIndex[];
+  school: SchoolArticle[];
 }
 
 interface MobileLayoutProps {
@@ -93,23 +95,33 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
           resistanceRatio={0.85}
         >
           <SwiperSlide>
-            <MobilePodcastsPage podcasts={data.podcasts} />
+            <PullToRefresh onRefresh={onRefresh} className="h-full">
+              <MobilePodcastsPage podcasts={data.podcasts} />
+            </PullToRefresh>
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileSchoolPage />
+            <PullToRefresh onRefresh={onRefresh} className="h-full">
+              <MobileSchoolPage schoolData={data.school} />
+            </PullToRefresh>
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileEconomyPage markets={data.markets} stocks={data.stocks} />
+            <PullToRefresh onRefresh={onRefresh} className="h-full">
+              <MobileEconomyPage markets={data.markets} stocks={data.stocks} />
+            </PullToRefresh>
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileAITechPage trends={data.trends} research={data.research} />
+            <PullToRefresh onRefresh={onRefresh} className="h-full">
+              <MobileAITechPage trends={data.trends} research={data.research} />
+            </PullToRefresh>
           </SwiperSlide>
           
           <SwiperSlide>
-            <MobileNewsPage news={data.news} />
+            <PullToRefresh onRefresh={onRefresh} className="h-full">
+              <MobileNewsPage news={data.news} />
+            </PullToRefresh>
           </SwiperSlide>
         </Swiper>
       </div>

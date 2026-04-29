@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '@/lib/translation';
 
 interface VoiceRecorderProps {
-  onTranscript: (text: string) => void;
+  onTranscript: (text: string, isAppend?: boolean) => void;
   disabled?: boolean;
 }
 
@@ -17,7 +17,7 @@ const isSpeechRecognitionAvailable = () => {
 export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [accumulatedTranscript, setAccumulatedTranscript] = useState('');
   const recognitionRef = useRef<any>(null);
   const { language } = useTranslation();
 
@@ -49,10 +49,14 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
         }
       }
       
-      const fullTranscript = (transcript + finalTranscript).trim();
-      if (finalTranscript) {
-        setTranscript(fullTranscript);
-        onTranscript(fullTranscript);
+      // Append final transcript to accumulated text
+      if (finalTranscript.trim()) {
+        const newText = finalTranscript.trim();
+        setAccumulatedTranscript(prev => {
+          const updatedText = prev ? prev + ' ' + newText : newText;
+          onTranscript(updatedText, true); // Signal that this should be appended
+          return updatedText;
+        });
       }
     };
 
@@ -77,7 +81,7 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
         recognitionRef.current.stop();
       }
     };
-  }, [isSupported, language, transcript, onTranscript, isRecording]);
+  }, [isSupported, language, accumulatedTranscript, onTranscript, isRecording]);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) return;
@@ -86,7 +90,7 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
       recognitionRef.current.stop();
       setIsRecording(false);
     } else {
-      setTranscript('');
+      setAccumulatedTranscript(''); // Clear accumulated transcript for new recording session
       recognitionRef.current.start();
       setIsRecording(true);
     }

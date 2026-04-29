@@ -8,6 +8,7 @@ import { AnimatedBackground } from "@/components/background/AnimatedBackground";
 import { TranslationProvider } from "@/lib/translation";
 import { SettingsProvider } from "@/lib/settings";
 import { SettingsModal } from "@/components/settings";
+import { PreloadTrigger } from "@/components/PreloadTrigger";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,8 +50,10 @@ export default function RootLayout({
         <AnimatedBackground />
         <TranslationProvider>
           <SettingsProvider>
-            {children}
-            <SettingsModal />
+            <PreloadTrigger>
+              {children}
+              <SettingsModal />
+            </PreloadTrigger>
           </SettingsProvider>
         </TranslationProvider>
       </body>

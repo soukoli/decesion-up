@@ -30,9 +30,9 @@ export function MobileNewsPage({ news }: MobileNewsPageProps) {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 pt-safe-area">
+    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pt-4 pb-3">
+      <header className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pb-3">
         <h1 className="text-3xl font-black text-white tracking-tight uppercase">
           {language === 'cs' ? 'Zprávy' : 'News'}
         </h1>

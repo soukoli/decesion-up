@@ -5,6 +5,7 @@ import { PodcastEpisode } from '@/types';
 import { PodcastCard } from './PodcastCard';
 import { useTranslation } from '@/lib/translation';
 import { CATEGORY_COLORS, getCategories } from '@/lib/podcasts-config';
+import { PodcastCardSkeleton } from '../Skeleton';
 
 interface PodcastSectionProps {
   initialEpisodes?: PodcastEpisode[];
@@ -55,10 +56,27 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
 
   if (loading) {
     return (
-      <div className="text-center py-8 text-slate-400">
-        <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-        <p className="text-sm">{language === 'cs' ? 'Načítám podcasty...' : 'Loading podcasts...'}</p>
-      </div>
+      <section className="space-y-4">
+        {/* Header skeleton */}
+        <div className="space-y-2">
+          <div className="h-6 bg-slate-700/50 rounded-lg w-32 animate-pulse"></div>
+          <div className="h-4 bg-slate-700/50 rounded-lg w-48 animate-pulse"></div>
+        </div>
+        
+        {/* Filter tabs skeleton */}
+        <div className="flex gap-2 pb-3 border-b border-slate-800">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="h-8 w-16 bg-slate-700/50 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+        
+        {/* Podcast cards skeleton */}
+        <div className="space-y-2">
+          {Array.from({ length: 8 }, (_, i) => (
+            <PodcastCardSkeleton key={i} />
+          ))}
+        </div>
+      </section>
     );
   }
 

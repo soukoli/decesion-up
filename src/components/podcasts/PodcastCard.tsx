@@ -80,7 +80,10 @@ export function PodcastCard({ episode }: PodcastCardProps) {
 
   return (
     <>
-      <div className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group">
+      <div 
+        className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group"
+        data-testid="podcast-card"
+      >
         {/* Podcast Image - small square */}
         <a
           href={primaryLink}

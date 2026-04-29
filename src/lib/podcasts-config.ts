@@ -53,9 +53,21 @@ export const PODCASTS: PodcastConfig[] = [
     categoryColor: CATEGORY_COLORS.Science,
     rssUrl: 'https://feeds.megaphone.fm/hubermanlab',
     spotifyUrl: 'https://open.spotify.com/show/79CkJF3UJTHFV8Dse3Oy0P',
-    youtubeUrl: 'https://youtube.com/@hubaboratoryatory',
+    youtubeUrl: 'https://youtube.com/@hubadoratoryatory',
     defaultImage: '/podcast-science.svg',
     priority: 3,
+  },
+  {
+    id: 'ted-talks',
+    name: 'TED Talks Daily',
+    category: 'Science',
+    categoryColor: CATEGORY_COLORS.Science,
+    rssUrl: 'https://feeds.feedburner.com/tedtalks_audio',
+    spotifyUrl: 'https://open.spotify.com/show/1VXcH8QHkjRcTCEd88U3ti',
+    youtubeUrl: 'https://youtube.com/@TEDTalksDirector',
+    webUrl: 'https://www.ted.com/talks',
+    defaultImage: '/podcast-science.svg',
+    priority: 4,
   },
   
   // === GLOBAL BUSINESS ===
@@ -67,7 +79,7 @@ export const PODCASTS: PodcastConfig[] = [
     rssUrl: 'https://feeds.npr.org/510313/podcast.xml',
     spotifyUrl: 'https://open.spotify.com/show/7xY0pqgkKEQJknNHruRmy7',
     defaultImage: '/podcast-business.svg',
-    priority: 4,
+    priority: 5,
   },
   {
     id: 'npr-planet-money',
@@ -77,7 +89,7 @@ export const PODCASTS: PodcastConfig[] = [
     rssUrl: 'https://feeds.npr.org/510289/podcast.xml',
     spotifyUrl: 'https://open.spotify.com/show/4FYpq3lSeQMAhqNI81O0Cn',
     defaultImage: '/podcast-business.svg',
-    priority: 5,
+    priority: 6,
   },
   
   // === CZECH TECH/BUSINESS ===
@@ -90,7 +102,7 @@ export const PODCASTS: PodcastConfig[] = [
     spotifyUrl: 'https://open.spotify.com/show/0S68hBTED7n5l8H3DiwrHc',
     webUrl: 'https://insider.cz',
     defaultImage: '/podcast-czech.svg',
-    priority: 6,
+    priority: 7,
   },
   {
     id: 'na-vlne-ai',
@@ -100,7 +112,7 @@ export const PODCASTS: PodcastConfig[] = [
     rssUrl: 'https://anchor.fm/s/e8c1b7c/podcast/rss', // May not work, Spotify is primary
     spotifyUrl: 'https://open.spotify.com/show/0IE3q115EPI6l8iMe3ZPJR',
     defaultImage: '/podcast-czech.svg',
-    priority: 7,
+    priority: 8,
   },
   {
     id: 'ai-v-kostce',
@@ -110,7 +122,7 @@ export const PODCASTS: PodcastConfig[] = [
     rssUrl: 'https://anchor.fm/s/f1c2a8c/podcast/rss', // May not work, Spotify is primary
     spotifyUrl: 'https://open.spotify.com/show/2LfNywjcsAuKBfqJPVdIMZ',
     defaultImage: '/podcast-czech.svg',
-    priority: 8,
+    priority: 9,
   },
 ];
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { PodcastEpisode } from '@/types';
 import { useTranslation } from '@/lib/translation';
-import { NOTE_CATEGORIES, PodcastNote } from '@/lib/notes-constants';
+import { NOTE_CATEGORIES, PodcastNote, suggestNoteCategoryFromPodcastName } from '@/lib/notes-constants';
 
 interface MobilePodcastNoteSheetProps {
   isOpen: boolean;
@@ -28,6 +28,8 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isLoading, setIsLoading] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   
   const recognitionRef = useRef<any>(null);
@@ -37,7 +39,33 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
 
   // Initialize speech recognition check
   useEffect(() => {
-    setIsSupported(isSpeechRecognitionAvailable());
+    const checkSupport = async () => {
+      const speechSupport = isSpeechRecognitionAvailable();
+      setIsSupported(speechSupport);
+      
+      if (speechSupport) {
+        // Check microphone permission
+        try {
+          const permission = await navigator.permissions?.query({ name: 'microphone' as PermissionName });
+          if (permission) {
+            setPermissionGranted(permission.state === 'granted');
+            permission.onchange = () => {
+              setPermissionGranted(permission.state === 'granted');
+            };
+          } else {
+            // Fallback - assume permission needed to be requested
+            setPermissionGranted(false);
+          }
+        } catch (err) {
+          console.log('Permission API not supported, will request on first use');
+          setPermissionGranted(false);
+        }
+      }
+      
+      console.log(`🎤 Speech Recognition Support: ${speechSupport}`);
+    };
+    
+    checkSupport();
   }, []);
 
   // Fetch or create note when opened
@@ -94,6 +122,29 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
     recognitionRef.current.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       setIsRecording(false);
+      setErrorMessage(`Chyba nahrávání: ${event.error}`);
+      
+      // Specific error handling
+      switch (event.error) {
+        case 'not-allowed':
+          setErrorMessage(language === 'cs' 
+            ? 'Přístup k mikrofonu byl odepřen. Povolte přístup v nastavení prohlížeče.' 
+            : 'Microphone access denied. Please allow microphone access in browser settings.');
+          break;
+        case 'no-speech':
+          setErrorMessage(language === 'cs' ? 'Nebyl detekován žádný hlas' : 'No speech detected');
+          break;
+        case 'audio-capture':
+          setErrorMessage(language === 'cs' ? 'Mikrofon není k dispozici' : 'Microphone not available');
+          break;
+        case 'network':
+          setErrorMessage(language === 'cs' ? 'Chyba sítě při nahrávání' : 'Network error during recording');
+          break;
+        default:
+          setErrorMessage(language === 'cs' 
+            ? `Nastala chyba: ${event.error}` 
+            : `Error occurred: ${event.error}`);
+      }
     };
 
     recognitionRef.current.onend = () => {
@@ -131,7 +182,14 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
         const data = await response.json();
         setNote(data.note);
         setNoteText(data.note.note || '');
-        setCategory(data.note.category || '');
+        
+        // Smart kategorie - pokud není kategorie nastavena, navrhni na základě podcastu
+        if (data.note.category) {
+          setCategory(data.note.category);
+        } else {
+          const suggestedCategory = suggestNoteCategoryFromPodcastName(episode.podcastName, episode.category);
+          setCategory(suggestedCategory);
+        }
       }
     } catch (err) {
       console.error('Error fetching note:', err);
@@ -186,16 +244,57 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
     }
   };
 
-  const toggleRecording = () => {
-    if (!recognitionRef.current) return;
+  const toggleRecording = async () => {
+    if (!isSupported) {
+      setErrorMessage(language === 'cs' 
+        ? 'Váš prohlížeč nepodporuje rozpoznávání řeči'
+        : 'Your browser does not support speech recognition');
+      return;
+    }
+
+    setErrorMessage(''); // Clear previous errors
 
     if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-      setLiveTranscript('');
+      try {
+        recognitionRef.current?.stop();
+        setIsRecording(false);
+        setLiveTranscript('');
+        console.log('🛑 Recording stopped');
+      } catch (err) {
+        console.error('Error stopping recording:', err);
+        setErrorMessage('Chyba při ukončování nahrávání');
+      }
     } else {
-      recognitionRef.current.start();
-      setIsRecording(true);
+      try {
+        // Request microphone permission explicitly
+        if (!permissionGranted) {
+          console.log('🎤 Requesting microphone permission...');
+          
+          // Try to get user media to trigger permission request
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop()); // Stop immediately
+            setPermissionGranted(true);
+            console.log('✅ Microphone permission granted');
+          } catch (permissionError) {
+            console.error('❌ Microphone permission denied:', permissionError);
+            setErrorMessage(language === 'cs' 
+              ? 'Přístup k mikrofonu byl odepřen. Povolte přístup a zkuste znovu.'
+              : 'Microphone access denied. Please allow access and try again.');
+            return;
+          }
+        }
+
+        console.log('🚀 Starting recording...');
+        recognitionRef.current?.start();
+        setIsRecording(true);
+      } catch (err) {
+        console.error('Error starting recording:', err);
+        setIsRecording(false);
+        setErrorMessage(language === 'cs' 
+          ? 'Nepodařilo se spustit nahrávání. Zkuste znovu.'
+          : 'Failed to start recording. Please try again.');
+      }
     }
   };
 
@@ -350,6 +449,28 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
                         {liveTranscript && (
                           <div className="mt-3 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50 max-w-full">
                             <p className="text-sm text-slate-300 italic">"{liveTranscript}"</p>
+                          </div>
+                        )}
+                        
+                        {/* Error message */}
+                        {errorMessage && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg"
+                          >
+                            <p className="text-sm text-red-400">{errorMessage}</p>
+                          </motion.div>
+                        )}
+                        
+                        {/* Status indicators */}
+                        {!permissionGranted && isSupported && (
+                          <div className="mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                            <p className="text-sm text-amber-400">
+                              {language === 'cs' 
+                                ? '🎤 Povolte přístup k mikrofonu pro nahrávání'
+                                : '🎤 Allow microphone access to enable recording'}
+                            </p>
                           </div>
                         )}
                       </>

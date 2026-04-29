@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { usePreloader } from '@/lib/preloader';
+import { useSettings } from '@/lib/settings';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -11,29 +13,34 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onComplete, duration = 2500 }: SplashScreenProps) {
   const [phase, setPhase] = useState<'logo' | 'expand' | 'exit'>('logo');
+  const { acledTokens, isAcledTokenValid } = useSettings();
+  const { isPreloading, hasPreloadedData } = usePreloader({ acledTokens, isAcledTokenValid });
 
   useEffect(() => {
+    // Pokud máme předčasně načtená data, zkrátíme splash screen
+    const effectiveDuration = hasPreloadedData ? Math.min(duration, 1500) : duration;
+    
     // Phase 1: Logo animation (0-1500ms)
     const expandTimer = setTimeout(() => {
       setPhase('expand');
-    }, 1500);
+    }, 1000);
 
-    // Phase 2: Exit animation (1500-2500ms)
+    // Phase 2: Exit animation 
     const exitTimer = setTimeout(() => {
       setPhase('exit');
-    }, duration - 500);
+    }, effectiveDuration - 500);
 
     // Complete
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, duration);
+    }, effectiveDuration);
 
     return () => {
       clearTimeout(expandTimer);
       clearTimeout(exitTimer);
       clearTimeout(completeTimer);
     };
-  }, [onComplete, duration]);
+  }, [onComplete, duration, hasPreloadedData]);
 
   return (
     <AnimatePresence>
@@ -175,12 +182,36 @@ export function SplashScreen({ onComplete, duration = 2500 }: SplashScreenProps)
               transition={{ delay: 0.9 }}
             >
               <motion.div
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full"
+                className={`h-full rounded-full ${
+                  hasPreloadedData 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-400' 
+                    : isPreloading 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-400' 
+                      : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                }`}
                 initial={{ width: '0%' }}
-                animate={{ width: '100%' }}
+                animate={{ 
+                  width: hasPreloadedData ? '100%' : '100%',
+                }}
                 transition={{ duration: 1.5, delay: 0.9, ease: 'easeInOut' }}
               />
             </motion.div>
+
+            {/* Preload Status Text */}
+            <motion.p
+              className="mt-3 text-xs text-slate-500 font-medium"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+            >
+              {hasPreloadedData ? (
+                <span className="text-green-400">✓ Data ready</span>
+              ) : isPreloading ? (
+                <span className="text-blue-400">⏳ Loading data...</span>
+              ) : (
+                <span className="text-amber-400/60">Initializing...</span>
+              )}
+            </motion.p>
           </motion.div>
         </motion.div>
       )}
