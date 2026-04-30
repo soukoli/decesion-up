@@ -11,47 +11,102 @@ interface RSSItem {
   enclosure?: { url: string };
 }
 
-// Reliable Czech news sources with high credibility
+// Reliable Czech news sources with high credibility - VERIFIED RSS FEEDS
 const CZECH_NEWS_SOURCES = [
+  // Tier 1: Highest Credibility (90-95/100)
   {
     id: 'ct24',
     name: 'ČT24',
-    url: 'https://ct24.ceskatelevize.cz/rss/hlavni-zpravy',
+    url: 'https://ct24.ceskatelevize.cz/rss',
     category: 'domaci' as const,
     credibility: 95,
-    type: 'public'
+    type: 'public',
+    description: 'Česká televize - veřejnoprávní televize'
   },
   {
-    id: 'irozhlas',
+    id: 'irozhlas-main',
     name: 'iROZHLAS',
-    url: 'https://www.irozhlas.cz/rss',
+    url: 'https://www.irozhlas.cz/rss/irozhlas',
     category: 'domaci' as const,
-    credibility: 95,
-    type: 'public'
+    credibility: 94,
+    type: 'public',
+    description: 'Český rozhlas - hlavní zprávy'
   },
   {
-    id: 'aktualne',
-    name: 'Aktuálně.cz',
-    url: 'https://www.aktualne.cz/rss/',
+    id: 'irozhlas-domov',
+    name: 'iROZHLAS Domov',
+    url: 'https://www.irozhlas.cz/rss/irozhlas/section/zpravy-domov',
     category: 'domaci' as const,
-    credibility: 80,
-    type: 'independent'
-  },
-  {
-    id: 'ct24-ekonomika',
-    name: 'ČT24 Ekonomika',
-    url: 'https://ct24.ceskatelevize.cz/rss/ekonomika',
-    category: 'ekonomika' as const,
-    credibility: 95,
-    type: 'public'
+    credibility: 94,
+    type: 'public',
+    description: 'Český rozhlas - domácí zprávy'
   },
   {
     id: 'irozhlas-ekonomika',
     name: 'iROZHLAS Ekonomika',
-    url: 'https://www.irozhlas.cz/ekonomika/rss',
+    url: 'https://www.irozhlas.cz/rss/irozhlas/section/ekonomika',
     category: 'ekonomika' as const,
-    credibility: 95,
-    type: 'public'
+    credibility: 94,
+    type: 'public',
+    description: 'Český rozhlas - ekonomické zprávy'
+  },
+  {
+    id: 'respekt',
+    name: 'Respekt',
+    url: 'https://www.respekt.cz/api/rss?type=articles&unlocked=1',
+    category: 'politika' as const,
+    credibility: 92,
+    type: 'independent',
+    description: 'Týdeník Respekt - analytická žurnalistika'
+  },
+
+  // Tier 2: High Credibility (85-89/100)
+  {
+    id: 'seznam-zpravy',
+    name: 'Seznam Zprávy',
+    url: 'https://www.seznamzpravy.cz/rss',
+    category: 'domaci' as const,
+    credibility: 88,
+    type: 'private',
+    description: 'Seznam Zprávy - investigativní žurnalistika'
+  },
+  {
+    id: 'hn-domaci',
+    name: 'HN Domácí',
+    url: 'https://domaci.hn.cz/?m=rss',
+    category: 'domaci' as const,
+    credibility: 87,
+    type: 'private',
+    description: 'Hospodářské noviny - domácí zprávy'
+  },
+  {
+    id: 'hn-byznys',
+    name: 'HN Byznys',
+    url: 'https://byznys.hn.cz/?m=rss',
+    category: 'ekonomika' as const,
+    credibility: 87,
+    type: 'private',
+    description: 'Hospodářské noviny - business'
+  },
+  {
+    id: 'aktualne',
+    name: 'Aktuálně.cz',
+    url: 'https://www.aktualne.cz/rss',
+    category: 'domaci' as const,
+    credibility: 85,
+    type: 'private',
+    description: 'Aktuálně.cz - všeobecné zprávy'
+  },
+
+  // Tier 3: Good Credibility (80-84/100)
+  {
+    id: 'novinky',
+    name: 'Novinky.cz',
+    url: 'https://www.novinky.cz/rss',
+    category: 'domaci' as const,
+    credibility: 82,
+    type: 'private',
+    description: 'Novinky.cz - aktuální zpravodajství'
   }
 ];
 
