@@ -43,7 +43,7 @@ export function MobileNewsPage({ news, czechNews }: MobileNewsPageProps) {
     <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pb-3">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase font-display">
           {language === 'cs' ? 'Zprávy' : 'News'}
         </h1>
         <p className="text-sm text-slate-500 mt-1">
@@ -156,23 +156,13 @@ export function MobileNewsPage({ news, czechNews }: MobileNewsPageProps) {
                 </div>
                 
                 <h2 
-                  className={`font-bold text-white mb-2 group-hover:text-amber-400 transition-colors leading-snug ${fontConfig.titleClass}`}
-                  style={{ 
-                    fontSize: `${fontConfig.scale}rem`,
-                    lineHeight: '1.3',
-                    wordBreak: 'break-word',
-                    hyphens: 'auto'
-                  }}
+                  className={`font-semibold text-white mb-2 group-hover:text-amber-400 transition-colors leading-snug ${fontConfig.titleClass}`}
                 >
                   {item.title}
                 </h2>
                 
                 <p 
-                  className={`text-slate-400 mb-3 ${fontConfig.bodyClass}`} 
-                  style={{ 
-                    fontSize: `${fontConfig.scale * 0.875}rem`,
-                    lineHeight: '1.4'
-                  }}
+                  className={`text-slate-400 mb-3 leading-relaxed ${fontConfig.bodyClass}`}
                 >
                   {item.description}
                 </p>
