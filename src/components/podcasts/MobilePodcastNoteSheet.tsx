@@ -12,7 +12,61 @@ interface MobilePodcastNoteSheetProps {
   episode: PodcastEpisode;
 }
 
-// Check if Speech Recognition is available
+// Enhanced mobile compatibility detection
+const getMobileCompatibility = () => {
+  if (typeof window === 'undefined') return { isSupported: false, reason: 'Server side', browser: 'unknown' };
+  
+  const userAgent = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+  const isAndroid = /Android/.test(userAgent);
+  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+  const isChrome = /Chrome/.test(userAgent);
+  const isFirefox = /Firefox/.test(userAgent);
+  
+  // Check for Speech Recognition API
+  const hasSpeechAPI = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+  
+  let browser = 'unknown';
+  if (isChrome) browser = 'chrome';
+  else if (isSafari) browser = 'safari';  
+  else if (isFirefox) browser = 'firefox';
+  
+  // Determine support
+  let isSupported = false;
+  let reason = '';
+  
+  if (isIOS) {
+    isSupported = false;
+    reason = 'iOS Safari doesn\'t support Web Speech API';
+  } else if (isSafari) {
+    isSupported = false;
+    reason = 'Desktop Safari has limited speech support';
+  } else if (isAndroid && isChrome && hasSpeechAPI) {
+    isSupported = true;
+    reason = 'Android Chrome supports speech recognition';
+  } else if (isChrome && hasSpeechAPI) {
+    isSupported = true; 
+    reason = 'Desktop Chrome supports speech recognition';
+  } else if (!hasSpeechAPI) {
+    isSupported = false;
+    reason = 'Web Speech API not available in this browser';
+  } else {
+    isSupported = false;
+    reason = 'Browser compatibility unknown';
+  }
+  
+  return {
+    isSupported,
+    reason,
+    browser,
+    isIOS,
+    isAndroid,
+    isMobile: isIOS || isAndroid,
+    userAgent: userAgent.slice(0, 100) // Truncated for logging
+  };
+};
+
+// Check if Speech Recognition is available (legacy)
 const isSpeechRecognitionAvailable = () => {
   if (typeof window === 'undefined') return false;
   return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
@@ -27,7 +81,7 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const [compatibility, setCompatibility] = useState<ReturnType<typeof getMobileCompatibility> | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -37,13 +91,19 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { language } = useTranslation();
 
-  // Initialize speech recognition check
+  // Initialize compatibility check
   useEffect(() => {
     const checkSupport = async () => {
-      const speechSupport = isSpeechRecognitionAvailable();
-      setIsSupported(speechSupport);
+      const compat = getMobileCompatibility();
+      setCompatibility(compat);
       
-      if (speechSupport) {
+      console.log('🎤 Voice Recording Compatibility Check:');
+      console.log(`   Browser: ${compat.browser} (${compat.isMobile ? 'Mobile' : 'Desktop'})`);
+      console.log(`   Supported: ${compat.isSupported}`);
+      console.log(`   Reason: ${compat.reason}`);
+      console.log(`   User Agent: ${compat.userAgent}`);
+      
+      if (compat.isSupported) {
         // Check microphone permission
         try {
           const permission = await navigator.permissions?.query({ name: 'microphone' as PermissionName });
@@ -61,8 +121,6 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
           setPermissionGranted(false);
         }
       }
-      
-      console.log(`🎤 Speech Recognition Support: ${speechSupport}`);
     };
     
     checkSupport();
@@ -80,467 +138,479 @@ export function MobilePodcastNoteSheet({ isOpen, onClose, episode }: MobilePodca
     };
   }, [isOpen, episode.id]);
 
-  // Initialize speech recognition
+  // Auto-focus textarea on open
   useEffect(() => {
-    if (!isSupported || !isOpen) return;
-
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-    recognitionRef.current.lang = language === 'cs' ? 'cs-CZ' : 'en-US';
-
-    recognitionRef.current.onresult = (event: any) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcriptPart = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcriptPart + ' ';
-        } else {
-          interimTranscript += transcriptPart;
-        }
-      }
-      
-      // Update live transcript
-      setLiveTranscript(interimTranscript || finalTranscript);
-      
-      // Append final transcript to note
-      if (finalTranscript.trim()) {
-        setNoteText(prev => {
-          const newText = prev ? prev + '\n\n' + finalTranscript.trim() : finalTranscript.trim();
-          // Trigger auto-save
-          triggerAutoSave(newText);
-          return newText;
-        });
-        setLiveTranscript('');
-      }
-    };
-
-    recognitionRef.current.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      setIsRecording(false);
-      setErrorMessage(`Chyba nahrávání: ${event.error}`);
-      
-      // Specific error handling
-      switch (event.error) {
-        case 'not-allowed':
-          setErrorMessage(language === 'cs' 
-            ? 'Přístup k mikrofonu byl odepřen. Povolte přístup v nastavení prohlížeče.' 
-            : 'Microphone access denied. Please allow microphone access in browser settings.');
-          break;
-        case 'no-speech':
-          setErrorMessage(language === 'cs' ? 'Nebyl detekován žádný hlas' : 'No speech detected');
-          break;
-        case 'audio-capture':
-          setErrorMessage(language === 'cs' ? 'Mikrofon není k dispozici' : 'Microphone not available');
-          break;
-        case 'network':
-          setErrorMessage(language === 'cs' ? 'Chyba sítě při nahrávání' : 'Network error during recording');
-          break;
-        default:
-          setErrorMessage(language === 'cs' 
-            ? `Nastala chyba: ${event.error}` 
-            : `Error occurred: ${event.error}`);
-      }
-    };
-
-    recognitionRef.current.onend = () => {
-      if (isRecording) {
-        try {
-          recognitionRef.current?.start();
-        } catch {
-          setIsRecording(false);
-        }
-      }
-    };
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [isSupported, isOpen, language, isRecording]);
+    if (isOpen && textareaRef.current) {
+      // Small delay to ensure the sheet is fully rendered
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 300);
+    }
+  }, [isOpen]);
 
   const fetchOrCreateNote = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          podcastId: episode.id,
-          podcastName: episode.podcastName,
-          episodeTitle: episode.title,
-          getOrCreate: true,
-        }),
-      });
-      
+      const response = await fetch(`/api/notes?podcastId=${episode.id}`);
       if (response.ok) {
-        const data = await response.json();
-        setNote(data.note);
-        setNoteText(data.note.note || '');
-        
-        // Smart kategorie - pokud není kategorie nastavena, navrhni na základě podcastu
-        if (data.note.category) {
-          setCategory(data.note.category);
+        const existingNote = await response.json();
+        if (existingNote) {
+          setNote(existingNote);
+          setNoteText(existingNote.content || '');
+          setCategory(existingNote.category || '');
         } else {
-          const suggestedCategory = suggestNoteCategoryFromPodcastName(episode.podcastName, episode.category);
+          // Create new note
+          const suggestedCategory = suggestNoteCategoryFromPodcastName(episode.title, episode.category || 'other');
           setCategory(suggestedCategory);
         }
       }
-    } catch (err) {
-      console.error('Error fetching note:', err);
+    } catch (error) {
+      console.error('Error fetching note:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const triggerAutoSave = useCallback((text: string) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    setSaveStatus('saving');
-    
-    saveTimeoutRef.current = setTimeout(async () => {
-      if (!note?.id) return;
-      
-      try {
-        const response = await fetch('/api/notes', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: note.id,
-            note: text,
-            category: category || null,
-          }),
-        });
-        
-        if (response.ok) {
-          setSaveStatus('saved');
-          setTimeout(() => setSaveStatus('idle'), 2000);
-        } else {
-          setSaveStatus('error');
-        }
-      } catch {
-        setSaveStatus('error');
-      }
-    }, 1000);
-  }, [note?.id, category]);
-
-  const handleNoteChange = (newText: string) => {
-    setNoteText(newText);
-    triggerAutoSave(newText);
-  };
-
-  const handleCategoryChange = (newCategory: string) => {
-    setCategory(newCategory);
-    setShowCategoryPicker(false);
-    if (note?.id) {
-      triggerAutoSave(noteText);
-    }
-  };
-
-  const toggleRecording = async () => {
-    if (!isSupported) {
-      setErrorMessage(language === 'cs' 
-        ? 'Váš prohlížeč nepodporuje rozpoznávání řeči'
-        : 'Your browser does not support speech recognition');
+  const startRecording = async () => {
+    if (!compatibility?.isSupported) {
+      setErrorMessage(compatibility?.reason || 'Speech recognition not supported');
       return;
     }
 
-    setErrorMessage(''); // Clear previous errors
-
-    if (isRecording) {
-      try {
-        recognitionRef.current?.stop();
-        setIsRecording(false);
-        setLiveTranscript('');
-        console.log('🛑 Recording stopped');
-      } catch (err) {
-        console.error('Error stopping recording:', err);
-        setErrorMessage('Chyba při ukončování nahrávání');
-      }
-    } else {
-      try {
-        // Request microphone permission explicitly
-        if (!permissionGranted) {
-          console.log('🎤 Requesting microphone permission...');
-          
-          // Try to get user media to trigger permission request
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            stream.getTracks().forEach(track => track.stop()); // Stop immediately
-            setPermissionGranted(true);
-            console.log('✅ Microphone permission granted');
-          } catch (permissionError) {
-            console.error('❌ Microphone permission denied:', permissionError);
-            setErrorMessage(language === 'cs' 
-              ? 'Přístup k mikrofonu byl odepřen. Povolte přístup a zkuste znovu.'
-              : 'Microphone access denied. Please allow access and try again.');
-            return;
+    setErrorMessage('');
+    
+    try {
+      // Request microphone permission explicitly
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // Stop immediately, we just needed permission
+      setPermissionGranted(true);
+      
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      recognition.lang = language === 'cs' ? 'cs-CZ' : 'en-US';
+      
+      let finalTranscript = '';
+      
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
           }
         }
-
-        console.log('🚀 Starting recording...');
-        recognitionRef.current?.start();
-        setIsRecording(true);
-      } catch (err) {
-        console.error('Error starting recording:', err);
+        
+        // Update live transcript with current interim results
+        setLiveTranscript(finalTranscript + interimTranscript);
+        
+        // Add final results to note text
+        if (finalTranscript) {
+          setNoteText(prev => {
+            const newText = prev + (prev ? ' ' : '') + finalTranscript.trim();
+            return newText;
+          });
+          finalTranscript = ''; // Reset after adding
+        }
+      };
+      
+      recognition.onend = () => {
         setIsRecording(false);
-        setErrorMessage(language === 'cs' 
-          ? 'Nepodařilo se spustit nahrávání. Zkuste znovu.'
-          : 'Failed to start recording. Please try again.');
+        setLiveTranscript('');
+        // Auto-restart if we were still recording (handle connection drops)
+        if (recognitionRef.current && recognitionRef.current.shouldRestart) {
+          setTimeout(() => startRecording(), 100);
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        setLiveTranscript('');
+        
+        let errorMsg = 'Recording error occurred';
+        switch (event.error) {
+          case 'not-allowed':
+            errorMsg = 'Microphone access denied. Please enable microphone permissions in your browser settings.';
+            setPermissionGranted(false);
+            break;
+          case 'no-speech':
+            errorMsg = 'No speech detected. Try speaking closer to the microphone.';
+            break;
+          case 'audio-capture':
+            errorMsg = 'No microphone found. Please check your device.';
+            break;
+          case 'network':
+            errorMsg = 'Network error. Speech recognition requires internet connection.';
+            break;
+          case 'aborted':
+            errorMsg = 'Recording was stopped.';
+            break;
+          case 'language-not-supported':
+            errorMsg = `Language ${recognition.lang} is not supported.`;
+            break;
+          default:
+            errorMsg = `Speech recognition error: ${event.error}`;
+        }
+        setErrorMessage(errorMsg);
+      };
+      
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setErrorMessage('');
+        console.log('🎤 Speech recognition started');
+      };
+      
+      recognitionRef.current = recognition;
+      recognitionRef.current.shouldRestart = true;
+      recognition.start();
+      
+    } catch (error: any) {
+      console.error('Error starting recording:', error);
+      setIsRecording(false);
+      
+      if (error.name === 'NotAllowedError') {
+        setErrorMessage('Microphone access denied. Please enable microphone permissions and try again.');
+        setPermissionGranted(false);
+      } else if (error.name === 'NotFoundError') {
+        setErrorMessage('No microphone found. Please check your device.');
+      } else {
+        setErrorMessage('Failed to start recording. Please try again.');
       }
     }
   };
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > 100 || info.velocity.y > 500) {
-      onClose();
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.shouldRestart = false;
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+    setLiveTranscript('');
+    setErrorMessage('');
+  };
+
+  // Auto-save functionality
+  const saveNote = useCallback(async (content: string, categoryValue: string) => {
+    if (!episode.id || !content.trim()) return;
+    
+    setIsSaving(true);
+    setSaveStatus('saving');
+    
+    try {
+      const noteData = {
+        podcastId: episode.id,
+        podcastTitle: episode.title,
+        content: content.trim(),
+        category: categoryValue || 'general'
+      };
+      
+      const method = note?.id ? 'PUT' : 'POST';
+      const url = note?.id ? `/api/notes?id=${note.id}` : '/api/notes';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(noteData)
+      });
+      
+      if (response.ok) {
+        const savedNote = await response.json();
+        setNote(savedNote);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        throw new Error('Failed to save note');
+      }
+    } catch (error) {
+      console.error('Error saving note:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [episode.id, episode.title, note?.id]);
+
+  // Auto-save with debounce
+  useEffect(() => {
+    if (noteText.trim() && category) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      saveTimeoutRef.current = setTimeout(() => {
+        saveNote(noteText, category);
+      }, 1000); // 1 second debounce
+    }
+  }, [noteText, category, saveNote]);
+
+  const handleClose = () => {
+    if (isRecording) {
+      stopRecording();
+    }
+    onClose();
+  };
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    if (info.offset.y > 100) {
+      handleClose();
     }
   };
 
-  const getCategoryLabel = (value: string) => {
-    const cat = NOTE_CATEGORIES.find(c => c.value === value);
-    if (!cat) return value;
-    return language === 'cs' ? cat.labelCs : cat.labelEn;
+  const getRecordingButtonText = () => {
+    if (!compatibility?.isSupported) {
+      if (compatibility?.isIOS) {
+        return language === 'cs' ? '📱 Použij Safari nebo Chrome na Androidu' : '📱 Use Safari or Chrome on Android';
+      }
+      return language === 'cs' ? '❌ Nepodporováno' : '❌ Not Supported';
+    }
+    
+    if (!permissionGranted) {
+      return language === 'cs' ? '🎤 Povolit mikrofon' : '🎤 Enable Microphone';
+    }
+    
+    if (isRecording) {
+      return language === 'cs' ? '🔴 Ukončit nahrávání' : '🔴 Stop Recording';
+    }
+    
+    return language === 'cs' ? '🎤 Začít nahrávat' : '🎤 Start Recording';
+  };
+
+  const getCompatibilityMessage = () => {
+    if (!compatibility) return null;
+    
+    if (compatibility.isIOS) {
+      return (
+        <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="flex items-start gap-2">
+            <span className="text-amber-500">⚠️</span>
+            <div className="text-sm">
+              <p className="text-amber-400 font-medium mb-1">
+                {language === 'cs' ? 'iOS Safari nepodporuje hlasové nahrávání' : 'iOS Safari doesn\'t support voice recording'}
+              </p>
+              <p className="text-slate-400">
+                {language === 'cs' 
+                  ? 'Můžete psát poznámky ručně nebo použít Chrome na Androidu'
+                  : 'You can type notes manually or use Chrome on Android'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (!compatibility.isSupported) {
+      return (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="flex items-start gap-2">
+            <span className="text-red-500">❌</span>
+            <div className="text-sm">
+              <p className="text-red-400 font-medium mb-1">
+                {language === 'cs' ? 'Hlasové nahrávání není podporováno' : 'Voice recording not supported'}
+              </p>
+              <p className="text-slate-400">{compatibility.reason}</p>
+              <p className="text-slate-500 text-xs mt-1">
+                {language === 'cs' 
+                  ? 'Doporučujeme Chrome nebo Firefox na desktopu'
+                  : 'We recommend Chrome or Firefox on desktop'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
-          />
-          
-          {/* Sheet */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+          onClick={handleClose}
+        >
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.5 }}
+            dragElastic={{ top: 0, bottom: 0.2 }}
             onDragEnd={handleDragEnd}
-            className="fixed inset-x-0 bottom-0 z-[101] bg-slate-900 rounded-t-3xl max-h-[90vh] flex flex-col"
-            style={{ touchAction: 'none' }}
+            className="w-full bg-slate-900 rounded-t-3xl border-t border-slate-700/50 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Drag Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            {/* Drag handle */}
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-1 bg-slate-600 rounded-full" />
             </div>
-
-            {/* Header */}
-            <div className="flex items-start justify-between px-4 pb-3 border-b border-slate-800">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🎧</span>
-                  <h2 className="text-lg font-bold text-white truncate">
-                    {episode.podcastName}
-                  </h2>
-                </div>
-                <p className="text-sm text-slate-400 truncate mt-1">
+            
+            {/* Content */}
+            <div className="px-6 pb-8 max-h-[80vh] overflow-y-auto">
+              {/* Header */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {language === 'cs' ? 'Poznámky k epizodě' : 'Episode Notes'}
+                </h3>
+                <p className="text-sm text-slate-400 line-clamp-2">
                   {episode.title}
                 </p>
               </div>
-              <button
-                onClick={onClose}
-                className="ml-2 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (
                 <>
-                  {/* Category Picker */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                      {language === 'cs' ? 'Téma' : 'Topic'}
+                  {/* Compatibility warning */}
+                  {getCompatibilityMessage()}
+
+                  {/* Category selector */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      {language === 'cs' ? 'Kategorie' : 'Category'}
                     </label>
-                    <button
-                      onClick={() => setShowCategoryPicker(!showCategoryPicker)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-left"
-                    >
-                      <span className={category ? 'text-white' : 'text-slate-500'}>
-                        {category ? getCategoryLabel(category) : (language === 'cs' ? 'Vybrat téma...' : 'Select topic...')}
-                      </span>
-                      <svg className={`w-5 h-5 text-slate-400 transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {/* Category dropdown */}
-                    <AnimatePresence>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+                        className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-left text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      >
+                        {category ? NOTE_CATEGORIES.find(cat => cat.value === category)?.[language === 'cs' ? 'labelCs' : 'labelEn'] : 
+                         (language === 'cs' ? 'Vyberte kategorii' : 'Select category')}
+                        <svg className="w-4 h-4 float-right mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
                       {showCategoryPicker && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-2 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden"
-                        >
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
                           {NOTE_CATEGORIES.map((cat) => (
                             <button
                               key={cat.value}
-                              onClick={() => handleCategoryChange(cat.value)}
-                              className={`w-full px-3 py-2.5 text-left text-sm transition-colors ${
-                                category === cat.value 
-                                  ? 'bg-amber-500/20 text-amber-400' 
-                                  : 'text-slate-300 hover:bg-slate-700'
-                              }`}
+                              type="button"
+                              onClick={() => {
+                                setCategory(cat.value);
+                                setShowCategoryPicker(false);
+                              }}
+                              className="w-full px-4 py-2 text-left text-white hover:bg-slate-700 transition-colors"
                             >
-                              {language === 'cs' ? cat.labelCs : cat.labelEn}
+                              {cat[language === 'cs' ? 'labelCs' : 'labelEn']}
                             </button>
                           ))}
-                        </motion.div>
+                        </div>
                       )}
-                    </AnimatePresence>
+                    </div>
                   </div>
 
-                  {/* Voice Recording */}
-                  <div className="flex flex-col items-center py-4">
-                    {isSupported ? (
-                      <>
-                        <button
-                          onClick={toggleRecording}
-                          className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
-                            isRecording
-                              ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50'
-                              : 'bg-amber-500/20 hover:bg-amber-500/30 border-2 border-amber-500/50'
-                          }`}
-                        >
-                          {isRecording ? (
-                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                              <rect x="6" y="6" width="12" height="12" rx="2" />
-                            </svg>
-                          ) : (
-                            <svg className="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-                            </svg>
-                          )}
-                        </button>
-                        <p className={`mt-3 text-sm ${isRecording ? 'text-red-400' : 'text-slate-400'}`}>
-                          {isRecording 
-                            ? (language === 'cs' ? 'Nahrávám... (klepni pro stop)' : 'Recording... (tap to stop)')
-                            : (language === 'cs' ? 'Nahraj myšlenku' : 'Record your thought')
-                          }
+                  {/* Voice recording section */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-slate-300">
+                        {language === 'cs' ? 'Hlasové poznámky' : 'Voice Notes'}
+                      </label>
+                      <button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        disabled={!compatibility?.isSupported}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          isRecording
+                            ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                            : compatibility?.isSupported && permissionGranted
+                              ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                              : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {getRecordingButtonText()}
+                      </button>
+                    </div>
+                    
+                    {/* Live transcript */}
+                    {isRecording && liveTranscript && (
+                      <div className="mb-3 p-3 bg-slate-800/50 border border-amber-500/30 rounded-lg">
+                        <p className="text-sm text-slate-300 mb-1">
+                          {language === 'cs' ? '🎙️ Živý přepis:' : '🎙️ Live transcript:'}
                         </p>
-                        
-                        {/* Live transcript */}
-                        {liveTranscript && (
-                          <div className="mt-3 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700/50 max-w-full">
-                            <p className="text-sm text-slate-300 italic">"{liveTranscript}"</p>
-                          </div>
-                        )}
-                        
-                        {/* Error message */}
-                        {errorMessage && (
-                          <motion.div 
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg"
-                          >
-                            <p className="text-sm text-red-400">{errorMessage}</p>
-                          </motion.div>
-                        )}
-                        
-                        {/* Status indicators */}
-                        {!permissionGranted && isSupported && (
-                          <div className="mt-3 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                            <p className="text-sm text-amber-400">
-                              {language === 'cs' 
-                                ? '🎤 Povolte přístup k mikrofonu pro nahrávání'
-                                : '🎤 Allow microphone access to enable recording'}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-sm text-slate-500">
-                          {language === 'cs' 
-                            ? 'Hlasové nahrávání není v tomto prohlížeči podporováno'
-                            : 'Voice recording not supported in this browser'}
-                        </p>
+                        <p className="text-amber-200 italic">{liveTranscript}</p>
+                      </div>
+                    )}
+                    
+                    {/* Error message */}
+                    {errorMessage && (
+                      <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p className="text-red-400 text-sm">{errorMessage}</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Note Text */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                      {language === 'cs' ? 'Poznámka' : 'Note'}
+                  {/* Text area */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      {language === 'cs' ? 'Obsah poznámky' : 'Note Content'}
                     </label>
                     <textarea
                       ref={textareaRef}
                       value={noteText}
-                      onChange={(e) => handleNoteChange(e.target.value)}
+                      onChange={(e) => setNoteText(e.target.value)}
                       placeholder={language === 'cs' 
-                        ? 'Tvoje myšlenky k tomuto podcastu...'
-                        : 'Your thoughts about this podcast...'}
-                      className="w-full min-h-[150px] px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none"
-                      style={{ minHeight: noteText ? Math.max(150, noteText.split('\n').length * 24) : 150 }}
+                        ? 'Zde napište své poznámky k této epizodě...' 
+                        : 'Write your notes about this episode here...'}
+                      className="w-full h-48 px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                     />
+                  </div>
+
+                  {/* Save status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {saveStatus === 'saving' && (
+                        <div className="flex items-center gap-2 text-amber-400">
+                          <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm">{language === 'cs' ? 'Ukládání...' : 'Saving...'}</span>
+                        </div>
+                      )}
+                      {saveStatus === 'saved' && (
+                        <div className="flex items-center gap-2 text-green-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-sm">{language === 'cs' ? 'Uloženo' : 'Saved'}</span>
+                        </div>
+                      )}
+                      {saveStatus === 'error' && (
+                        <div className="flex items-center gap-2 text-red-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span className="text-sm">{language === 'cs' ? 'Chyba při ukládání' : 'Save error'}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button
+                      onClick={handleClose}
+                      className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                    >
+                      {language === 'cs' ? 'Zavřít' : 'Close'}
+                    </button>
                   </div>
                 </>
               )}
             </div>
-
-            {/* Footer with save status */}
-            <div className="px-4 py-3 border-t border-slate-800 bg-slate-900/80 backdrop-blur-sm safe-area-bottom">
-              <div className="flex items-center justify-center gap-2 text-sm">
-                {saveStatus === 'saving' && (
-                  <>
-                    <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-amber-400">{language === 'cs' ? 'Ukládám...' : 'Saving...'}</span>
-                  </>
-                )}
-                {saveStatus === 'saved' && (
-                  <>
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-green-400">{language === 'cs' ? 'Uloženo' : 'Saved'}</span>
-                  </>
-                )}
-                {saveStatus === 'error' && (
-                  <>
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span className="text-red-400">{language === 'cs' ? 'Chyba při ukládání' : 'Error saving'}</span>
-                  </>
-                )}
-                {saveStatus === 'idle' && (
-                  <span className="text-slate-600 text-xs">
-                    {language === 'cs' 
-                      ? 'Změny se ukládají automaticky'
-                      : 'Changes are saved automatically'}
-                  </span>
-                )}
-              </div>
-            </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
