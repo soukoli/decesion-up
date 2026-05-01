@@ -22,8 +22,6 @@ export interface SchoolArticle {
   articleUrl: string;
   category: 'Novinky' | 'Družina';
   categoryColor: string;
-  isRead?: boolean;
-  isNew?: boolean;
 }
 
 export interface EconomicSignal {

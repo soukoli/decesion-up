@@ -6,7 +6,6 @@ import { useTranslation } from '@/lib/translation';
 
 interface SchoolCardProps {
   article: SchoolArticle;
-  onMarkAsRead?: (articleId: string) => void;
 }
 
 // Format relative time (freshness indicator) - reused from PodcastCard pattern
@@ -33,7 +32,7 @@ function formatRelativeTime(dateStr: string, lang: 'en' | 'cs'): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function SchoolCard({ article, onMarkAsRead }: SchoolCardProps) {
+export function SchoolCard({ article }: SchoolCardProps) {
   const { language } = useTranslation();
   
   const freshness = formatRelativeTime(article.pubDate, language);
@@ -47,41 +46,15 @@ export function SchoolCard({ article, onMarkAsRead }: SchoolCardProps) {
       ? 'text-amber-400' 
       : 'text-slate-500';
 
-  const handleClick = () => {
-    // Označit jako přečtený při kliknutí
-    if (onMarkAsRead) {
-      onMarkAsRead(article.id);
-    }
-  };
-
   return (
     <a
       href={article.articleUrl}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={handleClick}
-      className={`flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group relative ${
-        article.isRead ? 'opacity-60' : ''
-      }`}
+      className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group relative"
     >
-      {/* New indicator */}
-      {article.isNew && !article.isRead && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse">
-          <div className="absolute inset-0 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
-        </div>
-      )}
-
-      {/* Read status indicator */}
+      {/* Thumbnail */}
       <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-slate-700">
-        {/* Read checkmark overlay */}
-        {article.isRead && (
-          <div className="absolute inset-0 bg-green-600/80 flex items-center justify-center z-10">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        )}
-        
         {article.imageUrl ? (
           <Image
             src={article.imageUrl}
@@ -102,15 +75,8 @@ export function SchoolCard({ article, onMarkAsRead }: SchoolCardProps) {
         {/* Top row: Title + Category */}
         <div className="flex items-start gap-2 mb-1">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {/* New badge */}
-            {article.isNew && !article.isRead && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold flex-shrink-0">
-                NEW
-              </span>
-            )}
-            <h3 className={`text-sm font-semibold group-hover:text-amber-400 transition-colors ${
-              article.isRead ? 'text-slate-400 line-through' : 'text-white'
-            }`} style={{ wordBreak: 'break-word', hyphens: 'auto' }}>
+            <h3 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors" 
+                style={{ wordBreak: 'break-word', hyphens: 'auto' }}>
               {article.title}
             </h3>
           </div>
@@ -129,9 +95,7 @@ export function SchoolCard({ article, onMarkAsRead }: SchoolCardProps) {
         
         {/* Description */}
         {article.description && (
-          <p className={`text-sm line-clamp-1 mb-1 ${
-            article.isRead ? 'text-slate-500' : 'text-slate-400'
-          }`}>
+          <p className="text-sm line-clamp-1 mb-1 text-slate-400">
             {article.description}
           </p>
         )}
@@ -143,9 +107,6 @@ export function SchoolCard({ article, onMarkAsRead }: SchoolCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
             horackova.cz
-            {article.isRead && (
-              <span className="text-green-400 ml-2">✓ Přečteno</span>
-            )}
           </span>
         </div>
       </div>

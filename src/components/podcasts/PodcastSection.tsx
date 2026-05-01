@@ -6,6 +6,7 @@ import { PodcastCard } from './PodcastCard';
 import { useTranslation } from '@/lib/translation';
 import { CATEGORY_COLORS, getCategories } from '@/lib/podcasts-config';
 import { PodcastCardSkeleton } from '../Skeleton';
+import { SectionHeader } from '../mobile/SectionHeader';
 
 interface PodcastSectionProps {
   initialEpisodes?: PodcastEpisode[];
@@ -17,6 +18,7 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
   const [loading, setLoading] = useState(initialEpisodes.length === 0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
   const { language } = useTranslation();
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
       if (response.ok) {
         const data = await response.json();
         setEpisodes(data.podcasts || []);
+        setLastRefresh(new Date());
       }
     } catch (error) {
       console.error('Error fetching podcasts:', error);
@@ -86,6 +89,15 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
 
   return (
     <section className="space-y-4">
+      {/* Section Header */}
+      <SectionHeader
+        title={language === 'cs' ? 'Podcasty' : 'Podcasts'}
+        lastRefresh={lastRefresh}
+        onRefresh={fetchPodcasts}
+        refreshing={loading}
+        showSettings={true}
+      />
+
       {/* Category filter tabs */}
       <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-800">
         {getCategories().map((category) => {
