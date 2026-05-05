@@ -11,6 +11,7 @@ interface AITechSectionProps {
   research: AIResearch[];
   onGlobeClick?: () => void;
   conflictCount?: number;
+  hideSectionHeader?: boolean;
 }
 
 function formatTimeAgo(dateStr: string, lang: 'en' | 'cs'): string {
@@ -37,7 +38,7 @@ interface TranslatedPaper {
   summary: string;
 }
 
-export function AITechSection({ trends, research, onGlobeClick, conflictCount = 0 }: AITechSectionProps) {
+export function AITechSection({ trends, research, onGlobeClick, conflictCount = 0, hideSectionHeader = false }: AITechSectionProps) {
   const [expandedTrends, setExpandedTrends] = useState(false);
   const [expandedResearch, setExpandedResearch] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
@@ -133,15 +134,17 @@ export function AITechSection({ trends, research, onGlobeClick, conflictCount = 
 
   return (
     <section className="space-y-6">
-      {/* Section Header */}
-      <SectionHeader
-        title={language === 'cs' ? 'AI & Tech' : 'AI & Tech'}
-        lastRefresh={lastRefresh}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        onGlobeClick={onGlobeClick}
-        conflictCount={conflictCount}
-      />
+      {/* Section Header - only show in mobile */}
+      {!hideSectionHeader && (
+        <SectionHeader
+          title={language === 'cs' ? 'AI & Tech' : 'AI & Tech'}
+          lastRefresh={lastRefresh}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          onGlobeClick={onGlobeClick}
+          conflictCount={conflictCount}
+        />
+      )}
 
       {/* Translation indicator */}
       {isTranslating && (

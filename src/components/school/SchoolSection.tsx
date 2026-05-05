@@ -12,11 +12,12 @@ interface SchoolSectionProps {
   initialArticles?: SchoolArticle[];
   onGlobeClick?: () => void;
   conflictCount?: number;
+  hideSectionHeader?: boolean;
 }
 
 type CategoryFilter = ReturnType<typeof getSchoolCategories>[number];
 
-export function SchoolSection({ initialArticles = [], onGlobeClick, conflictCount = 0 }: SchoolSectionProps) {
+export function SchoolSection({ initialArticles = [], onGlobeClick, conflictCount = 0, hideSectionHeader = false }: SchoolSectionProps) {
   const [articles, setArticles] = useState<SchoolArticle[]>(initialArticles);
   const [loading, setLoading] = useState(initialArticles.length === 0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('Vše');
@@ -103,15 +104,17 @@ export function SchoolSection({ initialArticles = [], onGlobeClick, conflictCoun
 
   return (
     <section className="space-y-4">
-      {/* Section Header */}
-      <SectionHeader
-        title={language === 'cs' ? 'Horáčkova' : 'School News'}
-        lastRefresh={lastRefresh}
-        onRefresh={fetchArticles}
-        refreshing={loading}
-        onGlobeClick={onGlobeClick}
-        conflictCount={conflictCount}
-      />
+      {/* Section Header - only show in mobile */}
+      {!hideSectionHeader && (
+        <SectionHeader
+          title={language === 'cs' ? 'Horáčkova' : 'School News'}
+          lastRefresh={lastRefresh}
+          onRefresh={fetchArticles}
+          refreshing={loading}
+          onGlobeClick={onGlobeClick}
+          conflictCount={conflictCount}
+        />
+      )}
 
       {/* Category filter tabs */}
       <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-800">

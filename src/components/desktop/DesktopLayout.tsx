@@ -100,13 +100,13 @@ export function DesktopLayout({ data, onRefresh, refreshing, lastRefresh }: Desk
   const renderContent = () => {
     switch (activeSection) {
       case 'podcasts':
-        return <PodcastSection initialEpisodes={data.podcasts} />;
+        return <PodcastSection initialEpisodes={data.podcasts} hideSectionHeader={true} />;
       case 'school':
-        return <SchoolSection />;
+        return <SchoolSection hideSectionHeader={true} />;
       case 'economy':
-        return <EconomySection initialMarkets={data.markets} initialStocks={data.stocks} />;
+        return <EconomySection initialMarkets={data.markets} initialStocks={data.stocks} hideSectionHeader={true} />;
       case 'aitech':
-        return <AITechSection trends={data.trends} research={data.research} />;
+        return <AITechSection trends={data.trends} research={data.research} hideSectionHeader={true} />;
       case 'news':
         return <NewsSection news={data.news} />;
       default:

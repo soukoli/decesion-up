@@ -12,11 +12,12 @@ interface PodcastSectionProps {
   initialEpisodes?: PodcastEpisode[];
   onGlobeClick?: () => void;
   conflictCount?: number;
+  hideSectionHeader?: boolean;
 }
 
 type CategoryFilter = ReturnType<typeof getCategories>[number];
 
-export function PodcastSection({ initialEpisodes = [], onGlobeClick, conflictCount = 0 }: PodcastSectionProps) {
+export function PodcastSection({ initialEpisodes = [], onGlobeClick, conflictCount = 0, hideSectionHeader = false }: PodcastSectionProps) {
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
   const [loading, setLoading] = useState(initialEpisodes.length === 0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
@@ -91,16 +92,18 @@ export function PodcastSection({ initialEpisodes = [], onGlobeClick, conflictCou
 
   return (
     <section className="space-y-4">
-      {/* Section Header */}
-      <SectionHeader
-        title={language === 'cs' ? 'Podcasty' : 'Podcasts'}
-        lastRefresh={lastRefresh}
-        onRefresh={fetchPodcasts}
-        refreshing={loading}
-        showSettings={true}
-        onGlobeClick={onGlobeClick}
-        conflictCount={conflictCount}
-      />
+      {/* Section Header - only show in mobile */}
+      {!hideSectionHeader && (
+        <SectionHeader
+          title={language === 'cs' ? 'Podcasty' : 'Podcasts'}
+          lastRefresh={lastRefresh}
+          onRefresh={fetchPodcasts}
+          refreshing={loading}
+          showSettings={true}
+          onGlobeClick={onGlobeClick}
+          conflictCount={conflictCount}
+        />
+      )}
 
       {/* Category filter tabs */}
       <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-800">

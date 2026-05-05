@@ -10,6 +10,7 @@ interface EconomySectionProps {
   initialStocks?: StockIndex[];
   onGlobeClick?: () => void;
   conflictCount?: number;
+  hideSectionHeader?: boolean;
 }
 
 // Sparkline component - responsive width
@@ -181,7 +182,7 @@ function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'c
   );
 }
 
-export function EconomySection({ initialMarkets = [], initialStocks = [], onGlobeClick, conflictCount = 0 }: EconomySectionProps) {
+export function EconomySection({ initialMarkets = [], initialStocks = [], onGlobeClick, conflictCount = 0, hideSectionHeader = false }: EconomySectionProps) {
   const [markets, setMarkets] = useState<MarketSignal[]>(initialMarkets);
   const [stocks, setStocks] = useState<StockIndex[]>(initialStocks);
   const [loading, setLoading] = useState(initialMarkets.length === 0);
@@ -242,15 +243,17 @@ export function EconomySection({ initialMarkets = [], initialStocks = [], onGlob
 
   return (
     <section className="space-y-6">
-      {/* Section Header */}
-      <SectionHeader
-        title={language === 'cs' ? 'Ekonomika' : 'Economy'}
-        lastRefresh={lastRefresh}
-        onRefresh={fetchData}
-        refreshing={loading}
-        onGlobeClick={onGlobeClick}
-        conflictCount={conflictCount}
-      />
+      {/* Section Header - only show in mobile */}
+      {!hideSectionHeader && (
+        <SectionHeader
+          title={language === 'cs' ? 'Ekonomika' : 'Economy'}
+          lastRefresh={lastRefresh}
+          onRefresh={fetchData}
+          refreshing={loading}
+          onGlobeClick={onGlobeClick}
+          conflictCount={conflictCount}
+        />
+      )}
 
       {/* Currency section - 3 cards side by side */}
       <div>
