@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { MarketSignal, StockIndex } from '@/types';
 import { useTranslation } from '@/lib/translation';
+import { SectionHeader } from '../mobile/SectionHeader';
 
 interface EconomySectionProps {
   initialMarkets?: MarketSignal[];
   initialStocks?: StockIndex[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
 // Sparkline component - responsive width
@@ -178,10 +181,11 @@ function StockCard({ stock, language }: { stock: StockIndex; language: 'en' | 'c
   );
 }
 
-export function EconomySection({ initialMarkets = [], initialStocks = [] }: EconomySectionProps) {
+export function EconomySection({ initialMarkets = [], initialStocks = [], onGlobeClick, conflictCount = 0 }: EconomySectionProps) {
   const [markets, setMarkets] = useState<MarketSignal[]>(initialMarkets);
   const [stocks, setStocks] = useState<StockIndex[]>(initialStocks);
   const [loading, setLoading] = useState(initialMarkets.length === 0);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
   const { language } = useTranslation();
 
   useEffect(() => {
@@ -207,6 +211,8 @@ export function EconomySection({ initialMarkets = [], initialStocks = [] }: Econ
         const data = await stocksRes.json();
         setStocks(data || []);
       }
+      
+      setLastRefresh(new Date());
     } catch (error) {
       console.error('Error fetching economy data:', error);
     } finally {
@@ -236,6 +242,16 @@ export function EconomySection({ initialMarkets = [], initialStocks = [] }: Econ
 
   return (
     <section className="space-y-6">
+      {/* Section Header */}
+      <SectionHeader
+        title={language === 'cs' ? 'Ekonomika' : 'Economy'}
+        lastRefresh={lastRefresh}
+        onRefresh={fetchData}
+        refreshing={loading}
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
+      />
+
       {/* Currency section - 3 cards side by side */}
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">

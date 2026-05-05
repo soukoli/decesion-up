@@ -8,9 +8,11 @@ import { useState } from 'react';
 interface MobileNewsPageProps {
   news: WorldNews[];
   czechNews: WorldNews[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
-export function MobileNewsPage({ news, czechNews }: MobileNewsPageProps) {
+export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 0 }: MobileNewsPageProps) {
   const { language } = useTranslation();
   const { fontSize } = useSettings();
   const fontConfig = FONT_SIZE_CONFIG[fontSize];

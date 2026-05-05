@@ -10,11 +10,13 @@ import { SectionHeader } from '../mobile/SectionHeader';
 
 interface SchoolSectionProps {
   initialArticles?: SchoolArticle[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
 type CategoryFilter = ReturnType<typeof getSchoolCategories>[number];
 
-export function SchoolSection({ initialArticles = [] }: SchoolSectionProps) {
+export function SchoolSection({ initialArticles = [], onGlobeClick, conflictCount = 0 }: SchoolSectionProps) {
   const [articles, setArticles] = useState<SchoolArticle[]>(initialArticles);
   const [loading, setLoading] = useState(initialArticles.length === 0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('Vše');
@@ -107,6 +109,8 @@ export function SchoolSection({ initialArticles = [] }: SchoolSectionProps) {
         lastRefresh={lastRefresh}
         onRefresh={fetchArticles}
         refreshing={loading}
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
       />
 
       {/* Category filter tabs */}

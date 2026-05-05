@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { TechTrend, AIResearch } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
+import { SectionHeader } from '../mobile/SectionHeader';
 
 interface AITechSectionProps {
   trends: TechTrend[];
   research: AIResearch[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
 function formatTimeAgo(dateStr: string, lang: 'en' | 'cs'): string {
@@ -34,9 +37,11 @@ interface TranslatedPaper {
   summary: string;
 }
 
-export function AITechSection({ trends, research }: AITechSectionProps) {
+export function AITechSection({ trends, research, onGlobeClick, conflictCount = 0 }: AITechSectionProps) {
   const [expandedTrends, setExpandedTrends] = useState(false);
   const [expandedResearch, setExpandedResearch] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
   const { language, translate, isTranslating } = useTranslation();
   const { fontSize } = useSettings();
   const [translations, setTranslations] = useState<Record<string, TranslatedPaper>>({});
@@ -92,6 +97,18 @@ export function AITechSection({ trends, research }: AITechSectionProps) {
     }
   }, [language, research, displayedResearch, translate, translations]);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Since this is passed static data, we'll just simulate a refresh
+      // In a real app, you'd fetch fresh data here
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLastRefresh(new Date());
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const getTitle = (paper: AIResearch) => {
     if (language === 'cs' && translations[paper.id]?.title) {
       return translations[paper.id].title;
@@ -116,6 +133,16 @@ export function AITechSection({ trends, research }: AITechSectionProps) {
 
   return (
     <section className="space-y-6">
+      {/* Section Header */}
+      <SectionHeader
+        title={language === 'cs' ? 'AI & Tech' : 'AI & Tech'}
+        lastRefresh={lastRefresh}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
+      />
+
       {/* Translation indicator */}
       {isTranslating && (
         <div className="flex items-center gap-2 text-xs text-slate-500">

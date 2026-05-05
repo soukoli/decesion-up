@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
-import { NOTE_CATEGORIES, PodcastNote } from '@/lib/notes-constants';
+import { PodcastNote } from '@/lib/notes-constants';
+import { CATEGORY_COLORS } from '@/lib/podcasts-config';
 import { SectionHeader } from '../SectionHeader';
 
-export function MobileNotesPage() {
+export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeClick?: () => void; conflictCount?: number }) {
   const { language } = useTranslation();
   const { fontSize } = useSettings();
   const fontConfig = FONT_SIZE_CONFIG[fontSize];
@@ -16,6 +17,8 @@ export function MobileNotesPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
   const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
 
   // Fetch all notes
@@ -75,24 +78,26 @@ export function MobileNotesPage() {
     });
   };
 
-  // Get category label and color
+  // Simplified podcast categories
+  const PODCAST_CATEGORIES = [
+    { value: 'Tech', labelCs: 'Technologie', labelEn: 'Tech' },
+    { value: 'Science', labelCs: 'Věda', labelEn: 'Science' },  
+    { value: 'Business', labelCs: 'Business', labelEn: 'Business' },
+    { value: 'Czech', labelCs: 'České', labelEn: 'Czech' },
+  ];
+
+  // Get category label and color using podcast categories
   const getCategoryInfo = (categoryValue: string | null) => {
-    const cat = NOTE_CATEGORIES.find(c => c.value === categoryValue);
+    const cat = PODCAST_CATEGORIES.find(c => c.value === categoryValue);
     const colors: Record<string, string> = {
-      'ai-tech': 'bg-violet-500/20 text-violet-400',
-      'productivity': 'bg-blue-500/20 text-blue-400',
-      'business': 'bg-green-500/20 text-green-400',
-      'science': 'bg-cyan-500/20 text-cyan-400',
-      'philosophy': 'bg-amber-500/20 text-amber-400',
-      'health': 'bg-red-500/20 text-red-400',
-      'psychology': 'bg-pink-500/20 text-pink-400',
-      'history': 'bg-orange-500/20 text-orange-400',
-      'economics': 'bg-emerald-500/20 text-emerald-400',
-      'other': 'bg-slate-500/20 text-slate-400',
+      'Tech': 'bg-violet-500/20 text-violet-400',
+      'Science': 'bg-blue-500/20 text-blue-400', 
+      'Business': 'bg-green-500/20 text-green-400',
+      'Czech': 'bg-orange-500/20 text-orange-400',
     };
     return {
       label: cat ? (language === 'cs' ? cat.labelCs : cat.labelEn) : (language === 'cs' ? 'Ostatní' : 'Other'),
-      color: colors[categoryValue || 'other'] || colors.other,
+      color: colors[categoryValue || 'Other'] || 'bg-slate-500/20 text-slate-400',
     };
   };
 
@@ -109,6 +114,49 @@ export function MobileNotesPage() {
     }
   };
 
+  // Copy note to clipboard
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
+    } catch (error) {
+      console.error('Failed to copy note:', error);
+    }
+  };
+
+  // Start editing note
+  const startEdit = (note: PodcastNote) => {
+    setEditingNoteId(note.id);
+    setEditingText(note.note || '');
+  };
+
+  // Save edited note
+  const handleSave = async (noteId: number) => {
+    try {
+      const res = await fetch('/api/notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: noteId, note: editingText }),
+      });
+      
+      if (res.ok) {
+        setNotes(prev => prev.map(n => 
+          n.id === noteId ? { ...n, note: editingText, updated_at: new Date().toISOString() } : n
+        ));
+        setEditingNoteId(null);
+        setEditingText('');
+      }
+    } catch (error) {
+      console.error('Failed to update note:', error);
+    }
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingNoteId(null);
+    setEditingText('');
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
       {/* Header with controls */}
@@ -117,6 +165,8 @@ export function MobileNotesPage() {
         lastRefresh={lastRefresh}
         onRefresh={fetchNotes}
         refreshing={loading}
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
       />
 
       {/* Subtitle */}
@@ -162,7 +212,7 @@ export function MobileNotesPage() {
         >
           {language === 'cs' ? 'Vše' : 'All'}
         </button>
-        {NOTE_CATEGORIES.map(cat => (
+        {PODCAST_CATEGORIES.map(cat => (
           <button
             key={cat.value}
             onClick={() => setActiveCategory(activeCategory === cat.value ? null : cat.value)}
@@ -260,20 +310,77 @@ export function MobileNotesPage() {
                 {/* Expanded content */}
                 {isExpanded && (
                   <div className="px-3 pb-3 border-t border-slate-700/30">
-                    {/* Full note text */}
+                    {/* Full note text or edit textarea */}
                     <div className="mt-3 p-3 bg-slate-900/50 rounded-lg">
-                      {hasContent ? (
-                        <p className="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
-                          {note.note}
-                        </p>
+                      {editingNoteId === note.id ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            placeholder={language === 'cs' ? 'Upravit poznámku...' : 'Edit note...'}
+                            className="w-full bg-slate-800/50 text-slate-300 text-sm border border-slate-600 rounded-lg p-2 resize-none focus:outline-none focus:border-amber-500 min-h-[80px]"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSave(note.id)}
+                              className="px-3 py-1.5 bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg text-xs font-medium hover:bg-amber-500/30 transition-colors"
+                            >
+                              {language === 'cs' ? 'Uložit' : 'Save'}
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="px-3 py-1.5 bg-slate-700/50 text-slate-400 border border-slate-600/50 rounded-lg text-xs font-medium hover:bg-slate-700 transition-colors"
+                            >
+                              {language === 'cs' ? 'Zrušit' : 'Cancel'}
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <p className="text-slate-500 text-sm italic">
-                          {language === 'cs' ? 'Prázdná poznámka' : 'Empty note'}
-                        </p>
+                        <>
+                          {hasContent ? (
+                            <p className="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                              {note.note}
+                            </p>
+                          ) : (
+                            <p className="text-slate-500 text-sm italic">
+                              {language === 'cs' ? 'Prázdná poznámka' : 'Empty note'}
+                            </p>
+                          )}
+                          
+                          {/* Action buttons */}
+                          <div className="flex gap-2 mt-3 pt-2 border-t border-slate-800/50">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopy(note.note || '');
+                              }}
+                              className="flex items-center gap-1.5 px-2 py-1 bg-slate-800/50 text-slate-400 rounded text-xs font-medium hover:bg-slate-700 transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              {language === 'cs' ? 'Kopírovat' : 'Copy'}
+                            </button>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEdit(note);
+                              }}
+                              className="flex items-center gap-1.5 px-2 py-1 bg-slate-800/50 text-slate-400 rounded text-xs font-medium hover:bg-slate-700 transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              {language === 'cs' ? 'Upravit' : 'Edit'}
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                     
-                    {/* Meta info */}
+                    {/* Meta info and delete button */}
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-[10px] text-slate-600">
                         {new Date(note.created_at).toLocaleDateString(

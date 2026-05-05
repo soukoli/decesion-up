@@ -10,11 +10,13 @@ import { SectionHeader } from '../mobile/SectionHeader';
 
 interface PodcastSectionProps {
   initialEpisodes?: PodcastEpisode[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
 type CategoryFilter = ReturnType<typeof getCategories>[number];
 
-export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
+export function PodcastSection({ initialEpisodes = [], onGlobeClick, conflictCount = 0 }: PodcastSectionProps) {
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>(initialEpisodes);
   const [loading, setLoading] = useState(initialEpisodes.length === 0);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
@@ -96,6 +98,8 @@ export function PodcastSection({ initialEpisodes = [] }: PodcastSectionProps) {
         onRefresh={fetchPodcasts}
         refreshing={loading}
         showSettings={true}
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
       />
 
       {/* Category filter tabs */}

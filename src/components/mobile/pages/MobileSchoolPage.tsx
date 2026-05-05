@@ -5,12 +5,18 @@ import { SchoolArticle } from '@/types';
 
 interface MobileSchoolPageProps {
   schoolData: SchoolArticle[];
+  onGlobeClick?: () => void;
+  conflictCount?: number;
 }
 
-export function MobileSchoolPage({ schoolData }: MobileSchoolPageProps) {
+export function MobileSchoolPage({ schoolData, onGlobeClick, conflictCount = 0 }: MobileSchoolPageProps) {
   return (
     <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
-      <SchoolSection initialArticles={schoolData} />
+      <SchoolSection 
+        initialArticles={schoolData} 
+        onGlobeClick={onGlobeClick}
+        conflictCount={conflictCount}
+      />
     </div>
   );
 }
