@@ -145,29 +145,6 @@ export function NewsCardSkeleton() {
 }
 
 /**
- * Skeleton pro market signal
- */
-export function MarketSignalSkeleton() {
-  return (
-    <div className="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-      <div className="flex items-center justify-between">
-        {/* Left side */}
-        <div className="space-y-2">
-          <Skeleton variant="text" height="14px" width="80px" />
-          <Skeleton variant="text" height="20px" width="120px" />
-        </div>
-        
-        {/* Right side */}
-        <div className="text-right space-y-2">
-          <Skeleton variant="rectangular" width="60px" height="16px" />
-          <Skeleton variant="text" height="12px" width="50px" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
  * Skeleton pro research item
  */
 export function ResearchItemSkeleton() {

@@ -56,6 +56,7 @@ export function PodcastSection({ initialEpisodes = [], onGlobeClick, conflictCou
     'All': { en: 'All', cs: 'Vše' },
     'Tech': { en: 'Tech & AI', cs: 'Tech & AI' },
     'Science': { en: 'Science', cs: 'Věda' },
+    'Learning': { en: 'Learning', cs: 'Učení' },
     'Business': { en: 'Business', cs: 'Byznys' },
     'Czech': { en: 'Czech', cs: 'České' },
   };

@@ -166,12 +166,12 @@ export function NewsSection({ news }: NewsSectionProps) {
               </span>
             </div>
             
-            <h3 className={`${fontConfig.titleClass} font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1`}>
+            <h3 className={`${fontSize === 'small' ? 'text-base' : fontSize === 'large' ? 'text-xl' : 'text-lg'} font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-2 mb-1 leading-relaxed tracking-wide`}>
               {getTitle(item)}
             </h3>
             
             {item.description && (
-              <p className={`${fontConfig.bodyClass} text-slate-400 line-clamp-2 mb-2`}>
+              <p className={`${fontSize === 'small' ? 'text-sm' : fontSize === 'large' ? 'text-base' : 'text-[15px]'} text-slate-400 line-clamp-2 mb-2 leading-relaxed`}>
                 {getDescription(item)}
               </p>
             )}

@@ -3,7 +3,7 @@
 import { WorldNews } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface MobileNewsPageProps {
   news: WorldNews[];
@@ -12,16 +12,52 @@ interface MobileNewsPageProps {
   conflictCount?: number;
 }
 
+interface TranslatedNews {
+  title: string;
+  description: string;
+}
+
 export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 0 }: MobileNewsPageProps) {
-  const { language } = useTranslation();
+  const { language, setLanguage, translate, isTranslating } = useTranslation();
   const { fontSize } = useSettings();
   const fontConfig = FONT_SIZE_CONFIG[fontSize];
   
   // Tab state: 'world' or 'czech'
   const [activeTab, setActiveTab] = useState<'world' | 'czech'>('world');
+  const [translations, setTranslations] = useState<Record<string, TranslatedNews>>({});
   
   // Choose current news based on active tab
   const currentNews = activeTab === 'world' ? news : czechNews;
+
+  // Translate world news titles when language is Czech
+  useEffect(() => {
+    if (language === 'cs' && activeTab === 'world' && news.length > 0) {
+      const translateNews = async () => {
+        const untranslated = news.filter(item => !translations[item.id]?.title);
+        if (untranslated.length === 0) return;
+
+        const titles = untranslated.map(item => item.title);
+        const translatedTitles = await translate(titles);
+
+        const newTranslations: Record<string, TranslatedNews> = { ...translations };
+        untranslated.forEach((item, idx) => {
+          newTranslations[item.id] = {
+            title: translatedTitles[idx] || item.title,
+            description: translations[item.id]?.description || '',
+          };
+        });
+        setTranslations(newTranslations);
+      };
+      translateNews();
+    }
+  }, [language, activeTab, news, translate, translations]);
+
+  const getTitle = (item: WorldNews) => {
+    if (language === 'cs' && activeTab === 'world' && translations[item.id]?.title) {
+      return translations[item.id].title;
+    }
+    return item.title;
+  };
 
   // Category colors for Czech news
   const czechCategoryColors: Record<string, string> = {
@@ -45,9 +81,29 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
     <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pb-3">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase font-display">
-          {language === 'cs' ? 'Zprávy' : 'News'}
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-black text-white tracking-tight uppercase font-display">
+            {language === 'cs' ? 'Zprávy' : 'News'}
+          </h1>
+          {/* Language toggle */}
+          <button
+            onClick={() => setLanguage(language === 'en' ? 'cs' : 'en')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              language === 'cs'
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:text-white'
+            }`}
+          >
+            <span className="text-sm">{language === 'cs' ? '🇨🇿' : '🇬🇧'}</span>
+            <span className="text-xs font-medium">{language === 'cs' ? 'CZ' : 'EN'}</span>
+            {isTranslating && (
+              <svg className="w-3 h-3 animate-spin ml-1" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            )}
+          </button>
+        </div>
         <p className="text-sm text-slate-500 mt-1">
           {activeTab === 'world' 
             ? (language === 'cs' ? 'Nejdůležitější světové události' : 'Most important world events')
@@ -158,13 +214,17 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
                 </div>
                 
                 <h2 
-                  className={`font-semibold text-white mb-2 group-hover:text-amber-400 transition-colors leading-snug ${fontConfig.titleClass}`}
+                  className={`font-semibold text-white mb-2 group-hover:text-amber-400 transition-colors leading-relaxed tracking-wide ${
+                    fontSize === 'small' ? 'text-base' : fontSize === 'large' ? 'text-xl' : 'text-lg'
+                  }`}
                 >
-                  {item.title}
+                  {getTitle(item)}
                 </h2>
                 
                 <p 
-                  className={`text-slate-400 mb-3 leading-relaxed ${fontConfig.bodyClass}`}
+                  className={`text-slate-400 mb-3 leading-relaxed ${
+                    fontSize === 'small' ? 'text-sm' : fontSize === 'large' ? 'text-base' : 'text-[15px]'
+                  }`}
                 >
                   {item.description}
                 </p>

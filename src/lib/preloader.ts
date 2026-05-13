@@ -63,16 +63,16 @@ export function usePreloader(options: PreloaderOptions = {}) {
       preloadMonitor.startTimer('api-calls');
       
       // Paralelní načítání všech API endpointů
-      const [podcastsRes, marketsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
+      const [podcastsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, schoolRes, transportRes, weatherRes] = await Promise.all([
         fetch(`/api/podcasts`, fetchOptions),
-        fetch(`/api/markets`, fetchOptions),
         fetch(`/api/trends`, fetchOptions),
         fetch(`/api/news`, fetchOptions),
         fetch(`/api/news/czech`, fetchOptions),
         fetch(`/api/hotspots`, hotspotsOptions),
         fetch(`/api/research`, fetchOptions),
-        fetch(`/api/stocks?period=5d`, fetchOptions),
         fetch(`/api/school`, fetchOptions),
+        fetch(`/api/transport`, fetchOptions),
+        fetch(`/api/weather`, fetchOptions),
       ]);
       
       preloadMonitor.endTimer('api-calls');
@@ -80,25 +80,20 @@ export function usePreloader(options: PreloaderOptions = {}) {
 
       const newData: AppData = {
         podcasts: [],
-        markets: [],
         trends: [],
         news: [],
         czechNews: [],
         hotspots: [],
         research: [],
-        stocks: [],
         school: [],
+        transport: [],
+        weather: null,
       };
 
       // Zpracování odpovědí (stejná logika jako v page.tsx)
       if (podcastsRes.ok) {
         const d = await podcastsRes.json();
         newData.podcasts = d.podcasts || [];
-      }
-
-      if (marketsRes.ok) {
-        const d = await marketsRes.json();
-        newData.markets = d.markets || [];
       }
 
       if (trendsRes.ok) {
@@ -126,14 +121,19 @@ export function usePreloader(options: PreloaderOptions = {}) {
         newData.research = d.research || [];
       }
 
-      if (stocksRes.ok) {
-        const d = await stocksRes.json();
-        newData.stocks = d || [];
-      }
-
       if (schoolRes.ok) {
         const d = await schoolRes.json();
         newData.school = d.articles || [];
+      }
+
+      if (transportRes.ok) {
+        const d = await transportRes.json();
+        newData.transport = d.alerts || [];
+      }
+
+      if (weatherRes.ok) {
+        const d = await weatherRes.json();
+        newData.weather = d.weather || null;
       }
 
       preloadMonitor.endTimer('data-processing');

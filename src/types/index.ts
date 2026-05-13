@@ -176,3 +176,40 @@ export interface DashboardData {
   aiCommunities: AICommunity[];
   lastUpdated: string;
 }
+
+// Transport alerts (PID.cz)
+export interface TransportAlert {
+  id: string;
+  lines: string[];
+  type: 'metro' | 'tram' | 'bus' | 'train' | 'other';
+  category: 'mimoradnost' | 'vyluka' | 'zmena';
+  title: string;
+  timeRange: string;
+  severity: 'high' | 'medium' | 'low';
+  url: string;
+}
+
+// Weather data (Open-Meteo)
+export interface WeatherData {
+  current: {
+    temperature: number;
+    weatherCode: number;
+    description: string;
+    descriptionCz: string;
+    icon: string;
+    windSpeed: number;
+  };
+  today: {
+    max: number;
+    min: number;
+  };
+  tomorrow: {
+    max: number;
+    min: number;
+    weatherCode: number;
+    description: string;
+    descriptionCz: string;
+    icon: string;
+  };
+  lastUpdated: string;
+}

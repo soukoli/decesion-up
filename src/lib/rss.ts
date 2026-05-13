@@ -67,6 +67,11 @@ export async function fetchPodcastEpisode(config: PodcastConfig): Promise<Podcas
       imageUrl = feed.itunes.image;
     }
     
+    // Use default image from config as fallback
+    if (!imageUrl) {
+      imageUrl = config.defaultImage;
+    }
+    
     return {
       id: `${config.id}-${item.guid || item.link || Date.now()}`,
       podcastName: config.name,
@@ -99,7 +104,7 @@ function createFallbackEpisode(config: PodcastConfig): PodcastEpisode {
     description: `Listen to the latest episode of ${config.name}`,
     duration: '~30 min',
     pubDate: new Date().toISOString(),
-    imageUrl: '',
+    imageUrl: config.defaultImage,
     spotifyUrl: config.spotifyUrl,
     youtubeUrl: config.youtubeUrl,
     webUrl: config.webUrl,

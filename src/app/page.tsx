@@ -8,20 +8,19 @@ import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
 import { usePreloader } from '@/lib/preloader';
 import { PageSkeleton } from '@/components/Skeleton';
-import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal } from '@/types';
 import debugLog from '@/lib/debug';
 
 export default function Home() {
   const [data, setData] = useState<AppData>({
     podcasts: [],
-    markets: [],
     trends: [],
     news: [],
     czechNews: [],
     hotspots: [],
     research: [],
-    stocks: [],
     school: [],
+    transport: [],
+    weather: null,
   });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -46,14 +45,14 @@ export default function Home() {
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
-      clearPreloadCache(); // Vymaž cache při refresh
+      clearPreloadCache();
     }
     
-    // Zkus nejprve použít předčasně načtená data
+    // Try preloaded data first
     if (!isRefresh) {
       const preloadedData = getPreloadedData();
       if (preloadedData) {
-      debugLog.log('✅ Using preloaded data, skipping fetch');
+        debugLog.log('✅ Using preloaded data, skipping fetch');
         setData(preloadedData);
         setLastRefresh(new Date());
         setLoading(false);
@@ -74,38 +73,33 @@ export default function Home() {
     };
     
     try {
-      const [podcastsRes, marketsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, stocksRes, schoolRes] = await Promise.all([
+      const [podcastsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, schoolRes, transportRes, weatherRes] = await Promise.all([
         fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
-        fetch(`/api/markets${cacheBuster}`, fetchOptions),
         fetch(`/api/trends${cacheBuster}`, fetchOptions),
         fetch(`/api/news${cacheBuster}`, fetchOptions),
         fetch(`/api/news/czech${cacheBuster}`, fetchOptions),
         fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
         fetch(`/api/research${cacheBuster}`, fetchOptions),
-        fetch(`/api/stocks?period=5d${isRefresh ? '&_t=' + Date.now() : ''}`, fetchOptions),
         fetch(`/api/school${cacheBuster}`, fetchOptions),
+        fetch(`/api/transport${cacheBuster}`, fetchOptions),
+        fetch(`/api/weather${cacheBuster}`, fetchOptions),
       ]);
 
       const newData: AppData = {
         podcasts: [],
-        markets: [],
         trends: [],
         news: [],
         czechNews: [],
         hotspots: [],
         research: [],
-        stocks: [],
         school: [],
+        transport: [],
+        weather: null,
       };
 
       if (podcastsRes.ok) {
         const d = await podcastsRes.json();
         newData.podcasts = d.podcasts || [];
-      }
-
-      if (marketsRes.ok) {
-        const d = await marketsRes.json();
-        newData.markets = d.markets || [];
       }
 
       if (trendsRes.ok) {
@@ -133,14 +127,19 @@ export default function Home() {
         newData.research = d.research || [];
       }
 
-      if (stocksRes.ok) {
-        const d = await stocksRes.json();
-        newData.stocks = d || [];
-      }
-
       if (schoolRes.ok) {
         const d = await schoolRes.json();
         newData.school = d.articles || [];
+      }
+
+      if (transportRes.ok) {
+        const d = await transportRes.json();
+        newData.transport = d.alerts || [];
+      }
+
+      if (weatherRes.ok) {
+        const d = await weatherRes.json();
+        newData.weather = d.weather || null;
       }
 
       setData(newData);

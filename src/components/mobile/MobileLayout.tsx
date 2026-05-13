@@ -2,38 +2,32 @@
 
 import { useState, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, EffectCreative } from 'swiper/modules';
+import { EffectCreative } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 
 // Import Swiper styles
 import 'swiper/css';
-import 'swiper/css/pagination';
 import 'swiper/css/effect-creative';
 
-import { useTranslation } from '@/lib/translation';
-import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, StockIndex, MarketSignal, SchoolArticle } from '@/types';
+import { PodcastEpisode, TechTrend, WorldNews, GlobalHotspot, AIResearch, SchoolArticle, TransportAlert, WeatherData } from '@/types';
 
 // Section components
-import { MobilePodcastsPage } from './pages/MobilePodcastsPage';
-import { MobileSchoolPage } from './pages/MobileSchoolPage';
-import { MobileEconomyPage } from './pages/MobileEconomyPage';
-import { MobileAITechPage } from './pages/MobileAITechPage';
-import { MobileNewsPage } from './pages/MobileNewsPage';
+import { MobileBriefingPage } from './pages/MobileBriefingPage';
+import { MobileFeedPage } from './pages/MobileFeedPage';
 import { MobileNotesPage } from './pages/MobileNotesPage';
 import { MobileNavigation } from './MobileNavigation';
-import { GlobeModal } from './GlobeModal';
 import { PullToRefresh } from '../PullToRefresh';
 
 export interface AppData {
   podcasts: PodcastEpisode[];
-  markets: MarketSignal[];
   trends: TechTrend[];
   news: WorldNews[];
-  czechNews: WorldNews[]; // New: Czech/local news
+  czechNews: WorldNews[];
   hotspots: GlobalHotspot[];
   research: AIResearch[];
-  stocks: StockIndex[];
   school: SchoolArticle[];
+  transport: TransportAlert[];
+  weather: WeatherData | null;
 }
 
 interface MobileLayoutProps {
@@ -43,25 +37,11 @@ interface MobileLayoutProps {
   lastRefresh: Date | null;
 }
 
-export type SectionId = 'podcasts' | 'school' | 'economy' | 'aitech' | 'news' | 'notes';
-
-const sections: { id: SectionId; label: string; labelCz: string; icon: string }[] = [
-  { id: 'podcasts', label: 'Podcasts', labelCz: 'Podcasty', icon: 'mic' },
-  { id: 'school', label: 'Horáčkova', labelCz: 'Horáčkova', icon: 'school' },
-  { id: 'economy', label: 'Economy', labelCz: 'Ekonomika', icon: 'chart' },
-  { id: 'aitech', label: 'AI & Tech', labelCz: 'AI & Tech', icon: 'brain' },
-  { id: 'news', label: 'News', labelCz: 'Zprávy', icon: 'news' },
-  { id: 'notes', label: 'Notes', labelCz: 'Poznámky', icon: 'notes' },
-];
+export type SectionId = 'home' | 'feed' | 'notes';
 
 export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: MobileLayoutProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [showGlobe, setShowGlobe] = useState(false);
   const swiperRef = useRef<SwiperType | null>(null);
-  const { language } = useTranslation();
-
-  // Calculate conflicts for globe badge
-  const conflictCount = data.hotspots.filter(h => h.intensity >= 7).length;
 
   const handleSlideChange = (swiper: SwiperType) => {
     setActiveIndex(swiper.activeIndex);
@@ -75,10 +55,10 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
 
   return (
     <div className="h-screen flex flex-col bg-slate-950 overflow-hidden">
-      {/* Main Swiper Content */}
+      {/* Main Swiper Content - 3 worlds */}
       <div className="flex-1 overflow-hidden">
         <Swiper
-          modules={[Pagination, EffectCreative]}
+          modules={[EffectCreative]}
           onSwiper={(swiper) => (swiperRef.current = swiper)}
           onSlideChange={handleSlideChange}
           effect="creative"
@@ -97,82 +77,50 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
           resistance={true}
           resistanceRatio={0.85}
         >
+          {/* World 1: Home / Briefing */}
           <SwiperSlide>
             <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobilePodcastsPage 
-                podcasts={data.podcasts} 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
+              <MobileBriefingPage
+                transport={data.transport}
+                weather={data.weather}
+                podcasts={data.podcasts}
+                news={data.news}
+                czechNews={data.czechNews}
+                school={data.school}
+                hotspots={data.hotspots}
               />
             </PullToRefresh>
           </SwiperSlide>
-          
+
+          {/* World 2: Feed (nested swipe for channels) */}
           <SwiperSlide>
             <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileSchoolPage 
-                schoolData={data.school} 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
+              <MobileFeedPage
+                podcasts={data.podcasts}
+                school={data.school}
+                trends={data.trends}
+                research={data.research}
+                news={data.news}
+                czechNews={data.czechNews}
+                onRefresh={onRefresh}
+                refreshing={refreshing}
               />
             </PullToRefresh>
           </SwiperSlide>
-          
+
+          {/* World 3: Notes / Ideas */}
           <SwiperSlide>
             <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileEconomyPage 
-                markets={data.markets} 
-                stocks={data.stocks} 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
-              />
-            </PullToRefresh>
-          </SwiperSlide>
-          
-          <SwiperSlide>
-            <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileAITechPage 
-                trends={data.trends} 
-                research={data.research} 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
-              />
-            </PullToRefresh>
-          </SwiperSlide>
-          
-          <SwiperSlide>
-            <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileNewsPage 
-                news={data.news} 
-                czechNews={data.czechNews} 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
-              />
-            </PullToRefresh>
-          </SwiperSlide>
-          
-          <SwiperSlide>
-            <PullToRefresh onRefresh={onRefresh} className="h-full">
-              <MobileNotesPage 
-                onGlobeClick={() => setShowGlobe(true)}
-                conflictCount={conflictCount}
-              />
+              <MobileNotesPage />
             </PullToRefresh>
           </SwiperSlide>
         </Swiper>
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - 3 icons only */}
       <MobileNavigation
-        sections={sections}
         activeIndex={activeIndex}
         onNavigate={handleNavigate}
-      />
-
-      {/* Globe Modal */}
-      <GlobeModal
-        isOpen={showGlobe}
-        onClose={() => setShowGlobe(false)}
-        hotspots={data.hotspots}
       />
     </div>
   );
