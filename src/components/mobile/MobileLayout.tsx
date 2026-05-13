@@ -54,9 +54,9 @@ export function MobileLayout({ data, onRefresh, refreshing, lastRefresh }: Mobil
   };
 
   return (
-    <div className="h-screen flex flex-col bg-slate-950 overflow-hidden">
+    <div className="h-screen bg-slate-950 overflow-hidden relative">
       {/* Main Swiper Content - 3 worlds */}
-      <div className="flex-1 overflow-hidden">
+      <div className="h-full pb-20">
         <Swiper
           modules={[EffectCreative]}
           onSwiper={(swiper) => (swiperRef.current = swiper)}
