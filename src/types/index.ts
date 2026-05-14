@@ -190,6 +190,14 @@ export interface TransportAlert {
 }
 
 // Weather data (Open-Meteo)
+export interface WeatherHourly {
+  time: string;
+  temperature: number;
+  weatherCode: number;
+  icon: string;
+  precipProbability: number;
+}
+
 export interface WeatherData {
   current: {
     temperature: number;
@@ -211,5 +219,8 @@ export interface WeatherData {
     descriptionCz: string;
     icon: string;
   };
+  hourly: WeatherHourly[];
+  hasPrecipitation: boolean;
+  radarUrl: string | null;
   lastUpdated: string;
 }
