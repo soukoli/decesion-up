@@ -74,25 +74,25 @@ export function MobileFeedPage({ podcasts, school, trends, research, news, czech
           touchMoveStopPropagation={false}
         >
           <SwiperSlide>
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <MobilePodcastsPage podcasts={podcasts} />
             </div>
           </SwiperSlide>
 
           <SwiperSlide>
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <MobileSchoolPage schoolData={school} />
             </div>
           </SwiperSlide>
 
           <SwiperSlide>
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <MobileAITechPage trends={trends} research={research} />
             </div>
           </SwiperSlide>
 
           <SwiperSlide>
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <MobileNewsPage news={news} czechNews={czechNews} />
             </div>
           </SwiperSlide>

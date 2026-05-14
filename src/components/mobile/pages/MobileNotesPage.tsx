@@ -179,7 +179,7 @@ export function MobileNotesPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
+    <div className="h-full overflow-y-auto overscroll-contain bg-slate-950 px-4 py-4 pb-24">
       {/* Header */}
       <header className="mb-4">
         <div className="flex items-center justify-between">

@@ -1,11 +1,10 @@
 'use client';
 
-import { TransportAlert, WeatherData, PodcastEpisode, WorldNews, SchoolArticle } from '@/types';
+import { TransportAlert, WeatherData, PodcastEpisode, WorldNews, SchoolArticle, GlobalHotspot } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GlobeModal } from '../GlobeModal';
-import { GlobalHotspot } from '@/types';
 
 interface MobileBriefingPageProps {
   transport: TransportAlert[];
@@ -17,36 +16,93 @@ interface MobileBriefingPageProps {
   hotspots: GlobalHotspot[];
 }
 
+function formatTimeAgo(dateStr: string, lang: 'en' | 'cs'): string {
+  const date = new Date(dateStr);
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (diffMins < 1) return lang === 'cs' ? 'teď' : 'now';
+  if (diffMins < 60) return `${diffMins}m`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${Math.floor(diffHours / 24)}d`;
+}
+
 export function MobileBriefingPage({ transport, weather, podcasts, news, czechNews, school, hotspots }: MobileBriefingPageProps) {
   const { language } = useTranslation();
   const { openSettings } = useSettings();
   const [showGlobe, setShowGlobe] = useState(false);
+  const [transportLastUpdate, setTransportLastUpdate] = useState<Date>(new Date());
+  const [weatherLastUpdate, setWeatherLastUpdate] = useState<Date>(new Date());
+  const [liveTransport, setLiveTransport] = useState<TransportAlert[]>(transport);
+  const [liveWeather, setLiveWeather] = useState<WeatherData | null>(weather);
 
   const conflictCount = hotspots.filter(h => h.intensity >= 7).length;
 
-  // Get fresh items (less than 6 hours old)
+  // Auto-refresh transport every 1 minute
+  const refreshTransport = useCallback(async () => {
+    try {
+      const res = await fetch('/api/transport');
+      if (res.ok) {
+        const data = await res.json();
+        setLiveTransport(data.alerts || []);
+        setTransportLastUpdate(new Date());
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  // Auto-refresh weather every 5 minutes
+  const refreshWeather = useCallback(async () => {
+    try {
+      const res = await fetch('/api/weather');
+      if (res.ok) {
+        const data = await res.json();
+        setLiveWeather(data.weather || null);
+        setWeatherLastUpdate(new Date());
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    const transportInterval = setInterval(refreshTransport, 60 * 1000); // 1 min
+    const weatherInterval = setInterval(refreshWeather, 5 * 60 * 1000); // 5 min
+    return () => {
+      clearInterval(transportInterval);
+      clearInterval(weatherInterval);
+    };
+  }, [refreshTransport, refreshWeather]);
+
+  // Sync with props on initial load / pull-to-refresh
+  useEffect(() => {
+    setLiveTransport(transport);
+    setTransportLastUpdate(new Date());
+  }, [transport]);
+
+  useEffect(() => {
+    setLiveWeather(weather);
+    setWeatherLastUpdate(new Date());
+  }, [weather]);
+
+  // Fresh news (< 6h)
   const freshNews = [...news, ...czechNews]
     .filter(n => (Date.now() - new Date(n.publishedAt).getTime()) < 6 * 60 * 60 * 1000)
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
+    .slice(0, 4);
 
+  // Fresh podcasts (< 24h)
   const freshPodcasts = podcasts
     .filter(p => (Date.now() - new Date(p.pubDate).getTime()) < 24 * 60 * 60 * 1000)
-    .slice(0, 2);
-
-  const freshSchool = school
-    .filter(s => (Date.now() - new Date(s.pubDate).getTime()) < 48 * 60 * 60 * 1000)
-    .slice(0, 1);
-
-  const newItemsCount = freshNews.length + freshPodcasts.length + freshSchool.length;
+    .slice(0, 3);
 
   // Today's date
-  const today = new Date();
-  const dateStr = today.toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US', {
+  const dateStr = new Date().toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
+
+  const formatUpdate = (date: Date) => {
+    return date.toLocaleTimeString(language === 'cs' ? 'cs-CZ' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="h-full bg-slate-950 px-4 py-4 flex flex-col">
@@ -57,7 +113,7 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
           <p className="text-xs text-slate-500">{dateStr}</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Globe button */}
+          {/* Globe button - only icon, no text */}
           <button
             onClick={() => setShowGlobe(true)}
             className="relative p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white transition-colors"
@@ -84,21 +140,24 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
         </div>
       </header>
 
-      {/* Content - no scroll, fill viewport */}
-      <div className="flex-1 flex flex-col gap-3 min-h-0">
-        {/* Transport Alerts - only when there are issues */}
-        {transport.length > 0 && (
-          <div className="rounded-xl bg-red-950/30 border border-red-500/30 p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              <span className="text-xs font-semibold text-red-400 uppercase">
-                {language === 'cs' ? 'Doprava' : 'Transport'}
-              </span>
+      {/* Content - compact cards, no infinite scroll */}
+      <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+        {/* Transport Alerts - only when issues exist */}
+        {liveTransport.length > 0 && (
+          <div className="rounded-xl bg-red-950/30 border border-red-500/30 p-3 flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <span className="text-xs font-semibold text-red-400 uppercase">
+                  {language === 'cs' ? 'Doprava' : 'Transport'}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-600">{formatUpdate(transportLastUpdate)}</span>
             </div>
             <div className="space-y-1.5">
-              {transport.slice(0, 3).map((alert) => (
+              {liveTransport.slice(0, 3).map((alert) => (
                 <a
                   key={alert.id}
                   href={alert.url}
@@ -117,59 +176,73 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
         )}
 
         {/* Weather */}
-        {weather && (
-          <div className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex items-center justify-between">
+        {liveWeather && (
+          <div className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{weather.current.icon}</span>
+              <span className="text-2xl">{liveWeather.current.icon}</span>
               <div>
-                <span className="text-xl font-bold text-white">{weather.current.temperature}°C</span>
+                <span className="text-xl font-bold text-white">{liveWeather.current.temperature}°C</span>
                 <p className="text-xs text-slate-400">
-                  {language === 'cs' ? weather.current.descriptionCz : weather.current.description}
+                  {language === 'cs' ? liveWeather.current.descriptionCz : liveWeather.current.description}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-500">
-                {language === 'cs' ? 'Zítra' : 'Tomorrow'}
-              </p>
               <div className="flex items-center gap-1">
-                <span className="text-sm">{weather.tomorrow.icon}</span>
-                <span className="text-sm text-slate-300">{weather.tomorrow.max}°</span>
-                <span className="text-xs text-slate-500">{weather.tomorrow.min}°</span>
+                <span className="text-sm">{liveWeather.tomorrow.icon}</span>
+                <span className="text-sm text-slate-300">{liveWeather.tomorrow.max}°</span>
+                <span className="text-xs text-slate-500">{liveWeather.tomorrow.min}°</span>
               </div>
+              <p className="text-[10px] text-slate-600 mt-0.5">{formatUpdate(weatherLastUpdate)}</p>
             </div>
           </div>
         )}
 
-        {/* New items / Notifications */}
-        {newItemsCount > 0 && (
-          <div className="flex-1 rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 min-h-0 overflow-hidden">
+        {/* Fresh News section */}
+        {freshNews.length > 0 && (
+          <div className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex-shrink-0">
             <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-              </svg>
-              <span className="text-xs font-semibold text-amber-400 uppercase">
-                {language === 'cs' ? `Nové (${newItemsCount})` : `New (${newItemsCount})`}
+              <span className="text-xs">📰</span>
+              <span className="text-xs font-semibold text-slate-300 uppercase">
+                {language === 'cs' ? 'Zprávy' : 'News'}
               </span>
             </div>
-            <div className="space-y-2">
-              {freshSchool.map((item) => (
-                <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
-                  <span className="text-xs">🏫</span>
-                  <span className="text-sm text-slate-300 group-hover:text-white truncate">{item.title}</span>
-                </a>
+            <div className="space-y-1.5">
+              {freshNews.map((item) => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-600 w-8 flex-shrink-0 text-right">
+                    {formatTimeAgo(item.publishedAt, language)}
+                  </span>
+                  <span className="text-xs text-slate-300 truncate">{item.title}</span>
+                </div>
               ))}
-              {freshNews.slice(0, 2).map((item) => (
-                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
-                  <span className="text-xs">📰</span>
-                  <span className="text-sm text-slate-300 group-hover:text-white truncate">{item.title}</span>
-                </a>
-              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Fresh Podcasts section */}
+        {freshPodcasts.length > 0 && (
+          <div className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex-shrink-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs">🎧</span>
+              <span className="text-xs font-semibold text-slate-300 uppercase">
+                {language === 'cs' ? 'Podcasty' : 'Podcasts'}
+              </span>
+            </div>
+            <div className="space-y-1.5">
               {freshPodcasts.map((item) => (
-                <a key={item.id} href={item.spotifyUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group">
-                  <span className="text-xs">🎧</span>
-                  <span className="text-sm text-slate-300 group-hover:text-white truncate">
-                    {item.podcastName}: {item.title}
+                <a
+                  key={item.id}
+                  href={item.spotifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 group"
+                >
+                  <span className="text-[10px] text-slate-600 w-8 flex-shrink-0 text-right">
+                    {formatTimeAgo(item.pubDate, language)}
+                  </span>
+                  <span className="text-xs text-slate-300 group-hover:text-white truncate">
+                    {item.podcastName}
                   </span>
                 </a>
               ))}
@@ -177,37 +250,16 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
           </div>
         )}
 
-        {/* If nothing new, show a calm status */}
-        {newItemsCount === 0 && !transport.length && (
+        {/* No items state */}
+        {freshNews.length === 0 && freshPodcasts.length === 0 && liveTransport.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <span className="text-3xl mb-2 block">✓</span>
               <p className="text-sm text-slate-400">
-                {language === 'cs' ? 'Vše v pořádku. Žádné nové události.' : 'All clear. No new events.'}
+                {language === 'cs' ? 'Vše v pořádku.' : 'All clear.'}
               </p>
             </div>
           </div>
-        )}
-
-        {/* Global hotspots compact indicator */}
-        {conflictCount > 0 && (
-          <button
-            onClick={() => setShowGlobe(true)}
-            className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex items-center justify-between hover:border-slate-600 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm">🌐</span>
-              <span className="text-xs text-slate-400">
-                {language === 'cs'
-                  ? `${conflictCount} globálních událostí`
-                  : `${conflictCount} global events`
-                }
-              </span>
-            </div>
-            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
         )}
       </div>
 

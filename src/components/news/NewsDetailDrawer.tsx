@@ -52,7 +52,7 @@ export function NewsDetailDrawer({ article, isOpen, onClose }: NewsDetailDrawerP
     translateContent();
   }, [article, language, translate]);
 
-  // Reset translations when article changes
+  // Reset on article change
   useEffect(() => {
     setTranslatedTitle(null);
     setTranslatedDescription(null);
@@ -64,130 +64,111 @@ export function NewsDetailDrawer({ article, isOpen, onClose }: NewsDetailDrawerP
   return (
     <AnimatePresence>
       {isOpen && article && (
-        <>
-          {/* Backdrop overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={onClose}
-          />
-
-          {/* Drawer panel */}
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] bg-slate-900 rounded-t-2xl border-t border-slate-700/50 shadow-2xl flex flex-col"
-          >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-slate-700" />
-            </div>
-
-            {/* Header with close button */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">
-                  {article.source}
+        <motion.div
+          initial={{ opacity: 0, x: '100%' }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="fixed inset-0 z-50 bg-slate-950 flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-800">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm">{language === 'cs' ? 'Zpět' : 'Back'}</span>
+            </button>
+            <div className="flex items-center gap-2">
+              {article.credibility && article.credibility > 80 && (
+                <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full">
+                  ✓ {language === 'cs' ? 'Ověřeno' : 'Verified'}
                 </span>
-                {article.category && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    {article.category}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-full hover:bg-slate-800 transition-colors text-slate-400 hover:text-white"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-              {/* Translation loading indicator */}
+              )}
               {isTranslating && (
-                <div className="flex items-center gap-2 text-xs text-amber-400">
-                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {language === 'cs' ? 'Překládám...' : 'Translating...'}
-                </div>
-              )}
-
-              {/* Image */}
-              {article.imageUrl && (
-                <div className="rounded-xl overflow-hidden">
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Title */}
-              <h2 className="text-xl font-semibold text-white leading-relaxed">
-                {displayTitle}
-              </h2>
-
-              {/* Date */}
-              <p className="text-sm text-slate-500">
-                {formatDate(article.publishedAt, language)}
-              </p>
-
-              {/* Description */}
-              {displayDescription && (
-                <p className="text-base text-slate-300 leading-relaxed">
-                  {displayDescription}
-                </p>
-              )}
-
-              {/* Metadata badges */}
-              <div className="flex flex-wrap gap-2 pt-2">
-                {article.credibility !== undefined && (
-                  <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700">
-                    {language === 'cs' ? 'Důvěryhodnost' : 'Credibility'}: {article.credibility}%
-                  </span>
-                )}
-                {article.freshness && (
-                  <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700">
-                    {article.freshness === 'hot' && '🔥'} {article.freshness}
-                  </span>
-                )}
-                {article.sourceType && (
-                  <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700">
-                    {article.sourceType}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Footer with link button */}
-            <div className="px-5 py-4 border-t border-slate-800">
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:text-amber-300 font-medium transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <svg className="w-4 h-4 animate-spin text-amber-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                {language === 'cs' ? 'Číst originál' : 'Read original'}
-              </a>
+              )}
             </div>
-          </motion.div>
-        </>
+          </div>
+
+          {/* Content - scrollable */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 space-y-4">
+            {/* Source + Category */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">
+                {article.source}
+              </span>
+              {article.category && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  {article.category}
+                </span>
+              )}
+            </div>
+
+            {/* Image */}
+            {article.imageUrl && (
+              <div className="rounded-xl overflow-hidden -mx-1">
+                <img
+                  src={article.imageUrl}
+                  alt=""
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            )}
+
+            {/* Title */}
+            <h1 className="text-2xl font-bold text-white leading-snug">
+              {displayTitle}
+            </h1>
+
+            {/* Date */}
+            <p className="text-sm text-slate-500">
+              {formatDate(article.publishedAt, language)}
+            </p>
+
+            {/* Description / Content */}
+            {displayDescription && (
+              <div className="text-base text-slate-300 leading-relaxed whitespace-pre-line">
+                {displayDescription}
+              </div>
+            )}
+
+            {/* Metadata */}
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-800">
+              {article.freshness && (
+                <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400">
+                  {article.freshness === 'hot' && '🔥 '}{article.freshness}
+                </span>
+              )}
+              {article.sourceType && (
+                <span className="text-xs px-2 py-1 rounded-md bg-slate-800 text-slate-400">
+                  {article.sourceType === 'public' ? '📺 ' : ''}{article.sourceType}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Footer - source link */}
+          <div className="flex-shrink-0 p-4 border-t border-slate-800">
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:text-amber-300 font-medium transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {language === 'cs' ? 'Číst originál na ' + article.source : 'Read original on ' + article.source}
+            </a>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
