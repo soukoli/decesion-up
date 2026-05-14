@@ -4,6 +4,7 @@ import { WorldNews } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 import { useState, useEffect } from 'react';
+import { NewsDetailDrawer } from '@/components/news/NewsDetailDrawer';
 
 interface MobileNewsPageProps {
   news: WorldNews[];
@@ -25,6 +26,7 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
   // Tab state: 'world' or 'czech'
   const [activeTab, setActiveTab] = useState<'world' | 'czech'>('world');
   const [translations, setTranslations] = useState<Record<string, TranslatedNews>>({});
+  const [selectedArticle, setSelectedArticle] = useState<WorldNews | null>(null);
   
   // Choose current news based on active tab
   const currentNews = activeTab === 'world' ? news : czechNews;
@@ -174,12 +176,10 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
                   : 'text-slate-500';
             
             return (
-              <a
+              <button
                 key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group"
+                onClick={() => setSelectedArticle(item)}
+                className="block w-full text-left p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 hover:border-amber-500/50 hover:bg-slate-800/50 transition-all group"
               >
                 {/* Header row with source, credibility, and time */}
                 <div className="flex items-center justify-between mb-2">
@@ -245,11 +245,18 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
                     </svg>
                   </div>
                 </div>
-              </a>
+              </button>
             );
           })
         )}
       </div>
+
+      {/* News Detail Drawer */}
+      <NewsDetailDrawer
+        article={selectedArticle}
+        isOpen={selectedArticle !== null}
+        onClose={() => setSelectedArticle(null)}
+      />
     </div>
   );
 }

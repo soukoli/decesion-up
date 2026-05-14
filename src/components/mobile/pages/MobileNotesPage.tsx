@@ -4,10 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/lib/translation';
 import { useSettings, FONT_SIZE_CONFIG } from '@/lib/settings';
 import { PodcastNote } from '@/lib/notes-constants';
-import { CATEGORY_COLORS } from '@/lib/podcasts-config';
-import { SectionHeader } from '../SectionHeader';
 
-export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeClick?: () => void; conflictCount?: number }) {
+export function MobileNotesPage() {
   const { language } = useTranslation();
   const { fontSize } = useSettings();
   const fontConfig = FONT_SIZE_CONFIG[fontSize];
@@ -19,7 +17,9 @@ export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeCl
   const [expandedNoteId, setExpandedNoteId] = useState<number | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(new Date());
+  const [newNoteText, setNewNoteText] = useState('');
+  const [showNewNote, setShowNewNote] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   // Fetch all notes
   const fetchNotes = useCallback(async () => {
@@ -31,7 +31,6 @@ export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeCl
       if (res.ok) {
         const data = await res.json();
         setNotes(data.notes || []);
-        setLastRefresh(new Date());
       }
     } catch (error) {
       console.error('Failed to fetch notes:', error);
@@ -43,6 +42,28 @@ export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeCl
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
+
+  // Create a new personal note
+  const createNote = async () => {
+    if (!newNoteText.trim()) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: newNoteText.trim() }),
+      });
+      if (res.ok) {
+        setNewNoteText('');
+        setShowNewNote(false);
+        await fetchNotes();
+      }
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   // Filter notes by search query
   const filteredNotes = notes.filter(note => {
@@ -159,22 +180,61 @@ export function MobileNotesPage({ onGlobeClick, conflictCount = 0 }: { onGlobeCl
 
   return (
     <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
-      {/* Header with controls */}
-      <SectionHeader
-        title={language === 'cs' ? 'Poznámky' : 'Notes'}
-        lastRefresh={lastRefresh}
-        onRefresh={fetchNotes}
-        refreshing={loading}
-        onGlobeClick={onGlobeClick}
-        conflictCount={conflictCount}
-      />
+      {/* Header */}
+      <header className="mb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-black text-white tracking-tight uppercase">
+            {language === 'cs' ? 'Nápady' : 'Ideas'}
+          </h1>
+          <button
+            onClick={() => setShowNewNote(!showNewNote)}
+            className={`p-2.5 rounded-xl transition-all ${
+              showNewNote 
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                : 'bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 mt-1">
+          {language === 'cs' 
+            ? `${sortedNotes.length} poznámek` 
+            : `${sortedNotes.length} notes`}
+        </p>
+      </header>
 
-      {/* Subtitle */}
-      <p className="text-sm text-slate-500 mb-3">
-        {language === 'cs' 
-          ? `${sortedNotes.length} poznámek` 
-          : `${sortedNotes.length} notes`}
-      </p>
+      {/* New note input */}
+      {showNewNote && (
+        <div className="mb-4 p-3 bg-slate-800/50 rounded-xl border border-amber-500/30">
+          <textarea
+            value={newNoteText}
+            onChange={(e) => setNewNoteText(e.target.value)}
+            placeholder={language === 'cs' ? 'Zapsat nápad...' : 'Write an idea...'}
+            className="w-full bg-transparent text-white text-sm placeholder-slate-500 resize-none focus:outline-none min-h-[60px]"
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-700/50">
+            <button
+              onClick={() => { setShowNewNote(false); setNewNoteText(''); }}
+              className="px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            >
+              {language === 'cs' ? 'Zrušit' : 'Cancel'}
+            </button>
+            <button
+              onClick={createNote}
+              disabled={!newNoteText.trim() || creating}
+              className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+            >
+              {creating 
+                ? (language === 'cs' ? 'Ukládám...' : 'Saving...') 
+                : (language === 'cs' ? 'Uložit' : 'Save')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="mb-3 relative">

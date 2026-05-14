@@ -70,6 +70,8 @@ export function MobileFeedPage({ podcasts, school, trends, research, news, czech
           speed={250}
           resistance={true}
           resistanceRatio={0.65}
+          touchStartPreventDefault={false}
+          touchMoveStopPropagation={false}
         >
           <SwiperSlide>
             <div className="h-full overflow-y-auto">

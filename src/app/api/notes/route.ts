@@ -77,28 +77,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { podcastId, podcastName, episodeTitle, note, category, getOrCreate } = body;
     
-    if (!podcastId || !podcastName || !episodeTitle) {
-      return NextResponse.json(
-        { error: 'Missing required fields: podcastId, podcastName, episodeTitle' },
-        { status: 400 }
-      );
-    }
+    // Allow "free" notes without podcast context
+    const effectivePodcastId = podcastId || 'personal';
+    const effectivePodcastName = podcastName || 'Personal Note';
+    const effectiveEpisodeTitle = episodeTitle || new Date().toLocaleDateString();
     
-    // If getOrCreate flag is set, use upsert-like behavior
-    if (getOrCreate) {
-      const existingOrNew = await getOrCreateNoteForEpisode(podcastId, podcastName, episodeTitle);
-      return NextResponse.json({ note: existingOrNew }, { status: 200 });
-    }
-    
-    // Otherwise require note content
-    if (!note) {
+    if (!note && !getOrCreate) {
       return NextResponse.json(
         { error: 'Missing required field: note' },
         { status: 400 }
       );
     }
     
-    const newNote = await createPodcastNote(podcastId, podcastName, episodeTitle, note, category);
+    // If getOrCreate flag is set, use upsert-like behavior
+    if (getOrCreate) {
+      const existingOrNew = await getOrCreateNoteForEpisode(effectivePodcastId, effectivePodcastName, effectiveEpisodeTitle);
+      return NextResponse.json({ note: existingOrNew }, { status: 200 });
+    }
+    
+    const newNote = await createPodcastNote(effectivePodcastId, effectivePodcastName, effectiveEpisodeTitle, note, category);
     
     return NextResponse.json({ note: newNote }, { status: 201 });
   } catch (error) {

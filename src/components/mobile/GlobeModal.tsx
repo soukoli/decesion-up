@@ -202,7 +202,7 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
           className="fixed inset-0 z-50 bg-slate-950"
         >
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-slate-950 via-slate-950/80 to-transparent">
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] bg-gradient-to-b from-slate-950 via-slate-950/80 to-transparent">
             <div>
               <h2 className="text-xl font-bold text-white">
                 {language === 'cs' ? 'Globální Události' : 'Global Hotspots'}
@@ -218,7 +218,8 @@ export function GlobeModal({ isOpen, onClose, hotspots }: GlobeModalProps) {
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-slate-800/80 text-white hover:bg-slate-700 transition-colors"
+              className="p-3 rounded-full bg-slate-800/90 text-white hover:bg-slate-700 active:scale-95 transition-all shadow-lg"
+              aria-label="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
