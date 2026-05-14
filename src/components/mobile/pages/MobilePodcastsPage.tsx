@@ -11,7 +11,7 @@ interface MobilePodcastsPageProps {
 
 export function MobilePodcastsPage({ podcasts, onGlobeClick, conflictCount = 0 }: MobilePodcastsPageProps) {
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
+    <div className="bg-slate-950 px-4 py-4 pb-6">
       <PodcastSection 
         initialEpisodes={podcasts} 
         onGlobeClick={onGlobeClick}

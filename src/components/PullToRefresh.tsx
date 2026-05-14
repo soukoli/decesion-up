@@ -149,6 +149,7 @@ export function PullToRefresh({ children, onRefresh, disabled = false, className
 
       {/* Content with pull effect */}
       <motion.div
+        className="h-full"
         animate={{ 
           y: isPulling || isRefreshing ? Math.min(pullDistance * 0.5, 40) : 0 
         }}

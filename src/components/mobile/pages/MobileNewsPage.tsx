@@ -80,7 +80,7 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4">
+    <div className="bg-slate-950 px-4 py-4">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-sm pb-3">
         <div className="flex items-center justify-between">
@@ -145,7 +145,7 @@ export function MobileNewsPage({ news, czechNews, onGlobeClick, conflictCount = 
       </header>
 
       {/* Content */}
-      <div className="pb-32 space-y-3">
+      <div className="pb-6 space-y-3">
         {currentNews.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
             <p className="text-sm">

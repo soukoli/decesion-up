@@ -11,7 +11,7 @@ interface MobileSchoolPageProps {
 
 export function MobileSchoolPage({ schoolData, onGlobeClick, conflictCount = 0 }: MobileSchoolPageProps) {
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 px-4 py-4 pb-32">
+    <div className="bg-slate-950 px-4 py-4 pb-6">
       <SchoolSection 
         initialArticles={schoolData} 
         onGlobeClick={onGlobeClick}
