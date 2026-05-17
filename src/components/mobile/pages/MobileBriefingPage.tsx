@@ -3,7 +3,7 @@
 import { TransportAlert, WeatherData, PodcastEpisode, WorldNews, SchoolArticle, GlobalHotspot } from '@/types';
 import { useTranslation } from '@/lib/translation';
 import { useSettings } from '@/lib/settings';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { GlobeModal } from '../GlobeModal';
 
 interface MobileBriefingPageProps {
@@ -45,48 +45,18 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
   const { language } = useTranslation();
   const { openSettings } = useSettings();
   const [showGlobe, setShowGlobe] = useState(false);
-  const [transportLastUpdate, setTransportLastUpdate] = useState<Date>(new Date());
-  const [weatherLastUpdate, setWeatherLastUpdate] = useState<Date>(new Date());
-  const [liveTransport, setLiveTransport] = useState<TransportAlert[]>(transport);
-  const [liveWeather, setLiveWeather] = useState<WeatherData | null>(weather);
 
   const conflictCount = hotspots.filter(h => h.intensity >= 7).length;
 
-  const transportAgo = useRelativeTime(transportLastUpdate, language);
-  const weatherAgo = useRelativeTime(weatherLastUpdate, language);
-
-  // Auto-refresh transport every 1 minute
-  const refreshTransport = useCallback(async () => {
-    try {
-      const res = await fetch('/api/transport');
-      if (res.ok) {
-        const data = await res.json();
-        setLiveTransport(data.alerts || []);
-        setTransportLastUpdate(new Date());
-      }
-    } catch { /* silent */ }
-  }, []);
-
-  // Auto-refresh weather every 5 minutes
-  const refreshWeather = useCallback(async () => {
-    try {
-      const res = await fetch('/api/weather');
-      if (res.ok) {
-        const data = await res.json();
-        setLiveWeather(data.weather || null);
-        setWeatherLastUpdate(new Date());
-      }
-    } catch { /* silent */ }
-  }, []);
-
-  useEffect(() => {
-    const transportInterval = setInterval(refreshTransport, 60 * 1000);
-    const weatherInterval = setInterval(refreshWeather, 5 * 60 * 1000);
-    return () => { clearInterval(transportInterval); clearInterval(weatherInterval); };
-  }, [refreshTransport, refreshWeather]);
-
-  useEffect(() => { setLiveTransport(transport); setTransportLastUpdate(new Date()); }, [transport]);
-  useEffect(() => { setLiveWeather(weather); setWeatherLastUpdate(new Date()); }, [weather]);
+  // Compute relative time from weather/transport lastUpdated timestamps
+  const transportAgo = useRelativeTime(
+    transport.length > 0 ? new Date() : new Date(), // data comes from page.tsx which tracks freshness
+    language
+  );
+  const weatherAgo = useRelativeTime(
+    weather?.lastUpdated ? new Date(weather.lastUpdated) : new Date(),
+    language
+  );
 
   // Fresh news (< 6h)
   const freshNews = [...news, ...czechNews]
@@ -133,7 +103,7 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
       {/* Content */}
       <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto overscroll-contain pb-6">
         {/* Transport Alerts */}
-        {liveTransport.length > 0 && (
+        {transport.length > 0 && (
           <div className="rounded-xl bg-red-950/30 border border-red-500/30 p-3 flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -147,7 +117,7 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
               <span className="text-[10px] text-red-400/60">{transportAgo}</span>
             </div>
             <div className="space-y-1.5">
-              {liveTransport.slice(0, 3).map((alert) => (
+              {transport.slice(0, 3).map((alert) => (
                 <a key={alert.id} href={alert.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
                   <span className="text-xs font-mono font-bold text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded">
                     {alert.type === 'metro' ? `M${alert.lines[0]}` : alert.lines.slice(0, 3).join(',')}
@@ -160,15 +130,15 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
         )}
 
         {/* Weather with hourly forecast */}
-        {liveWeather && (
+        {weather && (
           <div className="rounded-xl bg-slate-800/30 border border-slate-700/50 p-3 flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{liveWeather.current.icon}</span>
+                <span className="text-2xl">{weather.current.icon}</span>
                 <div>
-                  <span className="text-xl font-bold text-white">{liveWeather.current.temperature}°C</span>
+                  <span className="text-xl font-bold text-white">{weather.current.temperature}°C</span>
                   <p className="text-xs text-slate-400">
-                    {language === 'cs' ? liveWeather.current.descriptionCz : liveWeather.current.description}
+                    {language === 'cs' ? weather.current.descriptionCz : weather.current.description}
                   </p>
                 </div>
               </div>
@@ -176,9 +146,9 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
             </div>
 
             {/* Hourly forecast strip */}
-            {liveWeather.hourly && liveWeather.hourly.length > 0 && (
+            {weather.hourly && weather.hourly.length > 0 && (
               <div className="flex gap-3 mt-2 pt-2 border-t border-slate-700/30 overflow-x-auto no-scrollbar">
-                {liveWeather.hourly.map((h, i) => (
+                {weather.hourly.map((h, i) => (
                   <div key={i} className="flex flex-col items-center gap-0.5 flex-shrink-0">
                     <span className="text-[10px] text-slate-500">{h.time}</span>
                     <span className="text-sm">{h.icon}</span>
@@ -192,9 +162,9 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
             )}
 
             {/* Radar link when precipitation */}
-            {liveWeather.hasPrecipitation && liveWeather.radarUrl && (
+            {weather.hasPrecipitation && weather.radarUrl && (
               <a
-                href={liveWeather.radarUrl}
+                href={weather.radarUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/30 text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -263,7 +233,7 @@ export function MobileBriefingPage({ transport, weather, podcasts, news, czechNe
         )}
 
         {/* Empty state */}
-        {freshNews.length === 0 && freshPodcasts.length === 0 && liveTransport.length === 0 && (
+        {freshNews.length === 0 && freshPodcasts.length === 0 && transport.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <span className="text-3xl mb-2 block">✓</span>
