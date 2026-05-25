@@ -1,217 +1,118 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { SplashScreen, useSplashScreen } from '@/components/SplashScreen';
-import { MobileLayout, AppData } from '@/components/mobile';
-import { DesktopLayout } from '@/components/desktop/DesktopLayout';
-import { useTranslation } from '@/lib/translation';
-import { useSettings } from '@/lib/settings';
-import { usePreloader } from '@/lib/preloader';
-import { PageSkeleton } from '@/components/Skeleton';
-import debugLog from '@/lib/debug';
+import { useState, useRef, useEffect } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectCreative } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
 
-// Stale thresholds (in ms)
-const TRANSPORT_STALE_MS = 60 * 1000;  // 1 minute
-const WEATHER_STALE_MS = 5 * 60 * 1000; // 5 minutes
+import 'swiper/css';
+import 'swiper/css/effect-creative';
 
-export default function Home() {
-  const [data, setData] = useState<AppData>({
-    podcasts: [],
-    trends: [],
-    news: [],
-    czechNews: [],
-    hotspots: [],
-    research: [],
-    school: [],
-    transport: [],
-    weather: null,
-  });
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+import { HomeScreen } from '@/components/home/HomeScreen';
+import { FeedScreen } from '@/components/feed/FeedScreen';
+import { KnowledgeScreen } from '@/components/knowledge/KnowledgeScreen';
+import { DesktopLayout } from '@/components/layout/DesktopLayout';
+import { IdeaSheet } from '@/components/ui/IdeaSheet';
 
-  // Track when each data source was last fetched
-  const lastFetchedRef = useRef<{ transport: number; weather: number; full: number }>({
-    transport: 0,
-    weather: 0,
-    full: 0,
-  });
-  
-  const { showSplash, handleSplashComplete } = useSplashScreen(false);
-  const { language } = useTranslation();
-  const { acledTokens, isAcledTokenValid } = useSettings();
-  const { getPreloadedData, clearPreloadCache } = usePreloader({ acledTokens, isAcledTokenValid });
+// Bottom nav: 3 icons only (Home, Feed, Knowledge)
+const NAV_ITEMS = [
+  { id: 'home', icon: (active: boolean) => (
+    <svg className="w-6 h-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+    </svg>
+  )},
+  { id: 'feed', icon: (active: boolean) => (
+    <svg className="w-6 h-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+    </svg>
+  )},
+  { id: 'knowledge', icon: (active: boolean) => (
+    <svg className="w-6 h-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+    </svg>
+  )},
+];
 
-  // Detect mobile
+export default function AppPage() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(true);
+  const [showIdeaSheet, setShowIdeaSheet] = useState(false);
+  const swiperRef = useRef<SwiperType | null>(null);
+
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Selective refresh for transport only
-  const refreshTransport = useCallback(async () => {
-    try {
-      const res = await fetch('/api/transport');
-      if (res.ok) {
-        const d = await res.json();
-        setData(prev => ({ ...prev, transport: d.alerts || [] }));
-        lastFetchedRef.current.transport = Date.now();
-      }
-    } catch { /* silent */ }
-  }, []);
-
-  // Selective refresh for weather only
-  const refreshWeather = useCallback(async () => {
-    try {
-      const res = await fetch('/api/weather');
-      if (res.ok) {
-        const d = await res.json();
-        setData(prev => ({ ...prev, weather: d.weather || null }));
-        lastFetchedRef.current.weather = Date.now();
-      }
-    } catch { /* silent */ }
-  }, []);
-
-  // Full data fetch (initial load + pull-to-refresh)
-  const fetchData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-      clearPreloadCache();
-    }
-    
-    if (!isRefresh) {
-      const preloadedData = getPreloadedData();
-      if (preloadedData) {
-        debugLog.log('✅ Using preloaded data, skipping fetch');
-        setData(preloadedData);
-        setLastRefresh(new Date());
-        setLoading(false);
-        const now = Date.now();
-        lastFetchedRef.current = { transport: now, weather: now, full: now };
-        return;
-      }
-    }
-    
-    const cacheBuster = isRefresh ? `?_t=${Date.now()}` : '';
-    const fetchOptions: RequestInit = isRefresh ? { cache: 'no-store' as RequestCache } : {};
-    
-    const acledToken = isAcledTokenValid ? acledTokens?.accessToken : null;
-    const hotspotsOptions: RequestInit = {
-      ...fetchOptions,
-      ...(acledToken ? { headers: { 'Authorization': `Bearer ${acledToken}` } } : {})
-    };
-    
-    try {
-      const [podcastsRes, trendsRes, newsRes, czechNewsRes, hotspotsRes, researchRes, schoolRes, transportRes, weatherRes] = await Promise.all([
-        fetch(`/api/podcasts${cacheBuster}`, fetchOptions),
-        fetch(`/api/trends${cacheBuster}`, fetchOptions),
-        fetch(`/api/news${cacheBuster}`, fetchOptions),
-        fetch(`/api/news/czech${cacheBuster}`, fetchOptions),
-        fetch(`/api/hotspots${cacheBuster}`, hotspotsOptions),
-        fetch(`/api/research${cacheBuster}`, fetchOptions),
-        fetch(`/api/school${cacheBuster}`, fetchOptions),
-        fetch(`/api/transport${cacheBuster}`, fetchOptions),
-        fetch(`/api/weather${cacheBuster}`, fetchOptions),
-      ]);
-
-      const newData: AppData = {
-        podcasts: [],
-        trends: [],
-        news: [],
-        czechNews: [],
-        hotspots: [],
-        research: [],
-        school: [],
-        transport: [],
-        weather: null,
-      };
-
-      if (podcastsRes.ok) { const d = await podcastsRes.json(); newData.podcasts = d.podcasts || []; }
-      if (trendsRes.ok) { const d = await trendsRes.json(); newData.trends = d.trends || []; }
-      if (newsRes.ok) { const d = await newsRes.json(); newData.news = d.news || []; }
-      if (czechNewsRes.ok) { const d = await czechNewsRes.json(); newData.czechNews = d.news || []; }
-      if (hotspotsRes.ok) { const d = await hotspotsRes.json(); newData.hotspots = d.hotspots || []; }
-      if (researchRes.ok) { const d = await researchRes.json(); newData.research = d.research || []; }
-      if (schoolRes.ok) { const d = await schoolRes.json(); newData.school = d.articles || []; }
-      if (transportRes.ok) { const d = await transportRes.json(); newData.transport = d.alerts || []; }
-      if (weatherRes.ok) { const d = await weatherRes.json(); newData.weather = d.weather || null; }
-
-      setData(newData);
-      setLastRefresh(new Date());
-      const now = Date.now();
-      lastFetchedRef.current = { transport: now, weather: now, full: now };
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [acledTokens, isAcledTokenValid, getPreloadedData, clearPreloadCache]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Visibility-based stale refresh
-  // When app becomes visible (user returns from lock screen, tab switch, etc.)
-  // check if data is stale and refresh only what's needed
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== 'visible') return;
-      
-      const now = Date.now();
-      const { transport, weather } = lastFetchedRef.current;
-
-      // Check transport staleness (1 min threshold)
-      if (now - transport > TRANSPORT_STALE_MS) {
-        debugLog.log('🔄 Transport data stale, refreshing...');
-        refreshTransport();
-      }
-
-      // Check weather staleness (5 min threshold)
-      if (now - weather > WEATHER_STALE_MS) {
-        debugLog.log('🔄 Weather data stale, refreshing...');
-        refreshWeather();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [refreshTransport, refreshWeather]);
-
-  const handleRefresh = () => {
-    fetchData(true);
+  const handleNavigate = (index: number) => {
+    swiperRef.current?.slideTo(index);
   };
 
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} duration={2500} />;
+  // Desktop: sidebar layout
+  if (!isMobile) {
+    return <DesktopLayout />;
   }
 
-  if (loading) {
-    return <PageSkeleton />;
-  }
-
-  if (isMobile) {
-    return (
-      <MobileLayout
-        data={data}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        lastRefresh={lastRefresh}
-      />
-    );
-  }
-
+  // Mobile: swipe layout
   return (
-    <DesktopLayout
-      data={data}
-      onRefresh={handleRefresh}
-      refreshing={refreshing}
-      lastRefresh={lastRefresh}
-    />
+    <div className="h-dvh bg-slate-950 relative">
+      {/* Main content - 3 worlds */}
+      <div className="h-full pb-20">
+        <Swiper
+          modules={[EffectCreative]}
+          onSwiper={(swiper) => (swiperRef.current = swiper)}
+          onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+          effect="creative"
+          creativeEffect={{
+            prev: { translate: ['-100%', 0, -50], opacity: 0.6 },
+            next: { translate: ['100%', 0, -50], opacity: 0.6 },
+          }}
+          className="h-full"
+          speed={280}
+          resistance={true}
+          resistanceRatio={0.85}
+        >
+          <SwiperSlide><HomeScreen /></SwiperSlide>
+          <SwiperSlide><FeedScreen /></SwiperSlide>
+          <SwiperSlide><KnowledgeScreen /></SwiperSlide>
+        </Swiper>
+      </div>
+
+      {/* Floating pill navigation - 3 nav icons + 1 action */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+        <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 shadow-2xl shadow-black/40">
+          {NAV_ITEMS.map((item, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavigate(index)}
+                className={`p-3 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? 'text-amber-400 bg-amber-500/15 scale-110'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                {item.icon(isActive)}
+              </button>
+            );
+          })}
+          {/* Add idea button - visually distinct */}
+          <button
+            onClick={() => setShowIdeaSheet(true)}
+            className="p-3 ml-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 active:scale-95 transition-all"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      {/* Idea capture sheet */}
+      <IdeaSheet isOpen={showIdeaSheet} onClose={() => setShowIdeaSheet(false)} />
+    </div>
   );
 }

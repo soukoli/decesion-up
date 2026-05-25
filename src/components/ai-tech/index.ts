@@ -1,1 +1,0 @@
-export { AITechSection } from './AITechSection';

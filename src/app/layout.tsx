@@ -1,29 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Bebas_Neue } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-creative";
-import { AnimatedBackground } from "@/components/background/AnimatedBackground";
-import { TranslationProvider } from "@/lib/translation";
-import { SettingsProvider } from "@/lib/settings";
-import { SettingsModal } from "@/components/settings";
-import { PreloadTrigger } from "@/components/PreloadTrigger";
+import { FontSizeProvider } from "@/lib/font-size";
+import { Snackbar } from "@/components/ui/Snackbar";
 
 const inter = Inter({
+  subsets: ["latin", "latin-ext"],
   variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const bebasNeue = Bebas_Neue({
-  variable: "--font-bebas",
-  weight: "400",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "DecisionUp - Personal Intelligence Feed",
-  description: "Your daily intelligence feed. Signal, not noise. Make better decisions with curated insights from the world.",
+  title: "DecisionUp",
+  description: "AI-powered personal decision system",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -35,6 +24,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#0f172a",
 };
@@ -45,17 +35,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${bebasNeue.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans relative">
-        <AnimatedBackground />
-        <TranslationProvider>
-          <SettingsProvider>
-            <PreloadTrigger>
-              {children}
-              <SettingsModal />
-            </PreloadTrigger>
-          </SettingsProvider>
-        </TranslationProvider>
+    <html lang="cs" className={`${inter.variable} h-full`}>
+      <body className="h-dvh overflow-hidden bg-slate-950 text-white">
+        <FontSizeProvider>
+          {children}
+          <Snackbar />
+        </FontSizeProvider>
       </body>
     </html>
   );
