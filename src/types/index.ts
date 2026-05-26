@@ -56,6 +56,8 @@ export interface UserProfile {
   font_size: 'sm' | 'md' | 'lg';
   language: 'cs' | 'en';
   theme: 'dark' | 'light' | 'system';
+  google_token?: string;
+  google_refresh_token?: string;
   created_at: string;
   updated_at: string;
 }

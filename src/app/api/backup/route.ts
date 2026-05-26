@@ -5,17 +5,30 @@ const BACKUP_FILENAME = 'decisionup-backup.json';
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 
+// Helper: Get Google token from user_profile DB
+async function getGoogleToken(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('user_profile')
+    .select('google_token')
+    .eq('id', userId)
+    .single();
+  return data?.google_token || null;
+}
+
 // GET - Get backup info (last backup date)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session?.provider_token) {
-      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = session.provider_token;
+    const token = await getGoogleToken(supabase, user.id);
+    if (!token) {
+      return NextResponse.json({ exists: false, lastBackup: null, error: 'no_token' });
+    }
 
     // Search for backup file in appDataFolder
     const searchRes = await fetch(
@@ -44,14 +57,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session?.provider_token || !user) {
-      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = session.provider_token;
+    const token = await getGoogleToken(supabase, user.id);
+    if (!token) {
+      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+    }
 
     // Fetch all user data
     const [rawRes, aiRes, groupsRes] = await Promise.all([
@@ -84,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     if (existingFileId) {
       // Update existing file
-      await fetch(
+      const updateRes = await fetch(
         `${DRIVE_UPLOAD}/files/${existingFileId}?uploadType=media`,
         {
           method: 'PATCH',
@@ -95,25 +110,37 @@ export async function POST(request: NextRequest) {
           body: content,
         }
       );
+      if (!updateRes.ok) {
+        const err = await updateRes.text();
+        console.error('Drive update error:', err);
+        return NextResponse.json({ error: 'Drive upload failed' }, { status: 500 });
+      }
     } else {
       // Create new file in appDataFolder
-      const metadata = {
+      const metadata = JSON.stringify({
         name: BACKUP_FILENAME,
         parents: ['appDataFolder'],
-      };
+      });
 
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', new Blob([content], { type: 'application/json' }));
+      const boundary = 'backup_boundary';
+      const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
 
-      await fetch(
+      const createRes = await fetch(
         `${DRIVE_UPLOAD}/files?uploadType=multipart`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: form,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`,
+          },
+          body,
         }
       );
+      if (!createRes.ok) {
+        const err = await createRes.text();
+        console.error('Drive create error:', err);
+        return NextResponse.json({ error: 'Drive upload failed' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true, backedUp: new Date().toISOString() });
@@ -127,14 +154,16 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const supabase = await createServerSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!session?.provider_token || !user) {
-      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = session.provider_token;
+    const token = await getGoogleToken(supabase, user.id);
+    if (!token) {
+      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+    }
 
     // Find backup file
     const searchRes = await fetch(

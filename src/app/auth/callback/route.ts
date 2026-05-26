@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies();
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,10 +26,20 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
     if (error) {
       console.error('Auth callback error:', error);
       return NextResponse.redirect(`${origin}/login?error=auth`);
+    }
+
+    // Save Google tokens to user_profile for Drive backup
+    if (data.session?.provider_token && data.session?.user?.id) {
+      await supabase.from('user_profile').upsert({
+        id: data.session.user.id,
+        google_token: data.session.provider_token,
+        google_refresh_token: data.session.provider_refresh_token || null,
+      }, { onConflict: 'id' });
     }
   }
 
