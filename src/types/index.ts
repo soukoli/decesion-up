@@ -1,21 +1,21 @@
 // Core domain types for Decision App New
+// MUST match DB schema in supabase/migrations/
 
 export type Priority = 'red' | 'yellow' | 'blue' | 'purple';
 export type IdeaStatus = 'active' | 'done' | 'archived';
 export type IdeaSource = 'text' | 'voice' | 'podcast' | 'school';
 
+// Table: public.ideas_raw
 export interface IdeaRaw {
   id: string;
   user_id: string;
   content: string;
   source: IdeaSource;
-  voice_transcript?: string;
-  podcast_id?: string;
   podcast_name?: string;
   created_at: string;
-  updated_at: string;
 }
 
+// Table: public.ideas_ai
 export interface IdeaAI {
   id: string;
   raw_id: string;
@@ -30,13 +30,14 @@ export interface IdeaAI {
   done_at?: string;
   created_at: string;
   updated_at: string;
-  // Joined
+  // Joined relations (not stored)
   group?: IdeaGroup;
   raw?: IdeaRaw;
-  // Client-only (not from DB)
+  // Client-only flag (not in DB)
   _processing?: boolean;
 }
 
+// Table: public.idea_groups
 export interface IdeaGroup {
   id: string;
   user_id: string;
@@ -45,14 +46,16 @@ export interface IdeaGroup {
   ai_generated: boolean;
   created_at: string;
   updated_at: string;
-  // Computed
+  // Computed (not stored)
   ideas_count?: number;
 }
 
+// Table: public.user_profile
 export interface UserProfile {
   id: string;
   font_size: 'sm' | 'md' | 'lg';
   language: 'cs' | 'en';
+  theme: 'dark' | 'light' | 'system';
   created_at: string;
   updated_at: string;
 }

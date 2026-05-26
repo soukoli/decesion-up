@@ -163,8 +163,13 @@ export async function PUT(request: NextRequest) {
     if (backupData.data.idea_groups?.length > 0) {
       for (const group of backupData.data.idea_groups) {
         await supabase.from('idea_groups').upsert({
-          ...group,
+          id: group.id,
           user_id: user.id,
+          name: group.name,
+          color: group.color,
+          ai_generated: group.ai_generated ?? true,
+          created_at: group.created_at,
+          updated_at: group.updated_at,
         }, { onConflict: 'id' });
       }
     }
@@ -173,8 +178,12 @@ export async function PUT(request: NextRequest) {
     if (backupData.data.ideas_raw?.length > 0) {
       for (const raw of backupData.data.ideas_raw) {
         await supabase.from('ideas_raw').upsert({
-          ...raw,
+          id: raw.id,
           user_id: user.id,
+          content: raw.content,
+          source: raw.source || 'text',
+          podcast_name: raw.podcast_name || null,
+          created_at: raw.created_at,
         }, { onConflict: 'id' });
       }
     }
@@ -183,8 +192,19 @@ export async function PUT(request: NextRequest) {
     if (backupData.data.ideas_ai?.length > 0) {
       for (const ai of backupData.data.ideas_ai) {
         await supabase.from('ideas_ai').upsert({
-          ...ai,
+          id: ai.id,
+          raw_id: ai.raw_id,
           user_id: user.id,
+          title: ai.title,
+          context: ai.context || null,
+          priority: ai.priority || 'blue',
+          status: ai.status || 'active',
+          group_id: ai.group_id || null,
+          ai_label: ai.ai_label || null,
+          ai_reason: ai.ai_reason || null,
+          done_at: ai.done_at || null,
+          created_at: ai.created_at,
+          updated_at: ai.updated_at,
         }, { onConflict: 'id' });
       }
     }
