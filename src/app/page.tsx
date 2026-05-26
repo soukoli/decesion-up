@@ -57,9 +57,9 @@ export default function AppPage() {
 
   // Mobile: swipe layout
   return (
-    <div className="h-dvh bg-slate-950 relative">
+    <div className="h-full bg-slate-950 relative">
       {/* Main content - 3 worlds */}
-      <div className="h-full pb-20">
+      <div className="h-full pb-24">
         <Swiper
           modules={[EffectCreative]}
           onSwiper={(swiper) => (swiperRef.current = swiper)}
@@ -81,7 +81,7 @@ export default function AppPage() {
       </div>
 
       {/* Floating pill navigation - 3 nav icons + 1 action */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed left-1/2 -translate-x-1/2 z-50" style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
         <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 shadow-2xl shadow-black/40">
           {NAV_ITEMS.map((item, index) => {
             const isActive = index === activeIndex;
