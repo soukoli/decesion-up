@@ -98,6 +98,13 @@ export async function POST(request: NextRequest) {
       `${DRIVE_API}/files?spaces=appDataFolder&q=name='${BACKUP_FILENAME}'&fields=files(id)`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    if (!searchRes.ok) {
+      const searchErr = await searchRes.text();
+      console.error('Drive search failed:', searchRes.status, searchErr);
+      return NextResponse.json({ error: 'Drive upload failed', detail: `Search failed: ${searchRes.status} - ${searchErr}` }, { status: 500 });
+    }
+
     const searchData = await searchRes.json();
     const existingFileId = searchData.files?.[0]?.id;
 
@@ -116,8 +123,8 @@ export async function POST(request: NextRequest) {
       );
       if (!updateRes.ok) {
         const err = await updateRes.text();
-        console.error('Drive update error:', err);
-        return NextResponse.json({ error: 'Drive upload failed' }, { status: 500 });
+        console.error('Drive update error:', updateRes.status, err);
+        return NextResponse.json({ error: 'Drive upload failed', detail: `Update ${updateRes.status}: ${err}` }, { status: 500 });
       }
     } else {
       // Create new file in appDataFolder
@@ -142,8 +149,8 @@ export async function POST(request: NextRequest) {
       );
       if (!createRes.ok) {
         const err = await createRes.text();
-        console.error('Drive create error:', err);
-        return NextResponse.json({ error: 'Drive upload failed' }, { status: 500 });
+        console.error('Drive create error:', createRes.status, err);
+        return NextResponse.json({ error: 'Drive upload failed', detail: `Create ${createRes.status}: ${err}` }, { status: 500 });
       }
     }
 

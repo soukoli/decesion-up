@@ -40,7 +40,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       } else {
         const data = await res.json();
         console.error('Backup failed:', data);
-        alert(data.error || 'Backup failed');
+        alert(data.detail || data.error || 'Backup failed');
       }
     } catch (e) { console.error('Backup error:', e); }
     finally { setBackingUp(false); }
