@@ -232,14 +232,14 @@ export function FeedScreen() {
                         {/* Bottom meta row */}
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${categoryColors[ep.category] || 'bg-slate-700/50 text-slate-400 border-slate-600'}`}>
+                            <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${categoryColors[ep.category] || 'bg-slate-700/50 text-slate-400 border-slate-600'}`}>
                               {ep.category}
                             </span>
-                            <span className="text-[10px] text-slate-500">{ep.duration}</span>
+                            <span className="text-[11px] text-slate-500">{ep.duration}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                            <span className="text-[10px] text-slate-600 font-mono">{formatRelativeTime(ep.pubDate)}</span>
+                            <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(ep.pubDate)}</span>
                           </div>
                         </div>
                       </a>
@@ -266,7 +266,7 @@ export function FeedScreen() {
                               </svg>
                             </button>
                           </div>
-                          <p className="text-[10px] text-slate-600 mt-1 px-1">Z: {ep.podcastName}</p>
+                          <p className="text-[11px] text-slate-600 mt-1 px-1">Z: {ep.podcastName}</p>
                         </div>
                       )}
                     </div>
@@ -285,12 +285,12 @@ export function FeedScreen() {
                       <p className={`${fontConfig.title} text-white group-hover:text-amber-400 transition-colors line-clamp-2`}>{t.title}</p>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${aiTechChipColors.HN}`}>HN</span>
-                          <span className="text-[10px] text-slate-500">{t.score} pts · {t.comments} comments</span>
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${aiTechChipColors.HN}`}>HN</span>
+                          <span className="text-[11px] text-slate-500">{t.score} pts · {t.comments} comments</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[10px] text-slate-600 font-mono">{t.timeAgo}</span>
+                          <span className="text-[11px] text-slate-600 font-mono">{t.timeAgo}</span>
                         </div>
                       </div>
                     </a>
@@ -307,12 +307,12 @@ export function FeedScreen() {
                       )}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${chip.color}`}>{chip.label}</span>
-                          <span className="text-[10px] text-slate-500">{r.authors.slice(0, 2).join(', ')}{r.authors.length > 2 ? ' +' : ''}</span>
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chip.color}`}>{chip.label}</span>
+                          <span className="text-[11px] text-slate-500">{r.authors.slice(0, 2).join(', ')}{r.authors.length > 2 ? ' +' : ''}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[10px] text-slate-600 font-mono">{formatRelativeTime(r.publishedAt)}</span>
+                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(r.publishedAt)}</span>
                         </div>
                       </div>
                     </a>
@@ -334,10 +334,10 @@ export function FeedScreen() {
                         <p className={`${fontConfig.body} text-slate-400 mt-1 line-clamp-2`}>{item.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[10px] text-slate-600 font-mono">{formatRelativeTime(item.publishedAt)}</span>
+                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(item.publishedAt)}</span>
                         </div>
                       </div>
                     </a>
@@ -366,12 +366,12 @@ export function FeedScreen() {
                       )}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.category}</span>
-                          <span className="text-[10px] text-slate-500">Horáčkova</span>
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.category}</span>
+                          <span className="text-[11px] text-slate-500">Horáčkova</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[10px] text-slate-600 font-mono">{formatRelativeTime(item.pubDate)}</span>
+                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(item.pubDate)}</span>
                         </div>
                       </div>
                     </a>

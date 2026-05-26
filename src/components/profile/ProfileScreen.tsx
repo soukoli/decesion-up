@@ -59,8 +59,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
               </div>
             )}
             <div>
-              <p className="text-white font-medium">{user.user_metadata?.full_name || 'Uživatel'}</p>
-              <p className="text-xs text-slate-400">{user.email}</p>
+              <p className="text-lg font-semibold text-white">{user.user_metadata?.full_name || 'Uživatel'}</p>
+              <p className="text-sm text-slate-400">{user.email}</p>
             </div>
           </div>
         </div>

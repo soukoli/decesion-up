@@ -188,7 +188,7 @@ function IdeaCard({ idea, onDone }: { idea: IdeaAI; onDone: (id: string) => void
     <div className="flex items-center gap-3 p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl group">
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white font-medium leading-snug truncate">{idea.title}</p>
+        <p className="text-[15px] text-white font-medium leading-snug truncate">{idea.title}</p>
         {idea.group && (
           <span className="text-[10px] text-slate-500 mt-0.5">{idea.group.name}</span>
         )}

@@ -134,7 +134,7 @@ export function KnowledgeScreen() {
       <div className="flex-shrink-0 px-4 pb-3 space-y-2">
         <div className="flex gap-1 bg-slate-800/50 p-1 rounded-lg">
           {(['active', 'done', 'all'] as ViewFilter[]).map(v => (
-            <button key={v} onClick={() => setViewFilter(v)} className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${viewFilter === v ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>
+            <button key={v} onClick={() => setViewFilter(v)} className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ${viewFilter === v ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>
               {v === 'active' ? 'Aktivní' : v === 'done' ? 'Hotovo' : 'Vše'}
             </button>
           ))}
@@ -149,7 +149,7 @@ export function KnowledgeScreen() {
 
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
           {(['all', 'red', 'yellow', 'blue', 'purple'] as (Priority | 'all')[]).map(p => (
-            <button key={p} onClick={() => setPriorityFilter(p)} className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${priorityFilter === p ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' : 'bg-slate-800/50 text-slate-500 border border-slate-700/50'}`}>
+            <button key={p} onClick={() => setPriorityFilter(p)} className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${priorityFilter === p ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50' : 'bg-slate-800/50 text-slate-500 border border-slate-700/50'}`}>
               {p === 'all' ? 'Vše' : PRIORITY_CONFIG[p].labelCz}
             </button>
           ))}
@@ -200,12 +200,12 @@ export function KnowledgeScreen() {
                       }`} />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium leading-snug ${
+                      <p className={`text-[15px] font-medium leading-snug ${
                         isProcessing ? 'text-slate-400' : isDone ? 'text-slate-500 line-through' : 'text-white'
                       }`}>
                         {idea.title}
                       </p>
-                      {idea.ai_label && !isProcessing && <span className="text-[10px] text-slate-500">{idea.ai_label}</span>}
+                      {idea.ai_label && !isProcessing && <span className="text-xs text-slate-500">{idea.ai_label}</span>}
                     </div>
                     {!isProcessing && (
                       <svg className={`w-4 h-4 text-slate-500 flex-shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,7 +234,7 @@ export function KnowledgeScreen() {
                             className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-600 resize-none focus:outline-none focus:border-amber-500/50 min-h-[60px]"
                           />
                           <div className="flex gap-2">
-                            <button onClick={saveEdit} className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg hover:bg-amber-500/30 transition-colors">Uložit</button>
+                            <button onClick={saveEdit} className="px-3 py-1.5 text-sm font-medium bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg hover:bg-amber-500/30 transition-colors">Uložit</button>
                             <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs text-slate-400 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white transition-colors">Zrušit</button>
                           </div>
                         </div>
@@ -248,23 +248,23 @@ export function KnowledgeScreen() {
                           <div className="flex flex-wrap gap-1.5">
                             {idea.status === 'active' && (
                               <>
-                                <button onClick={() => handleDone(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg hover:bg-green-500/20 active:scale-95 transition-all">
+                                <button onClick={() => handleDone(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-green-400 bg-green-500/10 border border-green-500/30 rounded-lg hover:bg-green-500/20 active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                                   Done
                                 </button>
-                                <button onClick={() => startEdit(idea)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
+                                <button onClick={() => startEdit(idea)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L11.828 15H9v-2.828l8.932-8.931z" /></svg>
                                   Edit
                                 </button>
-                                <button onClick={() => handleCopy(idea)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
+                                <button onClick={() => handleCopy(idea)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                   Copy
                                 </button>
-                                <button onClick={() => handleArchive(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
+                                <button onClick={() => handleArchive(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5" /></svg>
                                   Archiv
                                 </button>
-                                <button onClick={() => handleDelete(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 active:scale-95 transition-all">
+                                <button onClick={() => handleDelete(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                                   Smazat
                                 </button>
@@ -272,11 +272,11 @@ export function KnowledgeScreen() {
                             )}
                             {idea.status === 'done' && (
                               <>
-                                <button onClick={() => handleRestore(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
+                                <button onClick={() => handleRestore(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 rounded-lg hover:text-white active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
                                   Obnovit
                                 </button>
-                                <button onClick={() => handleDelete(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 active:scale-95 transition-all">
+                                <button onClick={() => handleDelete(idea.id)} className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 active:scale-95 transition-all">
                                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                                   Smazat
                                 </button>
