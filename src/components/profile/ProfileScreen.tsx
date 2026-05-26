@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useFontSize, FONT_CONFIGS, FontSize } from '@/lib/font-size';
+import { useTheme, Theme } from '@/lib/theme';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 interface ProfileScreenProps {
@@ -12,6 +13,7 @@ interface ProfileScreenProps {
 export function ProfileScreen({ onBack }: ProfileScreenProps) {
   const [user, setUser] = useState<any>(null);
   const { fontSize, setFontSize, fontConfig } = useFontSize();
+  const { theme, setTheme } = useTheme();
   const supabase = createClient();
 
   useEffect(() => {
@@ -111,9 +113,30 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
           <span className="text-sm text-slate-300">Jazyk</span>
           <span className="text-sm text-slate-500">Čeština</span>
         </div>
-        <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
-          <span className="text-sm text-slate-300">Téma</span>
-          <span className="text-sm text-slate-500">Tmavé</span>
+
+        {/* Theme selector */}
+        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
+          <p className="text-sm text-white font-medium mb-3">Téma</p>
+          <div className="flex gap-2">
+            {(['dark', 'light', 'system'] as Theme[]).map(t => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={`flex-1 py-2.5 px-3 rounded-lg text-center transition-all ${
+                  theme === t
+                    ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
+                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white'
+                }`}
+              >
+                <span className="block text-lg mb-0.5">
+                  {t === 'dark' ? '🌙' : t === 'light' ? '☀️' : '💻'}
+                </span>
+                <span className="text-[11px]">
+                  {t === 'dark' ? 'Tmavé' : t === 'light' ? 'Světlé' : 'Systém'}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
         <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
           <span className="text-sm text-slate-300">Verze</span>

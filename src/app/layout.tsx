@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { FontSizeProvider } from "@/lib/font-size";
+import { ThemeProvider } from "@/lib/theme";
 import { Snackbar } from "@/components/ui/Snackbar";
 
 const inter = Inter({
@@ -36,11 +37,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="cs" className={`${inter.variable} h-full`}>
-      <body className="h-dvh overflow-hidden bg-slate-950 text-white">
-        <FontSizeProvider>
-          {children}
-          <Snackbar />
-        </FontSizeProvider>
+      <body className="h-dvh overflow-hidden bg-slate-950 text-white dark">
+        <ThemeProvider>
+          <FontSizeProvider>
+            {children}
+            <Snackbar />
+          </FontSizeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
