@@ -49,54 +49,12 @@ export interface IdeaGroup {
   ideas_count?: number;
 }
 
-export interface IdeaLink {
-  id: string;
-  idea_a: string;
-  idea_b: string;
-  relationship?: string;
-  created_at: string;
-}
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: 'critical_reminder' | 'today_item' | 'family_alert' | 'ai_suggestion';
-  title: string;
-  body?: string;
-  read: boolean;
-  idea_id?: string;
-  created_at: string;
-}
-
 export interface UserProfile {
   id: string;
-  display_name?: string;
-  avatar_url?: string;
+  font_size: 'sm' | 'md' | 'lg';
   language: 'cs' | 'en';
-  theme: 'dark' | 'light' | 'system';
   created_at: string;
   updated_at: string;
-}
-
-export interface PodcastNote {
-  id: string;
-  user_id: string;
-  podcast_id: string;
-  podcast_name: string;
-  episode_title?: string;
-  note: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SchoolItem {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  event_date?: string;
-  source: string;
-  created_at: string;
 }
 
 // Priority colors for UI
