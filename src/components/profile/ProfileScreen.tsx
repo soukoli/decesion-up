@@ -15,10 +15,43 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
   const { fontSize, setFontSize, fontConfig } = useFontSize();
   const { theme, setTheme } = useTheme();
   const supabase = createClient();
+  const [backupInfo, setBackupInfo] = useState<{ exists: boolean; lastBackup: string | null }>({ exists: false, lastBackup: null });
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    fetchBackupInfo();
   }, []);
+
+  const fetchBackupInfo = async () => {
+    try {
+      const res = await fetch('/api/backup');
+      if (res.ok) setBackupInfo(await res.json());
+    } catch { /* silent */ }
+  };
+
+  const handleBackup = async () => {
+    setBackingUp(true);
+    try {
+      const res = await fetch('/api/backup', { method: 'POST' });
+      if (res.ok) {
+        await fetchBackupInfo();
+      }
+    } catch { /* silent */ }
+    finally { setBackingUp(false); }
+  };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      const res = await fetch('/api/backup', { method: 'PUT' });
+      if (res.ok) {
+        window.dispatchEvent(new Event('idea-updated'));
+      }
+    } catch { /* silent */ }
+    finally { setRestoring(false); }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -141,6 +174,35 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
           <span className="text-sm text-slate-300">Verze</span>
           <span className="text-sm text-slate-500">1.0.0</span>
+        </div>
+
+        {/* Google Drive Backup */}
+        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
+          <p className="text-sm text-white font-medium mb-1">Google Drive Záloha</p>
+          {backupInfo.lastBackup && (
+            <p className="text-xs text-slate-500 mb-3">
+              Poslední záloha: {new Date(backupInfo.lastBackup).toLocaleString('cs-CZ')}
+            </p>
+          )}
+          {!backupInfo.lastBackup && (
+            <p className="text-xs text-slate-500 mb-3">Zatím žádná záloha</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={handleBackup}
+              disabled={backingUp}
+              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {backingUp ? 'Zálohuji...' : 'Zálohovat'}
+            </button>
+            <button
+              onClick={handleRestore}
+              disabled={restoring || !backupInfo.exists}
+              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white active:scale-95 transition-all disabled:opacity-50"
+            >
+              {restoring ? 'Obnovuji...' : 'Obnovit'}
+            </button>
+          </div>
         </div>
       </div>
 
