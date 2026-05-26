@@ -6,13 +6,17 @@ const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 
 // Helper: Get Google token from user_profile DB
-async function getGoogleToken(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase
+async function getGoogleToken(supabase: any, userId: string): Promise<{ token: string | null; error?: string }> {
+  const { data, error } = await supabase
     .from('user_profile')
     .select('google_token')
     .eq('id', userId)
     .single();
-  return data?.google_token || null;
+  
+  if (error) return { token: null, error: `DB error: ${error.message}` };
+  if (!data) return { token: null, error: 'No user_profile row exists' };
+  if (!data.google_token) return { token: null, error: 'google_token is null in DB (re-login required)' };
+  return { token: data.google_token };
 }
 
 // GET - Get backup info (last backup date)
@@ -25,8 +29,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = await getGoogleToken(supabase, user.id);
-    if (!token) {
+    const { token, error: tokenError } = await getGoogleToken(supabase, user.id);
+    if (!token) { console.error("Backup token error:", tokenError);
       return NextResponse.json({ exists: false, lastBackup: null, error: 'no_token' });
     }
 
@@ -63,8 +67,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized', detail: 'No user' }, { status: 401 });
     }
 
-    const token = await getGoogleToken(supabase, user.id);
-    if (!token) {
+    const { token, error: tokenError } = await getGoogleToken(supabase, user.id);
+    if (!token) { console.error("Backup token error:", tokenError);
       return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.', detail: 'Token not in DB. User must re-login.' }, { status: 401 });
     }
 
@@ -160,8 +164,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = await getGoogleToken(supabase, user.id);
-    if (!token) {
+    const { token, error: tokenError } = await getGoogleToken(supabase, user.id);
+    if (!token) { console.error("Backup token error:", tokenError);
       return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
     }
 

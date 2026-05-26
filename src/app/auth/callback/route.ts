@@ -34,18 +34,25 @@ export async function GET(request: Request) {
     }
 
     // Save Google tokens to user_profile for Drive backup
-    if (data.session?.provider_token && data.session?.user?.id) {
+    if (data.session?.user?.id) {
+      const providerToken = data.session.provider_token;
+      const refreshToken = data.session.provider_refresh_token;
+      
+      console.log('Auth callback - provider_token exists:', !!providerToken, 'refresh_token exists:', !!refreshToken);
+
       const { error: upsertError } = await supabase.from('user_profile').upsert({
         id: data.session.user.id,
         font_size: 'md',
         language: 'cs',
         theme: 'dark',
-        google_token: data.session.provider_token,
-        google_refresh_token: data.session.provider_refresh_token || null,
+        google_token: providerToken || null,
+        google_refresh_token: refreshToken || null,
       }, { onConflict: 'id' });
       
       if (upsertError) {
         console.error('Failed to save Google token:', upsertError);
+      } else {
+        console.log('Google token saved to DB for user:', data.session.user.id);
       }
     }
   }
