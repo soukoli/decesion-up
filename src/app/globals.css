@@ -39,13 +39,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* PWA standalone safe areas */
-@supports (padding: env(safe-area-inset-top)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-  }
-}
-
 /* Light mode overrides */
 .light body,
 .light {

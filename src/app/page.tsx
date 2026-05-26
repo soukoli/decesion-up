@@ -81,8 +81,8 @@ export default function AppPage() {
       </div>
 
       {/* Floating pill navigation - 3 nav icons + 1 action */}
-      <div className="fixed left-1/2 -translate-x-1/2 z-50" style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-        <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 shadow-2xl shadow-black/40">
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 safe-area-bottom flex justify-center pointer-events-none">
+        <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 shadow-2xl shadow-black/40 pointer-events-auto">
           {NAV_ITEMS.map((item, index) => {
             const isActive = index === activeIndex;
             return (
