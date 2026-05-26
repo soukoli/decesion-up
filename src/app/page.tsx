@@ -46,6 +46,16 @@ export default function AppPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Listen for navigation events from child components
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const index = (e as CustomEvent).detail;
+      swiperRef.current?.slideTo(index);
+    };
+    window.addEventListener('navigate-screen', handler);
+    return () => window.removeEventListener('navigate-screen', handler);
+  }, []);
+
   const handleNavigate = (index: number) => {
     swiperRef.current?.slideTo(index);
   };

@@ -31,12 +31,18 @@ export function KnowledgeScreen() {
       }
     };
     const handleUpdated = () => fetchIdeas();
+    const handleNavigateIdea = (e: Event) => {
+      const ideaId = (e as CustomEvent).detail;
+      if (ideaId) setExpandedId(ideaId);
+    };
 
     window.addEventListener('idea-created', handleCreated);
     window.addEventListener('idea-updated', handleUpdated);
+    window.addEventListener('navigate-idea', handleNavigateIdea);
     return () => {
       window.removeEventListener('idea-created', handleCreated);
       window.removeEventListener('idea-updated', handleUpdated);
+      window.removeEventListener('navigate-idea', handleNavigateIdea);
     };
   }, []);
 

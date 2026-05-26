@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { IdeaAI, PRIORITY_CONFIG } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useSnackbar } from '@/components/ui/Snackbar';
 
 export function HomeScreen() {
   const [ideas, setIdeas] = useState<IdeaAI[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const { showSnackbar } = useSnackbar();
   const supabase = createClient();
 
   useEffect(() => {
@@ -44,16 +47,13 @@ export function HomeScreen() {
   };
 
   const handleDone = async (id: string) => {
-    try {
-      await fetch('/api/ideas', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: 'done' }),
-      });
-      setIdeas(prev => prev.filter(i => i.id !== id));
-    } catch (err) {
-      console.error('Failed to complete idea:', err);
-    }
+    setIdeas(prev => prev.filter(i => i.id !== id));
+    showSnackbar('Hotovo ✓');
+    await fetch('/api/ideas', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: 'done' }),
+    });
   };
 
   const critical = ideas.filter(i => i.priority === 'red');
@@ -165,6 +165,11 @@ function Section({ title, color, ideas, onDone }: { title: string; color: string
     purple: 'bg-purple-500',
   };
 
+  const handleNavigate = (ideaId: string) => {
+    window.dispatchEvent(new CustomEvent('navigate-idea', { detail: ideaId }));
+    window.dispatchEvent(new CustomEvent('navigate-screen', { detail: 2 }));
+  };
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
@@ -176,33 +181,66 @@ function Section({ title, color, ideas, onDone }: { title: string; color: string
       </div>
       <div className="space-y-1.5">
         {ideas.map(idea => (
-          <IdeaCard key={idea.id} idea={idea} onDone={onDone} />
+          <IdeaCard key={idea.id} idea={idea} onDone={onDone} onNavigate={handleNavigate} />
         ))}
       </div>
     </div>
   );
 }
 
-function IdeaCard({ idea, onDone }: { idea: IdeaAI; onDone: (id: string) => void }) {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl group">
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-[15px] text-white font-medium leading-snug truncate">{idea.title}</p>
-        {idea.group && (
-          <span className="text-[10px] text-slate-500 mt-0.5">{idea.group.name}</span>
-        )}
-      </div>
+function IdeaCard({ idea, onDone, onNavigate }: { idea: IdeaAI; onDone: (id: string) => void; onNavigate: (id: string) => void }) {
+  const x = useMotionValue(0);
+  const bgOpacity = useTransform(x, [0, 80], [0, 1]);
+  const checkScale = useTransform(x, [0, 80], [0.5, 1]);
+  const [swiped, setSwiped] = useState(false);
 
-      {/* Done button */}
-      <button
-        onClick={() => onDone(idea.id)}
-        className="flex-shrink-0 p-2 rounded-lg bg-green-500/10 text-green-400 border border-green-500/30 opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-95 transition-all"
+  const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
+    if (info.offset.x > 80) {
+      setSwiped(true);
+      animate(x, 400, { duration: 0.3 });
+      setTimeout(() => onDone(idea.id), 300);
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
+    }
+  };
+
+  if (swiped) return null;
+
+  return (
+    <div className="relative overflow-hidden rounded-xl">
+      {/* Green background (revealed on swipe) */}
+      <motion.div
+        className="absolute inset-0 bg-green-500/20 flex items-center pl-4"
+        style={{ opacity: bgOpacity }}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        <motion.div style={{ scale: checkScale }}>
+          <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </motion.div>
+      </motion.div>
+
+      {/* Draggable card */}
+      <motion.div
+        style={{ x }}
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 120 }}
+        dragElastic={0.15}
+        onDragEnd={handleDragEnd}
+        onClick={() => onNavigate(idea.id)}
+        className="relative flex items-center gap-3 p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl cursor-pointer active:bg-slate-800/50 transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] text-white font-medium leading-snug truncate">{idea.title}</p>
+          {idea.ai_label && (
+            <span className="text-xs text-slate-500">{idea.ai_label}</span>
+          )}
+        </div>
+        <svg className="w-4 h-4 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
-      </button>
+      </motion.div>
     </div>
   );
 }
