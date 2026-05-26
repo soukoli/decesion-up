@@ -25,6 +25,7 @@ export function FeedScreen() {
   const [news, setNews] = useState<WorldNews[]>([]);
   const [school, setSchool] = useState<SchoolArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { fontConfig } = useFontSize();
   const { showSnackbar } = useSnackbar();
   const [ideaForPodcast, setIdeaForPodcast] = useState<string | null>(null);
@@ -35,7 +36,11 @@ export function FeedScreen() {
   }, []);
 
   const fetchAll = async () => {
-    setLoading(true);
+    // Only show full loading spinner on initial load (no data yet)
+    const isInitial = podcasts.length === 0 && trends.length === 0 && news.length === 0;
+    if (isInitial) setLoading(true);
+    else setRefreshing(true);
+
     try {
       const [pRes, tRes, rRes, nRes, sRes] = await Promise.all([
         fetch('/api/podcasts'),
@@ -53,6 +58,7 @@ export function FeedScreen() {
       console.error('Feed fetch error:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -146,10 +152,10 @@ export function FeedScreen() {
           rightContent={
             <button
               onClick={fetchAll}
-              disabled={loading}
+              disabled={loading || refreshing}
               className="p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
             >
-              <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
             </button>
