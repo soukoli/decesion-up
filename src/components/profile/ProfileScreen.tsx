@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useFontSize, FONT_CONFIGS, FontSize } from '@/lib/font-size';
 import { useTheme, Theme } from '@/lib/theme';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useSnackbar } from '@/components/ui/Snackbar';
 
 interface ProfileScreenProps {
   onBack?: () => void;
@@ -14,6 +15,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
   const [user, setUser] = useState<any>(null);
   const { fontSize, setFontSize, fontConfig } = useFontSize();
   const { theme, setTheme } = useTheme();
+  const { showSnackbar } = useSnackbar();
   const supabase = createClient();
   const [backupInfo, setBackupInfo] = useState<{ exists: boolean; lastBackup: string | null }>({ exists: false, lastBackup: null });
   const [backingUp, setBackingUp] = useState(false);
@@ -37,12 +39,11 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       const res = await fetch('/api/backup', { method: 'POST' });
       if (res.ok) {
         await fetchBackupInfo();
+        showSnackbar('Záloha uložena ✓');
       } else {
-        const data = await res.json();
-        console.error('Backup failed:', data);
-        alert(data.detail || data.error || 'Backup failed');
+        showSnackbar('Záloha selhala');
       }
-    } catch (e) { console.error('Backup error:', e); }
+    } catch { showSnackbar('Záloha selhala'); }
     finally { setBackingUp(false); }
   };
 
@@ -52,8 +53,11 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       const res = await fetch('/api/backup', { method: 'PUT' });
       if (res.ok) {
         window.dispatchEvent(new Event('idea-updated'));
+        showSnackbar('Data obnovena ✓');
+      } else {
+        showSnackbar('Obnova selhala');
       }
-    } catch { /* silent */ }
+    } catch { showSnackbar('Obnova selhala'); }
     finally { setRestoring(false); }
   };
 
