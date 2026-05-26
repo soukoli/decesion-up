@@ -79,7 +79,6 @@ export function FeedScreen() {
         body: JSON.stringify({
           content,
           source: 'podcast',
-          podcast_id: ep.id,
           podcast_name: ep.podcastName,
         }),
       });

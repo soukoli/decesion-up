@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { content, source = 'text', voice_transcript, podcast_id, podcast_name } = body;
+    const { content, source = 'text', podcast_name } = body;
 
     if (!content || !content.trim()) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -24,8 +24,6 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         content: content.trim(),
         source,
-        voice_transcript: voice_transcript || null,
-        podcast_id: podcast_id || null,
         podcast_name: podcast_name || null,
       })
       .select()
