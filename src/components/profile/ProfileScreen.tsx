@@ -37,8 +37,12 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       const res = await fetch('/api/backup', { method: 'POST' });
       if (res.ok) {
         await fetchBackupInfo();
+      } else {
+        const data = await res.json();
+        console.error('Backup failed:', data);
+        alert(data.error || 'Backup failed');
       }
-    } catch { /* silent */ }
+    } catch (e) { console.error('Backup error:', e); }
     finally { setBackingUp(false); }
   };
 

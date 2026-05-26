@@ -60,12 +60,12 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized', detail: 'No user' }, { status: 401 });
     }
 
     const token = await getGoogleToken(supabase, user.id);
     if (!token) {
-      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.' }, { status: 401 });
+      return NextResponse.json({ error: 'No Google token. Please sign out and sign in again.', detail: 'Token not in DB. User must re-login.' }, { status: 401 });
     }
 
     // Fetch all user data
