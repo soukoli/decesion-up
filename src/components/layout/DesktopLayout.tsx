@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HomeScreen } from '@/components/home/HomeScreen';
 import { FeedScreen } from '@/components/feed/FeedScreen';
 import { KnowledgeScreen } from '@/components/knowledge/KnowledgeScreen';
+import { useSnackbar } from '@/components/ui/Snackbar';
+import { IdeaAI } from '@/types';
 
 type Screen = 'home' | 'feed' | 'knowledge';
 
@@ -25,8 +28,19 @@ const NAV_ITEMS: { id: Screen; label: string; icon: React.ReactNode }[] = [
   )},
 ];
 
+const PRIORITY_EMOJI: Record<string, string> = {
+  red: '🔴',
+  yellow: '🟡',
+  blue: '🔵',
+  purple: '🟣',
+};
+
 export function DesktopLayout() {
   const [activeScreen, setActiveScreen] = useState<Screen>('home');
+  const [showIdeaModal, setShowIdeaModal] = useState(false);
+  const [ideaText, setIdeaText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { showSnackbar } = useSnackbar();
 
   const renderContent = () => {
     switch (activeScreen) {
@@ -36,13 +50,71 @@ export function DesktopLayout() {
     }
   };
 
+  const handleSubmitIdea = async () => {
+    const content = ideaText.trim();
+    if (!content || submitting) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, source: 'text' }),
+      });
+
+      if (res.ok) {
+        const { idea } = await res.json();
+
+        const tempIdea: Partial<IdeaAI> & { _processing: boolean } = {
+          id: `temp-${idea.id}`,
+          raw_id: idea.id,
+          title: content,
+          priority: 'blue',
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          _processing: true,
+        };
+
+        window.dispatchEvent(new CustomEvent('idea-created', { detail: tempIdea }));
+
+        setIdeaText('');
+        setShowIdeaModal(false);
+
+        fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ raw_id: idea.id, content }),
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.idea?.ai_label) {
+              const emoji = PRIORITY_EMOJI[data.idea.priority] || '🔵';
+              showSnackbar(`✓ ${data.idea.ai_label} ${emoji}`);
+            } else {
+              showSnackbar('✓ Nápad uložen');
+            }
+            window.dispatchEvent(new Event('idea-updated'));
+          })
+          .catch(() => {
+            showSnackbar('✓ Nápad uložen');
+            window.dispatchEvent(new Event('idea-updated'));
+          });
+      }
+    } catch {
+      showSnackbar('Chyba při ukládání');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="h-dvh flex bg-slate-950">
       {/* Sidebar */}
       <aside className="w-64 flex-shrink-0 border-r border-slate-800 flex flex-col">
         {/* Logo */}
         <div className="p-5 border-b border-slate-800">
-          <h1 className="text-lg font-black text-white tracking-tight uppercase">DecisionUp</h1>
+          <h1 className="text-lg font-bold text-white tracking-tight uppercase">DecisionUp</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">Signal, not noise</p>
         </div>
 
@@ -64,8 +136,21 @@ export function DesktopLayout() {
           ))}
         </nav>
 
+        {/* Add idea button */}
+        <div className="p-3 border-t border-slate-800">
+          <button
+            onClick={() => setShowIdeaModal(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 active:scale-[0.98] transition-all"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span className="text-sm font-medium">Nový nápad</span>
+          </button>
+        </div>
+
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="px-4 pb-4">
           <p className="text-[10px] text-slate-600">DecisionUp v1.0</p>
         </div>
       </aside>
@@ -74,6 +159,57 @@ export function DesktopLayout() {
       <main className="flex-1 overflow-hidden">
         {renderContent()}
       </main>
+
+      {/* Idea Modal (centered popup) */}
+      <AnimatePresence>
+        {showIdeaModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[70]"
+              onClick={() => setShowIdeaModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-lg bg-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white">Nový nápad</h2>
+                <button
+                  onClick={() => setShowIdeaModal(false)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <textarea
+                value={ideaText}
+                onChange={(e) => setIdeaText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitIdea(); } }}
+                placeholder="Co tě napadá..."
+                autoFocus
+                className="w-full h-32 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-base text-white placeholder-slate-600 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+              />
+
+              <button
+                onClick={handleSubmitIdea}
+                disabled={!ideaText.trim() || submitting}
+                className="w-full mt-4 py-3 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 font-semibold hover:bg-amber-500/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Ukládám...' : 'Uložit nápad'}
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
