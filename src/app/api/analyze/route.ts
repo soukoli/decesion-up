@@ -11,7 +11,7 @@ const SYSTEM_PROMPT = `Jsi osobní organizační AI asistent. Uživatel ti diktu
 Tvoje práce:
 1. Pochop co uživatel říká (může být neformální, zkrácené, hovorové)
 2. Vytvoř krátký jasný title (max 5 slov, česky)
-3. Zaraď do existující skupiny NEBO vytvoř novou (max 15 skupin celkem)
+3. Zaraď do existující skupiny NEBO VYTVOŘ NOVOU skupinu
 4. Urči prioritu
 
 PRIORITA:
@@ -20,18 +20,36 @@ PRIORITA:
 - "blue" = nápad, inspirace, učení, zajímavost
 - "purple" = budoucnost, výzkum, dlouhodobé, someday/maybe
 
-SKUPINY jsou PROJEKTY a ŽIVOTNÍ OBLASTI (ne abstraktní kategorie):
-Příklady: "Narozeniny Nela", "Škola děti", "Dům", "AI projekt", "Práce", "Nákupy", "Zdraví"
+SKUPINY (max 15):
+Skupiny NEJSOU obecné kategorie jako "Nápady" nebo "Úkoly".
+Skupiny JSOU konkrétní projekty, témata a životní oblasti specifické pro uživatele.
+
+PŘÍKLADY DOBRÝCH SKUPIN:
+- "Narozeniny Nela" (konkrétní událost)
+- "Rekonstrukce koupelny" (konkrétní projekt)
+- "AI asistent app" (konkrétní projekt)
+- "Škola Matyáš" (konkrétní oblast)
+- "Dovolená Chorvatsko" (konkrétní plán)
+
+PŘÍKLADY ŠPATNÝCH SKUPIN (příliš obecné — NEPOUŽÍVEJ):
+- "Nápady" ❌
+- "Úkoly" ❌
+- "Osobní" ❌
+- "Práce" ❌ (příliš obecné, radši konkrétní projekt)
+- "Budoucnost" ❌
 
 PRAVIDLA:
-- Pokud existující skupina sedí → POUŽIJ JI (nepřidávej novou)
-- Max 15 skupin — sloučuj když to dává smysl
-- Title musí být jasný i bez kontextu (ne "to" nebo "udělat")
+- Když uživatel zmíní konkrétní projekt/téma → VYTVOŘ novou skupinu s tím názvem
+- Když uživatel řekne "nový projekt X" nebo "pracuji na X" → VŽDY vytvoř skupinu X
+- Pokud existující skupina přesně sedí → použij ji
+- NIKDY nepoužívej obecné názvy skupin
+- Skupiny pojmenuj konkrétně dle obsahu (ne abstraktně)
+- Title musí být jasný i bez kontextu
 - Pokud si nejsi jistý prioritou → yellow
 - Vždy odpovídej česky
 
 Odpověz POUZE validní JSON:
-{"title":"krátký title","priority":"red|yellow|blue|purple","group":"Název skupiny","reason":"proč"}`;
+{"title":"krátký title","priority":"red|yellow|blue|purple","group":"Konkrétní název skupiny","reason":"proč"}`;
 
 const MAX_GROUPS = 15;
 
@@ -67,19 +85,16 @@ export async function POST(request: NextRequest) {
 
     if (existingGroups.length > 0) {
       contextParts.push(`Existující skupiny (${existingGroups.length}/${MAX_GROUPS}): ${existingGroups.map(g => g.name).join(', ')}`);
+      contextParts.push('(Použij existující POUZE pokud přesně sedí. Jinak vytvoř novou konkrétní skupinu.)');
     } else {
-      contextParts.push('Zatím žádné skupiny — vytvoř první.');
+      contextParts.push('Zatím žádné skupiny — vytvoř první konkrétní skupinu dle obsahu nápadu.');
     }
 
     if (activeIdeas.length > 0) {
-      contextParts.push(`Aktivní nápady (${activeIdeas.length}): ${activeIdeas.map(i => `${i.title} [${i.ai_label || 'bez skupiny'}]`).join('; ')}`);
+      contextParts.push(`\nAktivní nápady: ${activeIdeas.map(i => `"${i.title}" [${i.ai_label || '-'}]`).join(', ')}`);
     }
 
-    if (archivedIdeas.length > 0) {
-      contextParts.push(`Historie (posledních ${archivedIdeas.length}): ${archivedIdeas.slice(0, 20).map(i => i.title).join('; ')}`);
-    }
-
-    contextParts.push(`\nNový nápad k zpracování: "${content}"`);
+    contextParts.push(`\nNOVÝ NÁPAD: "${content}"`);
 
     const contextMessage = contextParts.join('\n');
 
@@ -93,7 +108,7 @@ export async function POST(request: NextRequest) {
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: contextMessage },
         ],
-        temperature: 0.3,
+        temperature: 0.5,
         max_tokens: 200,
         response_format: { type: 'json_object' },
       });
