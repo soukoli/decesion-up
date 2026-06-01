@@ -112,22 +112,22 @@ export function IdeaSheet({ isOpen, onClose }: IdeaSheetProps) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-slate-900 rounded-t-2xl border-t border-slate-700/50 shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 z-[70] theme-bg-muted rounded-t-2xl border-t theme-border shadow-2xl"
             style={{ height: '50dvh' }}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 rounded-full bg-slate-700" />
+              <div className="w-10 h-1 rounded-full theme-bg-input" />
             </div>
 
             {/* Content */}
             <div className="flex flex-col h-[calc(100%-2rem)] px-5 pb-8">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white">Nový nápad</h2>
+                <h2 className="text-lg font-bold theme-text">Nový nápad</h2>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg theme-text-muted hover:theme-text hover:bg-slate-800 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -144,7 +144,7 @@ export function IdeaSheet({ isOpen, onClose }: IdeaSheetProps) {
                   placeholder="Co tě napadá..."
                   autoFocus
                   inputMode="text"
-                  className="w-full h-full bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-base text-white placeholder-slate-600 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+                  className="w-full h-full theme-bg-input border theme-border rounded-xl p-4 text-base theme-text placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
                 />
               </div>
 

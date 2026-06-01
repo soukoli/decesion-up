@@ -143,7 +143,7 @@ export function FeedScreen() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-950">
+    <div className="h-full flex flex-col theme-bg">
       {/* Header + tabs */}
       <div className="flex-shrink-0">
         <PageHeader
@@ -152,7 +152,7 @@ export function FeedScreen() {
             <button
               onClick={fetchAll}
               disabled={loading || refreshing}
-              className="p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg theme-bg-input theme-text-muted hover:text-white transition-colors disabled:opacity-50"
             >
               <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -161,15 +161,15 @@ export function FeedScreen() {
           }
         />
         <div className="px-4 pb-2">
-          <div className="flex gap-1 bg-slate-800/50 p-1 rounded-lg">
+          <div className="flex gap-1 theme-bg-input p-1 rounded-lg">
           {FEED_TABS.map((tab, index) => (
             <button
               key={tab.id}
               onClick={() => handleTabClick(index)}
               className={`flex-1 py-2 px-2 rounded-md text-xs font-medium transition-all ${
                 activeTab === index
-                  ? 'bg-slate-700 text-white shadow-lg'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'theme-bg-muted theme-text shadow-lg'
+                  : 'theme-text-muted hover:theme-text'
               }`}
             >
               {tab.label}
@@ -206,7 +206,7 @@ export function FeedScreen() {
                   const hasRealTitle = ep.title && ep.title !== 'Latest Episode';
 
                   return (
-                    <div key={ep.id} className={`rounded-xl overflow-hidden transition-colors ${fresh ? 'border border-green-500/30 bg-slate-800/40' : 'border border-slate-700/50 bg-slate-800/30'}`}>
+                    <div key={ep.id} className={`rounded-xl overflow-hidden transition-colors ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
                       {/* Clickable card → opens podcast */}
                       <a href={ep.spotifyUrl} target="_blank" rel="noopener noreferrer" className="block p-3">
                         <div className="flex items-start gap-3">
@@ -218,15 +218,15 @@ export function FeedScreen() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className={`${fontConfig.title} text-white font-semibold`}>{ep.podcastName}</p>
+                            <p className={`${fontConfig.title} theme-text font-semibold`}>{ep.podcastName}</p>
                             {hasRealTitle && (
-                              <p className="text-xs text-slate-300 mt-0.5 line-clamp-2">{ep.title}</p>
+                              <p className="text-xs theme-text-secondary mt-0.5 line-clamp-2">{ep.title}</p>
                             )}
                           </div>
                           {/* + idea button */}
                           <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIdeaForPodcast(showIdeaInput ? null : ep.id); setIdeaText(''); }}
-                            className={`p-1.5 rounded-lg flex-shrink-0 transition-all ${showIdeaInput ? 'bg-amber-500/20 text-amber-400' : 'text-slate-600 hover:text-slate-300 hover:bg-slate-700/50'}`}
+                            className={`p-1.5 rounded-lg flex-shrink-0 transition-all ${showIdeaInput ? 'bg-amber-500/20 text-amber-400' : 'theme-text-faint hover:theme-text-secondary hover:bg-slate-700/50'}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -235,23 +235,23 @@ export function FeedScreen() {
                         </div>
 
                         {/* Bottom meta row */}
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                           <div className="flex items-center gap-2">
-                            <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${categoryColors[ep.category] || 'bg-slate-700/50 text-slate-400 border-slate-600'}`}>
+                            <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${categoryColors[ep.category] || 'bg-slate-700/50 theme-text-muted border-slate-600'}`}>
                               {ep.category}
                             </span>
-                            <span className="text-[11px] text-slate-500">{ep.duration}</span>
+                            <span className="text-[11px] theme-text-muted">{ep.duration}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                            <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(ep.pubDate)}</span>
+                            <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(ep.pubDate)}</span>
                           </div>
                         </div>
                       </a>
 
                       {/* Inline idea input */}
                       {showIdeaInput && (
-                        <div className="px-3 pb-3 border-t border-slate-700/30">
+                        <div className="px-3 pb-3 border-t theme-border-light">
                           <div className="flex items-center gap-2 mt-2">
                             <input
                               type="text"
@@ -271,7 +271,7 @@ export function FeedScreen() {
                               </svg>
                             </button>
                           </div>
-                          <p className="text-[11px] text-slate-600 mt-1 px-1">Z: {ep.podcastName}</p>
+                          <p className="text-[11px] theme-text-faint mt-1 px-1">Z: {ep.podcastName}</p>
                         </div>
                       )}
                     </div>
@@ -286,16 +286,16 @@ export function FeedScreen() {
                 {trends.slice(0, 10).map(t => {
                   const fresh = isFreshFromTimeAgo(t.timeAgo);
                   return (
-                    <a key={t.id} href={t.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 bg-slate-800/40' : 'border border-slate-700/50 bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} text-white group-hover:text-amber-400 transition-colors line-clamp-2`}>{t.title}</p>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+                    <a key={t.id} href={t.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
+                      <p className={`${fontConfig.title} theme-text group-hover:text-amber-400 transition-colors line-clamp-2`}>{t.title}</p>
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <div className="flex items-center gap-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${aiTechChipColors.HN}`}>HN</span>
-                          <span className="text-[11px] text-slate-500">{t.score} pts · {t.comments} comments</span>
+                          <span className="text-[11px] theme-text-muted">{t.score} pts · {t.comments} comments</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[11px] text-slate-600 font-mono">{t.timeAgo}</span>
+                          <span className="text-[11px] theme-text-faint font-mono">{t.timeAgo}</span>
                         </div>
                       </div>
                     </a>
@@ -305,19 +305,19 @@ export function FeedScreen() {
                   const fresh = isFresh(r.publishedAt);
                   const chip = getResearchChip(r.category);
                   return (
-                    <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 bg-slate-800/40' : 'border border-slate-700/50 bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} text-white group-hover:text-blue-400 transition-colors line-clamp-2`}>{r.title}</p>
+                    <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
+                      <p className={`${fontConfig.title} theme-text group-hover:text-blue-400 transition-colors line-clamp-2`}>{r.title}</p>
                       {r.summary && (
-                        <p className={`${fontConfig.body} text-slate-400 mt-1 line-clamp-1`}>{r.summary}</p>
+                        <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-1`}>{r.summary}</p>
                       )}
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <div className="flex items-center gap-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chip.color}`}>{chip.label}</span>
-                          <span className="text-[11px] text-slate-500">{r.authors.slice(0, 2).join(', ')}{r.authors.length > 2 ? ' +' : ''}</span>
+                          <span className="text-[11px] theme-text-muted">{r.authors.slice(0, 2).join(', ')}{r.authors.length > 2 ? ' +' : ''}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(r.publishedAt)}</span>
+                          <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(r.publishedAt)}</span>
                         </div>
                       </div>
                     </a>
@@ -331,18 +331,18 @@ export function FeedScreen() {
               <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6 space-y-2">
                 {news.map(item => {
                   const fresh = isFresh(item.publishedAt);
-                  const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 text-slate-400 border-slate-600';
+                  const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
                   return (
-                    <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 bg-slate-800/40' : 'border border-slate-700/50 bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} text-white font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
+                    <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
+                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
                       {item.description && (
-                        <p className={`${fontConfig.body} text-slate-400 mt-1 line-clamp-2`}>{item.description}</p>
+                        <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
                       )}
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(item.publishedAt)}</span>
+                          <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(item.publishedAt)}</span>
                         </div>
                       </div>
                     </a>
@@ -357,26 +357,26 @@ export function FeedScreen() {
                 {school.length === 0 && !loading && (
                   <div className="text-center py-12">
                     <span className="text-3xl block mb-2">🏫</span>
-                    <p className="text-slate-400 text-sm">Žádné novinky ze školy</p>
+                    <p className="theme-text-muted text-sm">Žádné novinky ze školy</p>
                   </div>
                 )}
                 {school.map(item => {
                   const fresh = isFresh(item.pubDate);
                   const chipColor = schoolCategoryColors[item.category] || 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
                   return (
-                    <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 bg-slate-800/40' : 'border border-slate-700/50 bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} text-white font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
+                    <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
+                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
                       {item.description && (
-                        <p className={`${fontConfig.body} text-slate-400 mt-1 line-clamp-2`}>{item.description}</p>
+                        <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
                       )}
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <div className="flex items-center gap-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.category}</span>
-                          <span className="text-[11px] text-slate-500">Horáčkova</span>
+                          <span className="text-[11px] theme-text-muted">Horáčkova</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[11px] text-slate-600 font-mono">{formatRelativeTime(item.pubDate)}</span>
+                          <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(item.pubDate)}</span>
                         </div>
                       </div>
                     </a>

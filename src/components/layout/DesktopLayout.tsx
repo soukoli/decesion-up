@@ -109,13 +109,13 @@ export function DesktopLayout() {
   };
 
   return (
-    <div className="h-dvh flex bg-slate-950">
+    <div className="h-dvh flex theme-bg">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 border-r border-slate-800 flex flex-col">
+      <aside className="w-64 flex-shrink-0 border-r theme-border flex flex-col">
         {/* Logo */}
-        <div className="p-5 border-b border-slate-800">
-          <h1 className="text-lg font-bold text-white tracking-tight uppercase">DecisionUp</h1>
-          <p className="text-[10px] text-slate-500 mt-0.5">Signal, not noise</p>
+        <div className="p-5 border-b theme-border">
+          <h1 className="text-lg font-bold theme-text tracking-tight uppercase">DecisionUp</h1>
+          <p className="text-[10px] theme-text-muted mt-0.5">Signal, not noise</p>
         </div>
 
         {/* Navigation */}
@@ -127,7 +127,7 @@ export function DesktopLayout() {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                 activeScreen === item.id
                   ? 'bg-amber-500/20 text-amber-400'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  : 'theme-text-muted hover:theme-bg-card hover:theme-text'
               }`}
             >
               {item.icon}
@@ -137,7 +137,7 @@ export function DesktopLayout() {
         </nav>
 
         {/* Add idea button */}
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t theme-border">
           <button
             onClick={() => setShowIdeaModal(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 active:scale-[0.98] transition-all"
@@ -151,7 +151,7 @@ export function DesktopLayout() {
 
         {/* Footer */}
         <div className="px-4 pb-4">
-          <p className="text-[10px] text-slate-600">DecisionUp v1.0</p>
+          <p className="text-[10px] theme-text-faint">DecisionUp v1.0</p>
         </div>
       </aside>
 
@@ -176,13 +176,13 @@ export function DesktopLayout() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-lg bg-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl p-6"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-lg theme-bg-muted rounded-2xl border theme-border shadow-2xl p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white">Nový nápad</h2>
+                <h2 className="text-lg font-bold theme-text">Nový nápad</h2>
                 <button
                   onClick={() => setShowIdeaModal(false)}
-                  className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg theme-text-muted hover:theme-text hover:theme-bg-card transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -196,7 +196,7 @@ export function DesktopLayout() {
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitIdea(); } }}
                 placeholder="Co tě napadá..."
                 autoFocus
-                className="w-full h-32 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-base text-white placeholder-slate-600 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+                className="w-full h-32 theme-bg-input border theme-border rounded-xl p-4 text-base text-white placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
               />
 
               <button

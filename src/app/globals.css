@@ -149,3 +149,43 @@ body {
 /* No-scrollbar utility */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* ===== Theme-aware utility classes ===== */
+/* These replace hardcoded Tailwind color classes for theme support */
+
+/* Backgrounds */
+.theme-bg { background: var(--bg-app); }
+.theme-bg-card { background: var(--bg-card); }
+.theme-bg-muted { background: var(--bg-muted); }
+.theme-bg-input { background: var(--bg-input); }
+.theme-bg-nav { background: var(--bg-nav); }
+
+/* Text */
+.theme-text { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+.theme-text-faint { color: var(--text-faint); }
+
+/* Borders */
+.theme-border { border-color: var(--border); }
+.theme-border-light { border-color: var(--border-light); }
+
+/* Accent */
+.theme-accent { color: var(--accent-text); }
+.theme-accent-bg { background: var(--accent-bg); }
+.theme-accent-border { border-color: var(--accent-border); }
+
+/* Cards */
+.theme-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.theme-card:hover {
+  background: var(--bg-card-hover);
+}
+
+/* Shadows */
+.theme-shadow-sm { box-shadow: var(--shadow-sm); }
+.theme-shadow { box-shadow: var(--shadow-md); }
+.theme-shadow-lg { box-shadow: var(--shadow-lg); }

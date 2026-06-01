@@ -19,13 +19,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-dvh flex flex-col items-center justify-center bg-slate-950 px-6">
+    <div className="h-dvh flex flex-col items-center justify-center theme-bg px-6">
       {/* Logo */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-black text-white tracking-tight uppercase mb-2">
+        <h1 className="text-4xl font-black theme-text tracking-tight uppercase mb-2">
           DecisionUp
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm theme-text-muted">
           AI-powered personal decision system
         </p>
       </div>
@@ -45,7 +45,7 @@ export default function LoginPage() {
       </button>
 
       {/* Footer */}
-      <p className="mt-12 text-xs text-slate-600">
+      <p className="mt-12 text-xs theme-text-faint">
         Signal, not noise.
       </p>
     </div>

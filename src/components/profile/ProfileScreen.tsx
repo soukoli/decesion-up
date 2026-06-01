@@ -74,7 +74,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
           onBack && (
             <button
               onClick={onBack}
-              className="p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-slate-800/50 theme-text-muted hover:text-white transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -88,13 +88,13 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
 
       {/* User card */}
       {user && (
-        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-2xl mb-6">
+        <div className="p-4 theme-card rounded-2xl mb-6">
           <div className="flex items-center gap-4">
             {user.user_metadata?.avatar_url ? (
               <img
                 src={user.user_metadata.avatar_url}
                 alt=""
-                className="w-14 h-14 rounded-full border-2 border-slate-700"
+                className="w-14 h-14 rounded-full border-2 theme-border"
               />
             ) : (
               <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400">
@@ -102,8 +102,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
               </div>
             )}
             <div>
-              <p className="text-lg font-semibold text-white">{user.user_metadata?.full_name || 'Uživatel'}</p>
-              <p className="text-sm text-slate-400">{user.email}</p>
+              <p className="text-lg font-semibold theme-text">{user.user_metadata?.full_name || 'Uživatel'}</p>
+              <p className="text-sm theme-text-muted">{user.email}</p>
             </div>
           </div>
         </div>
@@ -112,8 +112,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
       {/* Settings */}
       <div className="space-y-2">
         {/* AI Agent status */}
-        <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
-          <span className="text-sm text-slate-300">AI Agent</span>
+        <div className="p-3 theme-card rounded-xl flex items-center justify-between">
+          <span className="text-sm theme-text-secondary">AI Agent</span>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500" />
             <span className="text-xs text-green-400">Aktivní</span>
@@ -121,8 +121,8 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
         </div>
 
         {/* Font Size */}
-        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-          <p className="text-sm text-white font-medium mb-3">Velikost textu zpráv</p>
+        <div className="p-4 theme-card rounded-xl">
+          <p className="text-sm theme-text font-medium mb-3">Velikost textu zpráv</p>
           <div className="flex gap-2">
             {(['sm', 'md', 'lg'] as FontSize[]).map(size => (
               <button
@@ -131,7 +131,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
                 className={`flex-1 py-2.5 px-3 rounded-lg text-center transition-all ${
                   fontSize === size
                     ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
-                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white'
+                    : 'theme-bg-input border theme-border theme-text-muted hover:text-white'
                 }`}
               >
                 <span className={`block ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} font-medium`}>
@@ -144,20 +144,20 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             ))}
           </div>
           {/* Preview */}
-          <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-            <p className={`${fontConfig.title} text-white font-medium`}>Ukázka nadpisu zprávy</p>
-            <p className={`${fontConfig.body} text-slate-400 mt-1`}>Toto je ukázka textu, jak bude vypadat ve feedu.</p>
+          <div className="mt-3 p-3 theme-bg-muted rounded-lg border theme-border">
+            <p className={`${fontConfig.title} theme-text font-medium`}>Ukázka nadpisu zprávy</p>
+            <p className={`${fontConfig.body} theme-text-muted mt-1`}>Toto je ukázka textu, jak bude vypadat ve feedu.</p>
           </div>
         </div>
 
-        <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
-          <span className="text-sm text-slate-300">Jazyk</span>
-          <span className="text-sm text-slate-500">Čeština</span>
+        <div className="p-3 theme-card rounded-xl flex items-center justify-between">
+          <span className="text-sm theme-text-secondary">Jazyk</span>
+          <span className="text-sm theme-text-muted">Čeština</span>
         </div>
 
         {/* Theme selector */}
-        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-          <p className="text-sm text-white font-medium mb-3">Téma</p>
+        <div className="p-4 theme-card rounded-xl">
+          <p className="text-sm theme-text font-medium mb-3">Téma</p>
           <div className="flex gap-2">
             {(['dark', 'light', 'system'] as Theme[]).map(t => (
               <button
@@ -166,7 +166,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
                 className={`flex-1 py-2.5 px-3 rounded-lg text-center transition-all ${
                   theme === t
                     ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
-                    : 'bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white'
+                    : 'theme-bg-input border theme-border theme-text-muted hover:text-white'
                 }`}
               >
                 <span className="block text-lg mb-0.5">
@@ -179,21 +179,21 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             ))}
           </div>
         </div>
-        <div className="p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center justify-between">
-          <span className="text-sm text-slate-300">Verze</span>
-          <span className="text-sm text-slate-500">1.0.0</span>
+        <div className="p-3 theme-card rounded-xl flex items-center justify-between">
+          <span className="text-sm theme-text-secondary">Verze</span>
+          <span className="text-sm theme-text-muted">1.0.0</span>
         </div>
 
         {/* Google Drive Backup */}
-        <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-          <p className="text-sm text-white font-medium mb-1">Google Drive Záloha</p>
+        <div className="p-4 theme-card rounded-xl">
+          <p className="text-sm theme-text font-medium mb-1">Google Drive Záloha</p>
           {backupInfo.lastBackup && (
-            <p className="text-xs text-slate-500 mb-3">
+            <p className="text-xs theme-text-muted mb-3">
               Poslední záloha: {new Date(backupInfo.lastBackup).toLocaleString('cs-CZ')}
             </p>
           )}
           {!backupInfo.lastBackup && (
-            <p className="text-xs text-slate-500 mb-3">Zatím žádná záloha</p>
+            <p className="text-xs theme-text-muted mb-3">Zatím žádná záloha</p>
           )}
           <div className="flex gap-2">
             <button
@@ -206,7 +206,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             <button
               onClick={handleRestore}
               disabled={restoring || !backupInfo.exists}
-              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-slate-800/50 border border-slate-700/50 text-slate-300 hover:text-white active:scale-95 transition-all disabled:opacity-50"
+              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium theme-bg-input border theme-border theme-text-secondary hover:text-white active:scale-95 transition-all disabled:opacity-50"
             >
               {restoring ? 'Obnovuji...' : 'Obnovit'}
             </button>
@@ -224,7 +224,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
 
       {/* Footer */}
       <div className="mt-8 text-center">
-        <p className="text-xs text-slate-600">DecisionUp v1.0</p>
+        <p className="text-xs theme-text-faint">DecisionUp v1.0</p>
         <p className="text-[10px] text-slate-700 mt-0.5">Signal, not noise.</p>
       </div>
       </div>

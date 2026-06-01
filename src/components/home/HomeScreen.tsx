@@ -92,23 +92,23 @@ export function HomeScreen() {
 
       <div className="px-4">
         {/* Date */}
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-xs theme-text-muted mb-4">
           {new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2 mb-5">
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-3 text-center">
+        <div className="theme-card rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-white">{ideas.length}</p>
-          <p className="text-[10px] text-slate-500 uppercase mt-0.5">Aktivní</p>
+          <p className="text-[10px] theme-text-muted uppercase mt-0.5">Aktivní</p>
         </div>
         <div className="bg-red-950/30 border border-red-500/30 rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-red-400">{critical.length}</p>
           <p className="text-[10px] text-red-400/60 uppercase mt-0.5">Kritické</p>
         </div>
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-3 text-center">
+        <div className="theme-card rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-green-400">{doneToday}</p>
-          <p className="text-[10px] text-slate-500 uppercase mt-0.5">Hotovo</p>
+          <p className="text-[10px] theme-text-muted uppercase mt-0.5">Hotovo</p>
         </div>
       </div>
 
@@ -119,8 +119,8 @@ export function HomeScreen() {
       ) : ideas.length === 0 ? (
         <div className="text-center py-12">
           <span className="text-4xl block mb-3">✨</span>
-          <p className="text-slate-400 text-sm">Žádné aktivní nápady</p>
-          <p className="text-slate-600 text-xs mt-1">Swipni doprava na Inbox</p>
+          <p className="theme-text-muted text-sm">Žádné aktivní nápady</p>
+          <p className="theme-text-faint text-xs mt-1">Swipni doprava na Inbox</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -177,7 +177,7 @@ function Section({ title, color, ideas, onDone }: { title: string; color: string
         <span className={`text-xs font-semibold uppercase ${colorMap[color]?.split(' ')[0]}`}>
           {title}
         </span>
-        <span className="text-xs text-slate-600">({ideas.length})</span>
+        <span className="text-xs theme-text-faint">({ideas.length})</span>
       </div>
       <div className="space-y-1.5">
         {ideas.map(idea => (
@@ -254,15 +254,15 @@ function IdeaCard({ idea, onDone, onNavigate }: { idea: IdeaAI; onDone: (id: str
         onDragEnd={handleDragEnd}
         onPointerDownCapture={(e) => e.stopPropagation()}
         onClick={() => onNavigate(idea.id)}
-        className="relative flex items-center gap-3 p-3 bg-slate-800/30 border border-slate-700/50 rounded-xl cursor-pointer active:bg-slate-800/50 transition-colors"
+        className="relative flex items-center gap-3 p-3 theme-card rounded-xl cursor-pointer active:bg-slate-800/50 transition-colors"
       >
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] text-white font-medium leading-snug truncate">{idea.title}</p>
+          <p className="text-[15px] theme-text font-medium leading-snug truncate">{idea.title}</p>
           {idea.ai_label && (
-            <span className="text-xs text-slate-500">{idea.ai_label}</span>
+            <span className="text-xs theme-text-muted">{idea.ai_label}</span>
           )}
         </div>
-        <svg className="w-4 h-4 text-slate-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <svg className="w-4 h-4 theme-text-faint flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </motion.div>

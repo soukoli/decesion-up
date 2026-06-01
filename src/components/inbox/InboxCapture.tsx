@@ -58,7 +58,7 @@ export function InboxCapture({ onSubmit }: InboxCaptureProps) {
         onKeyDown={handleKeyDown}
         placeholder="Co tě napadá..."
         autoFocus
-        className="flex-1 px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-colors"
+        className="flex-1 px-4 py-2.5 theme-bg-input border theme-border rounded-xl text-sm theme-text placeholder-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 transition-colors"
         disabled={submitting}
       />
       <button
