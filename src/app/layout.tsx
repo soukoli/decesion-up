@@ -36,8 +36,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="cs" className={`${inter.variable} h-full`}>
-      <body className="h-dvh overflow-hidden dark">
+    <html lang="cs" className={`${inter.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('decisionup-theme') || 'dark';
+                  var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  document.documentElement.classList.add(isDark ? 'dark' : 'light');
+                } catch (e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="h-dvh overflow-hidden">
         <ThemeProvider>
           <FontSizeProvider>
             {children}
