@@ -126,7 +126,7 @@ export function DesktopLayout() {
               onClick={() => setActiveScreen(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                 activeScreen === item.id
-                  ? 'bg-amber-500/20 text-amber-400'
+                  ? 'bg-violet-500/20 text-violet-400'
                   : 'theme-text-muted hover:theme-bg-card hover:theme-text'
               }`}
             >
@@ -140,7 +140,7 @@ export function DesktopLayout() {
         <div className="p-3 border-t theme-border">
           <button
             onClick={() => setShowIdeaModal(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30 active:scale-[0.98] transition-all"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -196,13 +196,13 @@ export function DesktopLayout() {
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitIdea(); } }}
                 placeholder="Co tě napadá..."
                 autoFocus
-                className="w-full h-32 theme-bg-input border theme-border rounded-xl p-4 text-base text-white placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+                className="w-full h-32 theme-bg-input border theme-border rounded-xl p-4 text-base text-white placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-violet-500/50 transition-colors"
               />
 
               <button
                 onClick={handleSubmitIdea}
                 disabled={!ideaText.trim() || submitting}
-                className="w-full mt-4 py-3 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 font-semibold hover:bg-amber-500/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full mt-4 py-3 rounded-xl bg-violet-500/20 border border-violet-500/50 text-violet-400 font-semibold hover:bg-violet-500/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Ukládám...' : 'Uložit nápad'}
               </button>

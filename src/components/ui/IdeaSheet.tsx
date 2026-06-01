@@ -144,7 +144,7 @@ export function IdeaSheet({ isOpen, onClose }: IdeaSheetProps) {
                   placeholder="Co tě napadá..."
                   autoFocus
                   inputMode="text"
-                  className="w-full h-full theme-bg-input border theme-border rounded-xl p-4 text-base theme-text placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+                  className="w-full h-full theme-bg-input border theme-border rounded-xl p-4 text-base theme-text placeholder-[var(--text-faint)] resize-none focus:outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
 
@@ -152,7 +152,7 @@ export function IdeaSheet({ isOpen, onClose }: IdeaSheetProps) {
               <button
                 onClick={handleSubmit}
                 disabled={!text.trim() || submitting}
-                className="w-full py-4 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 font-semibold text-base hover:bg-amber-500/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full py-4 rounded-xl bg-violet-500/20 border border-violet-500/50 text-violet-400 font-semibold text-base hover:bg-violet-500/30 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Ukládám...' : 'Uložit nápad'}
               </button>

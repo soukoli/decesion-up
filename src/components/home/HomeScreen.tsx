@@ -82,7 +82,7 @@ export function HomeScreen() {
             {user?.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border-2 border-slate-700" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-sm font-bold text-amber-400 border-2 border-slate-700">
+              <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-sm font-bold text-violet-400 border-2 border-slate-700">
                 {(user?.user_metadata?.full_name || user?.email || '?')[0].toUpperCase()}
               </div>
             )}
@@ -114,7 +114,7 @@ export function HomeScreen() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : ideas.length === 0 ? (
         <div className="text-center py-12">
@@ -153,14 +153,14 @@ export function HomeScreen() {
 function Section({ title, color, ideas, onDone }: { title: string; color: string; ideas: IdeaAI[]; onDone: (id: string) => void }) {
   const colorMap: Record<string, string> = {
     red: 'text-red-400 border-red-500/30',
-    yellow: 'text-amber-400 border-amber-500/30',
+    yellow: 'text-violet-400 border-violet-500/30',
     blue: 'text-blue-400 border-blue-500/30',
     purple: 'text-purple-400 border-purple-500/30',
   };
 
   const dotMap: Record<string, string> = {
     red: 'bg-red-500',
-    yellow: 'bg-amber-500',
+    yellow: 'bg-violet-500',
     blue: 'bg-blue-500',
     purple: 'bg-purple-500',
   };

@@ -101,7 +101,7 @@ export default function AppPage() {
                 onClick={() => handleNavigate(index)}
                 className={`p-3 rounded-full transition-all duration-200 ${
                   isActive
-                    ? 'text-amber-400 bg-amber-500/15 scale-110'
+                    ? 'text-violet-400 bg-violet-500/15 scale-110'
                     : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
@@ -112,7 +112,7 @@ export default function AppPage() {
           {/* Add idea button - visually distinct */}
           <button
             onClick={() => setShowIdeaSheet(true)}
-            className="p-3 ml-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 active:scale-95 transition-all"
+            className="p-3 ml-1 rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/40 hover:bg-violet-500/30 active:scale-95 transition-all"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

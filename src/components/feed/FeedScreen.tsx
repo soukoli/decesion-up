@@ -104,13 +104,13 @@ export function FeedScreen() {
   const categoryColors: Record<string, string> = {
     Tech: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
     Science: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Learning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    Learning: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
     Business: 'bg-green-500/20 text-green-400 border-green-500/30',
     Czech: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
   };
 
   const aiTechChipColors: Record<string, string> = {
-    HN: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    HN: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
     AI: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
     ML: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     NLP: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
@@ -125,7 +125,7 @@ export function FeedScreen() {
     'NPR': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     'ČT24': 'bg-red-500/20 text-red-400 border-red-500/30',
     'iROZHLAS': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    'Seznam Zprávy': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    'Seznam Zprávy': 'bg-violet-500/20 text-violet-400 border-violet-500/30',
     'Respekt': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
     'Aktuálně.cz': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
   };
@@ -183,7 +183,7 @@ export function FeedScreen() {
       <div className="flex-1 min-h-0 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <Swiper
@@ -226,7 +226,7 @@ export function FeedScreen() {
                           {/* + idea button */}
                           <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIdeaForPodcast(showIdeaInput ? null : ep.id); setIdeaText(''); }}
-                            className={`p-1.5 rounded-lg flex-shrink-0 transition-all ${showIdeaInput ? 'bg-amber-500/20 text-amber-400' : 'theme-text-faint hover:theme-text-secondary hover:bg-slate-700/50'}`}
+                            className={`p-1.5 rounded-lg flex-shrink-0 transition-all ${showIdeaInput ? 'bg-violet-500/20 text-violet-400' : 'theme-text-faint hover:theme-text-secondary hover:bg-slate-700/50'}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -260,11 +260,11 @@ export function FeedScreen() {
                               onKeyDown={(e) => { if (e.key === 'Enter') handlePodcastIdea(ep); }}
                               placeholder="Jaký nápad tě napadl..."
                               autoFocus
-                              className="flex-1 px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
+                              className="flex-1 px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50"
                             />
                             <button
                               onClick={() => handlePodcastIdea(ep)}
-                              className="p-2 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30 active:scale-95 transition-all"
+                              className="p-2 rounded-lg bg-violet-500/20 text-violet-400 border border-violet-500/50 hover:bg-violet-500/30 active:scale-95 transition-all"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -287,7 +287,7 @@ export function FeedScreen() {
                   const fresh = isFreshFromTimeAgo(t.timeAgo);
                   return (
                     <a key={t.id} href={t.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} theme-text group-hover:text-amber-400 transition-colors line-clamp-2`}>{t.title}</p>
+                      <p className={`${fontConfig.title} theme-text group-hover:text-violet-400 transition-colors line-clamp-2`}>{t.title}</p>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <div className="flex items-center gap-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${aiTechChipColors.HN}`}>HN</span>
@@ -334,7 +334,7 @@ export function FeedScreen() {
                   const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
                   return (
                     <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
+                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
                       {item.description && (
                         <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
                       )}
@@ -365,7 +365,7 @@ export function FeedScreen() {
                   const chipColor = schoolCategoryColors[item.category] || 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
                   return (
                     <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-amber-400 transition-colors line-clamp-2`}>{item.title}</p>
+                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
                       {item.description && (
                         <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
                       )}

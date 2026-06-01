@@ -97,7 +97,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
                 className="w-14 h-14 rounded-full border-2 theme-border"
               />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400">
+              <div className="w-14 h-14 rounded-full bg-violet-500/20 flex items-center justify-center text-xl font-bold text-violet-400">
                 {(user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()}
               </div>
             )}
@@ -130,7 +130,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
                 onClick={() => setFontSize(size)}
                 className={`flex-1 py-2.5 px-3 rounded-lg text-center transition-all ${
                   fontSize === size
-                    ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
+                    ? 'bg-violet-500/20 border border-violet-500/50 text-violet-400'
                     : 'theme-bg-input border theme-border theme-text-muted hover:text-white'
                 }`}
               >
@@ -165,7 +165,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
                 onClick={() => setTheme(t)}
                 className={`flex-1 py-2.5 px-3 rounded-lg text-center transition-all ${
                   theme === t
-                    ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400'
+                    ? 'bg-violet-500/20 border border-violet-500/50 text-violet-400'
                     : 'theme-bg-input border theme-border theme-text-muted hover:text-white'
                 }`}
               >
@@ -199,7 +199,7 @@ export function ProfileScreen({ onBack }: ProfileScreenProps) {
             <button
               onClick={handleBackup}
               disabled={backingUp}
-              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 active:scale-95 transition-all disabled:opacity-50"
+              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-violet-500/20 border border-violet-500/50 text-violet-400 hover:bg-violet-500/30 active:scale-95 transition-all disabled:opacity-50"
             >
               {backingUp ? 'Zálohuji...' : 'Zálohovat'}
             </button>

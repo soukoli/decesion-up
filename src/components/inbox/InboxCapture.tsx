@@ -58,13 +58,13 @@ export function InboxCapture({ onSubmit }: InboxCaptureProps) {
         onKeyDown={handleKeyDown}
         placeholder="Co tě napadá..."
         autoFocus
-        className="flex-1 px-4 py-2.5 theme-bg-input border theme-border rounded-xl text-sm theme-text placeholder-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 transition-colors"
+        className="flex-1 px-4 py-2.5 theme-bg-input border theme-border rounded-xl text-sm theme-text placeholder-[var(--text-muted)] focus:outline-none focus:border-violet-500/50 transition-colors"
         disabled={submitting}
       />
       <button
         onClick={handleSubmit}
         disabled={!text.trim() || submitting}
-        className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 hover:bg-amber-500/30 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+        className="p-2.5 rounded-xl bg-violet-500/20 border border-violet-500/50 text-violet-400 hover:bg-violet-500/30 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
       >
         {submitting ? (
           <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
