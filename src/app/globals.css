@@ -1,24 +1,117 @@
 @import "tailwindcss";
 
+/* ===== Design System: CSS Variables (Single Source of Truth) ===== */
+/* Based on Shadcn/ui color system + amber accent */
+
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  /* Backgrounds */
+  --bg-app: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-muted: #f1f5f9;
+  --bg-input: #f8fafc;
+  --bg-nav: rgba(255, 255, 255, 0.9);
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+
+  /* Borders */
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --border-focus: #f59e0b;
+
+  /* Accent (amber) */
   --accent: #f59e0b;
-  --card: #1e293b;
-  --card-border: #334155;
-  --muted: #64748b;
+  --accent-text: #92400e;
+  --accent-bg: #fffbeb;
+  --accent-border: #fde68a;
+
+  /* Priority colors */
+  --priority-red: #ef4444;
+  --priority-red-bg: #fef2f2;
+  --priority-yellow: #f59e0b;
+  --priority-yellow-bg: #fffbeb;
+  --priority-blue: #3b82f6;
+  --priority-blue-bg: #eff6ff;
+  --priority-purple: #8b5cf6;
+  --priority-purple-bg: #f5f3ff;
+
+  /* Status */
+  --success: #22c55e;
+  --success-bg: #f0fdf4;
+  --error: #ef4444;
+  --error-bg: #fef2f2;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-nav: 0 -4px 20px rgba(0, 0, 0, 0.06);
+
+  /* Radius */
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
 }
 
+/* Dark mode */
+.dark {
+  --bg-app: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.3);
+  --bg-card-hover: rgba(30, 41, 59, 0.5);
+  --bg-muted: #1e293b;
+  --bg-input: rgba(30, 41, 59, 0.5);
+  --bg-nav: rgba(15, 23, 42, 0.8);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --border: rgba(51, 65, 85, 0.5);
+  --border-light: rgba(51, 65, 85, 0.3);
+  --border-focus: rgba(245, 158, 11, 0.5);
+
+  --accent: #f59e0b;
+  --accent-text: #fbbf24;
+  --accent-bg: rgba(245, 158, 11, 0.2);
+  --accent-border: rgba(245, 158, 11, 0.4);
+
+  --priority-red: #f87171;
+  --priority-red-bg: rgba(239, 68, 68, 0.1);
+  --priority-yellow: #fbbf24;
+  --priority-yellow-bg: rgba(245, 158, 11, 0.1);
+  --priority-blue: #60a5fa;
+  --priority-blue-bg: rgba(59, 130, 246, 0.1);
+  --priority-purple: #a78bfa;
+  --priority-purple-bg: rgba(139, 92, 246, 0.1);
+
+  --success: #4ade80;
+  --success-bg: rgba(34, 197, 94, 0.1);
+  --error: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-nav: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Tailwind Theme Integration ===== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-app);
+  --color-foreground: var(--text-primary);
   --color-accent: var(--accent);
-  --color-card: var(--card);
-  --color-card-border: var(--card-border);
-  --color-muted: var(--muted);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* ===== Base Styles ===== */
 * {
   -webkit-tap-highlight-color: transparent;
 }
@@ -29,8 +122,8 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-app);
+  color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   height: 100dvh;
   overflow: hidden;
@@ -39,64 +132,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Light mode overrides */
-.light body,
-.light {
-  --background: #f8fafc;
-  --foreground: #1e293b;
-}
+/* Hide scrollbars */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
 
-.light .bg-slate-950 { background-color: #f8fafc; }
-.light .bg-slate-900\/80 { background-color: rgb(241 245 249 / 0.9); }
-.light .bg-slate-800\/30 { background-color: rgb(226 232 240 / 0.3); }
-.light .bg-slate-800\/50 { background-color: rgb(226 232 240 / 0.5); }
-.light .bg-slate-900\/50 { background-color: rgb(241 245 249 / 0.5); }
-.light .border-slate-700\/50 { border-color: rgb(203 213 225 / 0.5); }
-.light .border-slate-700\/30 { border-color: rgb(203 213 225 / 0.3); }
-.light .border-slate-800 { border-color: #e2e8f0; }
-.light .text-white { color: #1e293b; }
-.light .text-slate-300 { color: #475569; }
-.light .text-slate-400 { color: #64748b; }
-.light .text-slate-500 { color: #94a3b8; }
-.light .text-slate-600 { color: #94a3b8; }
-.light .placeholder-slate-500::placeholder { color: #94a3b8; }
-.light .placeholder-slate-600::placeholder { color: #cbd5e1; }
-.light .shadow-black\/40 { --tw-shadow-color: rgb(0 0 0 / 0.1); }
-.light .shadow-2xl { box-shadow: 0 8px 30px rgb(0 0 0 / 0.08); }
-
-/* Hide scrollbars globally but allow scrolling */
-::-webkit-scrollbar {
-  display: none;
-}
-
-* {
-  scrollbar-width: none;
-}
-
-/* Safe area for iOS */
+/* Safe areas */
 @supports (padding: max(0px)) {
-  .safe-area-bottom {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-  }
-  .safe-area-top {
-    padding-top: max(0.5rem, env(safe-area-inset-top));
-  }
+  .safe-area-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+  .safe-area-top { padding-top: max(0.5rem, env(safe-area-inset-top)); }
 }
 
-/* Swiper overrides */
-.swiper {
-  width: 100%;
-  height: 100%;
-}
-
-.swiper-slide {
-  overflow: hidden;
-}
+/* Swiper */
+.swiper { width: 100%; height: 100%; }
+.swiper-slide { overflow: hidden; }
 
 /* No-scrollbar utility */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  scrollbar-width: none;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }

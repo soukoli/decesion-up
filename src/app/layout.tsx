@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="cs" className={`${inter.variable} h-full`}>
-      <body className="h-dvh overflow-hidden bg-slate-950 text-white dark">
+      <body className="h-dvh overflow-hidden dark">
         <ThemeProvider>
           <FontSizeProvider>
             {children}

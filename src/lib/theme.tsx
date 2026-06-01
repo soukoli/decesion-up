@@ -34,15 +34,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setResolvedTheme(resolved);
 
     const root = document.documentElement;
-    if (resolved === 'light') {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#f8fafc');
-    } else {
-      root.classList.remove('light');
-      root.classList.add('dark');
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0f172a');
-    }
+    root.classList.remove('dark', 'light');
+    root.classList.add(resolved);
+    
+    const themeColor = resolved === 'light' ? '#ffffff' : '#0f172a';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   }, []);
 
   // Load theme on mount

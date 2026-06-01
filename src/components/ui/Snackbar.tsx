@@ -43,13 +43,15 @@ export function Snackbar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed bottom-24 left-4 right-4 z-[60] flex items-center justify-between px-4 py-3 bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl shadow-black/40"
+          className="fixed bottom-24 left-4 right-4 z-[60] flex items-center justify-between px-4 py-3 rounded-xl"
+          style={{ background: 'var(--bg-muted)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}
         >
-          <span className="text-sm text-white">{state.message}</span>
+          <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{state.message}</span>
           {state.onUndo && (
             <button
               onClick={handleUndo}
-              className="ml-3 px-3 py-1 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 active:scale-95 transition-all"
+              className="ml-3 px-3 py-1 text-xs font-semibold rounded-lg active:scale-95 transition-all"
+              style={{ color: 'var(--accent-text)', background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}
             >
               UNDO
             </button>

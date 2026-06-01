@@ -67,7 +67,7 @@ export default function AppPage() {
 
   // Mobile: swipe layout
   return (
-    <div className="h-full bg-slate-950 relative">
+    <div className="h-full relative" style={{ background: 'var(--bg-app)' }}>
       {/* Main content - 3 worlds */}
       <div className="h-full pb-24">
         <Swiper
@@ -92,7 +92,7 @@ export default function AppPage() {
 
       {/* Floating pill navigation - 3 nav icons + 1 action */}
       <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 safe-area-bottom flex justify-center pointer-events-none">
-        <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 shadow-2xl shadow-black/40 pointer-events-auto">
+        <nav className="flex items-center gap-1.5 px-4 py-2.5 rounded-full backdrop-blur-2xl pointer-events-auto" style={{ background: 'var(--bg-nav)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
           {NAV_ITEMS.map((item, index) => {
             const isActive = index === activeIndex;
             return (
