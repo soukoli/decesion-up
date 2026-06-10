@@ -334,10 +334,17 @@ export function FeedScreen() {
                   const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
                   return (
                     <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
-                      {item.description && (
-                        <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
-                      )}
+                      <div className="flex items-start gap-3">
+                        {item.imageUrl && (
+                          <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
+                          {item.description && (
+                            <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-1`}>{item.description}</p>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
                         <div className="flex items-center gap-1.5">
@@ -365,10 +372,17 @@ export function FeedScreen() {
                   const chipColor = schoolCategoryColors[item.category] || 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
                   return (
                     <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
-                      {item.description && (
-                        <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-2`}>{item.description}</p>
-                      )}
+                      <div className="flex items-start gap-3">
+                        {item.imageUrl && (
+                          <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
+                          {item.description && (
+                            <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-1`}>{item.description}</p>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
                         <div className="flex items-center gap-2">
                           <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.category}</span>
