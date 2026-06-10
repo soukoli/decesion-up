@@ -145,6 +145,9 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
         // Calculate freshness for Czech news
         const publishDate = new Date(pubDate || new Date());
         const hoursAgo = (Date.now() - publishDate.getTime()) / (1000 * 60 * 60);
+
+        // Extract image
+        const imageUrl = extractImageUrl(itemXml);
         
         items.push({
           id: `${source.id}-${Date.now()}-${items.length}`,
@@ -154,11 +157,12 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
           source: source.name,
           category: source.category,
           publishedAt: publishDate.toISOString(),
+          imageUrl: imageUrl || undefined,
           // Add Czech-specific metadata
           credibility: source.credibility,
           freshness: hoursAgo < 1 ? 'hot' : hoursAgo < 6 ? 'fresh' : hoursAgo < 24 ? 'recent' : 'old',
           sourceType: source.type as 'public' | 'private' | 'independent',
-          isLocal: true, // Mark as Czech/local news
+          isLocal: true,
         });
       }
     }
@@ -168,6 +172,18 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
     console.error(`Error fetching Czech news from ${source.name}:`, error);
     return [];
   }
+}
+
+function extractImageUrl(xml: string): string | null {
+  const thumbMatch = xml.match(/<media:thumbnail[^>]+url="([^"]+)"/i);
+  if (thumbMatch) return thumbMatch[1];
+  const mediaMatch = xml.match(/<media:content[^>]+url="([^"]+)"/i);
+  if (mediaMatch) return mediaMatch[1];
+  const enclosureMatch = xml.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image[^"]*"/i);
+  if (enclosureMatch) return enclosureMatch[1];
+  const enclosureAnyMatch = xml.match(/<enclosure[^>]+url="([^"]+)"/i);
+  if (enclosureAnyMatch && enclosureAnyMatch[1].match(/\.(jpg|jpeg|png|webp|gif)/i)) return enclosureAnyMatch[1];
+  return null;
 }
 
 function extractTag(xml: string, tag: string): string | null {

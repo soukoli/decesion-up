@@ -77,6 +77,9 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
       const pubDate = extractTag(itemXml, 'pubDate');
       
       if (title && link) {
+        // Extract image from media:thumbnail, media:content, or enclosure
+        const imageUrl = extractImageUrl(itemXml);
+        
         items.push({
           id: `${source.id}-${items.length}`,
           title: cleanHtml(title),
@@ -85,6 +88,7 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
           source: source.name,
           category: source.category,
           publishedAt: pubDate || new Date().toISOString(),
+          imageUrl: imageUrl || undefined,
         });
       }
     }
@@ -94,6 +98,32 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
     console.error(`Error fetching ${source.name}:`, error);
     return [];
   }
+}
+
+function extractImageUrl(xml: string): string | null {
+  // Try media:thumbnail url attribute
+  const thumbMatch = xml.match(/<media:thumbnail[^>]+url="([^"]+)"/i);
+  if (thumbMatch) return thumbMatch[1];
+
+  // Try media:content url attribute
+  const mediaMatch = xml.match(/<media:content[^>]+url="([^"]+)"/i);
+  if (mediaMatch) return mediaMatch[1];
+
+  // Try enclosure with image type
+  const enclosureMatch = xml.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image[^"]*"/i);
+  if (enclosureMatch) return enclosureMatch[1];
+
+  // Try enclosure url (any type)
+  const enclosureAnyMatch = xml.match(/<enclosure[^>]+url="([^"]+)"/i);
+  if (enclosureAnyMatch && enclosureAnyMatch[1].match(/\.(jpg|jpeg|png|webp|gif)/i)) {
+    return enclosureAnyMatch[1];
+  }
+
+  // Try image tag inside item
+  const imgMatch = xml.match(/<image>[\s\S]*?<url>([^<]+)<\/url>/i);
+  if (imgMatch) return imgMatch[1];
+
+  return null;
 }
 
 function extractTag(xml: string, tag: string): string | null {
