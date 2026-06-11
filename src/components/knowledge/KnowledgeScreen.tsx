@@ -182,9 +182,9 @@ export function KnowledgeScreen() {
               const isProcessing = idea._processing;
 
               return (
-                <div key={idea.id} className={`relative border rounded-xl transition-all overflow-hidden ${
+                <div key={idea.id} className={`relative theme-card transition-all overflow-hidden ${
                   isProcessing ? 'border-violet-500/20 bg-violet-500/5 animate-pulse' :
-                  isDone ? 'bg-slate-800/10 border-slate-800/30' : 'bg-slate-800/30 theme-border/50'
+                  isDone ? 'opacity-60' : ''
                 }`}>
                   {/* Header - clickable to expand */}
                   <button

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { IdeaAI, PRIORITY_CONFIG } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
@@ -189,83 +188,20 @@ function Section({ title, color, ideas, onDone }: { title: string; color: string
 }
 
 function IdeaCard({ idea, onDone, onNavigate }: { idea: IdeaAI; onDone: (id: string) => void; onNavigate: (id: string) => void }) {
-  const x = useMotionValue(0);
-  const bgOpacityRight = useTransform(x, [0, 80], [0, 1]);
-  const bgOpacityLeft = useTransform(x, [-80, 0], [1, 0]);
-  const checkScale = useTransform(x, [0, 80], [0.5, 1]);
-  const archiveScale = useTransform(x, [-80, 0], [1, 0.5]);
-  const [swiped, setSwiped] = useState(false);
-
-  const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
-    if (info.offset.x > 80) {
-      setSwiped(true);
-      animate(x, 400, { duration: 0.3 });
-      setTimeout(() => onDone(idea.id), 300);
-    } else if (info.offset.x < -80) {
-      setSwiped(true);
-      animate(x, -400, { duration: 0.3 });
-      setTimeout(() => {
-        fetch('/api/ideas', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: idea.id, status: 'archived' }),
-        });
-      }, 300);
-    } else {
-      animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
-    }
-  };
-
-  if (swiped) return null;
-
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      {/* Green background - swipe right (Done) */}
-      <motion.div
-        className="absolute inset-0 bg-green-500/20 flex items-center pl-4"
-        style={{ opacity: bgOpacityRight }}
-      >
-        <motion.div style={{ scale: checkScale }}>
-          <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </motion.div>
-      </motion.div>
-
-      {/* Red background - swipe left (Archive) */}
-      <motion.div
-        className="absolute inset-0 bg-red-500/20 flex items-center justify-end pr-4"
-        style={{ opacity: bgOpacityLeft }}
-      >
-        <motion.div style={{ scale: archiveScale }}>
-          <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-          </svg>
-        </motion.div>
-      </motion.div>
-
-      {/* Draggable card */}
-      <motion.div
-        style={{ x }}
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: -120, right: 120 }}
-        dragElastic={0.15}
-        onDragEnd={handleDragEnd}
-        onPointerDownCapture={(e) => e.stopPropagation()}
-        onClick={() => onNavigate(idea.id)}
-        className="relative flex items-center gap-3 p-3 theme-card rounded-xl cursor-pointer active:bg-slate-800/50 transition-colors"
-      >
-        <div className="flex-1 min-w-0">
-          <p className="text-[15px] theme-text font-medium leading-snug truncate">{idea.title}</p>
-          {idea.ai_label && (
-            <span className="text-xs theme-text-muted">{idea.ai_label}</span>
-          )}
-        </div>
-        <svg className="w-4 h-4 theme-text-faint flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-      </motion.div>
-    </div>
+    <button
+      onClick={() => onNavigate(idea.id)}
+      className="w-full text-left flex items-center gap-3 p-3 theme-card cursor-pointer active:opacity-80 transition-opacity"
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] theme-text font-medium leading-snug truncate">{idea.title}</p>
+        {idea.ai_label && (
+          <span className="text-xs theme-text-muted">{idea.ai_label}</span>
+        )}
+      </div>
+      <svg className="w-4 h-4 theme-text-faint flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
   );
 }
