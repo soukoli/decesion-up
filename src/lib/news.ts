@@ -68,7 +68,7 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
     
-    while ((match = itemRegex.exec(text)) !== null && items.length < 3) {
+    while ((match = itemRegex.exec(text)) !== null && items.length < 6) {
       const itemXml = match[1];
       
       const title = extractTag(itemXml, 'title');

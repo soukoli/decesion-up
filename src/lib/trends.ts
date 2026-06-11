@@ -33,7 +33,7 @@ export async function fetchHackerNewsTrends(): Promise<TechTrend[]> {
     const topStoryIds: number[] = await topStoriesRes.json();
     
     // Fetch top 10 stories
-    const storyPromises = topStoryIds.slice(0, 10).map(async (id) => {
+    const storyPromises = topStoryIds.slice(0, 25).map(async (id) => {
       const res = await fetch(
         `https://hacker-news.firebaseio.com/v0/item/${id}.json`
       );

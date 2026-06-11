@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { Swiper as SwiperType } from 'swiper';
 import { PodcastEpisode, TechTrend, WorldNews, AIResearch, SchoolArticle } from '@/types';
@@ -37,6 +37,10 @@ export function FeedScreen() {
   const [translating, setTranslating] = useState(false);
   const [newsDetailOpen, setNewsDetailOpen] = useState(false);
   const [newsDetailIndex, setNewsDetailIndex] = useState(0);
+  const [newsVisible, setNewsVisible] = useState(15);
+  const [techVisible, setTechVisible] = useState(15);
+  const newsEndRef = useRef<HTMLDivElement>(null);
+  const techEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchAll();
@@ -112,8 +116,7 @@ export function FeedScreen() {
 
   // Merged news (world + czech, chronological)
   const allNews = [...news, ...czechNews]
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 30);
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
   // Translate titles
   const translateTitles = async () => {
@@ -154,6 +157,28 @@ export function FeedScreen() {
     setNewsDetailIndex(index);
     setNewsDetailOpen(true);
   };
+
+  // Infinite scroll observers
+  useEffect(() => {
+    const newsObs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && newsVisible < allNews.length) {
+        setNewsVisible(prev => Math.min(prev + 15, allNews.length));
+      }
+    }, { threshold: 0.1 });
+    if (newsEndRef.current) newsObs.observe(newsEndRef.current);
+    return () => newsObs.disconnect();
+  }, [newsVisible, allNews.length]);
+
+  useEffect(() => {
+    const allTech = [...trends, ...research];
+    const techObs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && techVisible < allTech.length) {
+        setTechVisible(prev => Math.min(prev + 15, allTech.length));
+      }
+    }, { threshold: 0.1 });
+    if (techEndRef.current) techObs.observe(techEndRef.current);
+    return () => techObs.disconnect();
+  }, [techVisible, trends.length, research.length]);
 
   const categoryColors: Record<string, string> = {
     Tech: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
@@ -357,7 +382,7 @@ export function FeedScreen() {
             {/* AI & Tech */}
             <SwiperSlide>
               <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6 space-y-2">
-                {trends.slice(0, 10).map(t => {
+                {trends.slice(0, techVisible).map(t => {
                   const fresh = isFreshFromTimeAgo(t.timeAgo);
                   return (
                     <a key={t.id} href={t.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
@@ -375,7 +400,7 @@ export function FeedScreen() {
                     </a>
                   );
                 })}
-                {research.slice(0, 5).map(r => {
+                {research.slice(0, Math.max(0, techVisible - trends.length)).map(r => {
                   const fresh = isFresh(r.publishedAt);
                   const chip = getResearchChip(r.category);
                   return (
@@ -397,6 +422,15 @@ export function FeedScreen() {
                     </a>
                   );
                 })}
+                {techVisible < (trends.length + research.length) && (
+                  <div ref={techEndRef} className="flex justify-center py-4">
+                    <span className="flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  </div>
+                )}
               </div>
             </SwiperSlide>
 
@@ -405,7 +439,7 @@ export function FeedScreen() {
               <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6">
                 {/* News list */}
                 <div className="space-y-2">
-                  {allNews.map((item, index) => {
+                  {allNews.slice(0, newsVisible).map((item, index) => {
                     const fresh = isFresh(item.publishedAt);
                     const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
                     return (
@@ -427,7 +461,16 @@ export function FeedScreen() {
                         </div>
                       </button>
                     );
-                  })}
+                   })}
+                  {newsVisible < allNews.length && (
+                    <div ref={newsEndRef} className="flex justify-center py-4">
+                      <span className="flex gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </SwiperSlide>

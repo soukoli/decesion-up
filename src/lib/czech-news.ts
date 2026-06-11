@@ -133,7 +133,7 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
     
-    while ((match = itemRegex.exec(text)) !== null && items.length < 4) {
+    while ((match = itemRegex.exec(text)) !== null && items.length < 6) {
       const itemXml = match[1];
       
       const title = extractTag(itemXml, 'title');
