@@ -56,7 +56,7 @@ export function NewsDetailSheet({ articles, initialIndex, isOpen, onClose, trans
                   <div className="h-full overflow-y-auto overscroll-contain px-5 py-5 pb-24">
                     {/* Image */}
                     {article.imageUrl && (
-                      <img src={article.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl mb-4" />
+                      <img src={article.imageUrl} alt="" className="w-full h-48 object-cover rounded-xl mb-4" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     )}
 
                     {/* Source + time */}

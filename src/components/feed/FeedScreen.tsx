@@ -203,15 +203,35 @@ export function FeedScreen() {
         <PageHeader
           title="Feed"
           rightContent={
-            <button
-              onClick={fetchAll}
-              disabled={loading || refreshing}
-              className="p-2 rounded-lg theme-bg-input theme-text-muted hover:text-white transition-colors disabled:opacity-50"
-            >
-              <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-            </button>
+            <>
+              <button
+                onClick={handleTranslateToggle}
+                disabled={translating}
+                className={`p-2 rounded-lg transition-colors ${
+                  translateEnabled ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' : 'theme-bg-input theme-text-muted border border-transparent'
+                }`}
+              >
+                {translating ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={fetchAll}
+                disabled={loading || refreshing}
+                className="p-2 rounded-lg theme-bg-input theme-text-muted hover:theme-text transition-colors disabled:opacity-50"
+              >
+                <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </>
           }
         />
         <div className="px-4 pb-2">
@@ -383,19 +403,6 @@ export function FeedScreen() {
             {/* News */}
             <SwiperSlide>
               <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6">
-                {/* Translate toggle */}
-                <div className="flex items-center justify-end mb-3">
-                  <button
-                    onClick={handleTranslateToggle}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      translateEnabled ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' : 'theme-bg-input border theme-border theme-text-muted'
-                    }`}
-                  >
-                    {translating && <span className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />}
-                    CZ
-                  </button>
-                </div>
-
                 {/* News list */}
                 <div className="space-y-2">
                   {allNews.map((item, index) => {
@@ -405,7 +412,7 @@ export function FeedScreen() {
                       <button key={item.id} onClick={() => openNewsDetail(index)} className={`w-full text-left block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'theme-card'}`}>
                         <div className="flex items-start gap-3">
                           {item.imageUrl && (
-                            <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
+                            <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           )}
                           <div className="flex-1 min-w-0">
                             <p className={`${fontConfig.title} theme-text font-medium leading-snug`}>{getNewsTitle(item)}</p>
@@ -441,7 +448,7 @@ export function FeedScreen() {
                     <a key={item.id} href={item.articleUrl} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
                       <div className="flex items-start gap-3">
                         {item.imageUrl && (
-                          <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
+                          <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
