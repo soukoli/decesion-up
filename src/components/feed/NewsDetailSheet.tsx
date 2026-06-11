@@ -43,9 +43,10 @@ export function NewsDetailSheet({ articles, initialIndex, isOpen, onClose, trans
             </button>
           </div>
 
-          {/* Swipeable content */}
+          {/* Swipeable content - VERTICAL (up/down between articles) */}
           <div className="flex-1 min-h-0">
             <Swiper
+              direction="vertical"
               initialSlide={initialIndex}
               onSlideChange={(swiper: SwiperType) => setCurrentIndex(swiper.activeIndex)}
               className="h-full"
