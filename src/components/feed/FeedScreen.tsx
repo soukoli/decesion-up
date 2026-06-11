@@ -8,6 +8,7 @@ import { useFontSize } from '@/lib/font-size';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { formatRelativeTime, isFresh, isFreshFromTimeAgo } from '@/lib/utils';
 import { useSnackbar } from '@/components/ui/Snackbar';
+import { NewsDetailSheet } from './NewsDetailSheet';
 
 const FEED_TABS = [
   { id: 'podcasts', label: 'Podcasty' },
@@ -23,6 +24,7 @@ export function FeedScreen() {
   const [trends, setTrends] = useState<TechTrend[]>([]);
   const [research, setResearch] = useState<AIResearch[]>([]);
   const [news, setNews] = useState<WorldNews[]>([]);
+  const [czechNews, setCzechNews] = useState<WorldNews[]>([]);
   const [school, setSchool] = useState<SchoolArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,6 +32,11 @@ export function FeedScreen() {
   const { showSnackbar } = useSnackbar();
   const [ideaForPodcast, setIdeaForPodcast] = useState<string | null>(null);
   const [ideaText, setIdeaText] = useState('');
+  const [translateEnabled, setTranslateEnabled] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translating, setTranslating] = useState(false);
+  const [newsDetailOpen, setNewsDetailOpen] = useState(false);
+  const [newsDetailIndex, setNewsDetailIndex] = useState(0);
 
   useEffect(() => {
     fetchAll();
@@ -42,17 +49,19 @@ export function FeedScreen() {
     else setRefreshing(true);
 
     try {
-      const [pRes, tRes, rRes, nRes, sRes] = await Promise.all([
+      const [pRes, tRes, rRes, nRes, czRes, sRes] = await Promise.all([
         fetch('/api/podcasts'),
         fetch('/api/trends'),
         fetch('/api/research'),
         fetch('/api/news'),
+        fetch('/api/news/czech'),
         fetch('/api/school'),
       ]);
       if (pRes.ok) { const d = await pRes.json(); setPodcasts(d.podcasts || []); }
       if (tRes.ok) { const d = await tRes.json(); setTrends(d.trends || []); }
       if (rRes.ok) { const d = await rRes.json(); setResearch(d.research || []); }
       if (nRes.ok) { const d = await nRes.json(); setNews(d.news || []); }
+      if (czRes.ok) { const d = await czRes.json(); setCzechNews(d.news || []); }
       if (sRes.ok) { const d = await sRes.json(); setSchool(d.articles || []); }
     } catch (err) {
       console.error('Feed fetch error:', err);
@@ -99,6 +108,51 @@ export function FeedScreen() {
         showSnackbar('Nápad uložen');
       }
     } catch { /* silent */ }
+  };
+
+  // Merged news (world + czech, chronological)
+  const allNews = [...news, ...czechNews]
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, 30);
+
+  // Translate titles
+  const translateTitles = async () => {
+    setTranslating(true);
+    const untranslated = allNews.filter(n => !translations[n.id] && !/[ěščřžýáíéúůďťňó]/i.test(n.title));
+    if (untranslated.length === 0) { setTranslating(false); return; }
+
+    try {
+      const batch = untranslated.slice(0, 15);
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texts: batch.map(n => n.title), targetLang: 'cs' }),
+      });
+      if (res.ok) {
+        const { translations: results } = await res.json();
+        const newTranslations = { ...translations };
+        batch.forEach((n, i) => { if (results[i]) newTranslations[n.id] = results[i]; });
+        setTranslations(newTranslations);
+      }
+    } catch { /* silent */ }
+    finally { setTranslating(false); }
+  };
+
+  // Auto-translate when toggle is on and news load
+  const handleTranslateToggle = () => {
+    const newVal = !translateEnabled;
+    setTranslateEnabled(newVal);
+    if (newVal) translateTitles();
+  };
+
+  const getNewsTitle = (item: WorldNews) => {
+    if (translateEnabled && translations[item.id]) return translations[item.id];
+    return item.title;
+  };
+
+  const openNewsDetail = (index: number) => {
+    setNewsDetailIndex(index);
+    setNewsDetailOpen(true);
   };
 
   const categoryColors: Record<string, string> = {
@@ -328,33 +382,46 @@ export function FeedScreen() {
 
             {/* News */}
             <SwiperSlide>
-              <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6 space-y-2">
-                {news.map(item => {
-                  const fresh = isFresh(item.publishedAt);
-                  const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
-                  return (
-                    <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className={`block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'border theme-border bg-slate-800/30'}`}>
-                      <div className="flex items-start gap-3">
-                        {item.imageUrl && (
-                          <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className={`${fontConfig.title} theme-text font-medium group-hover:text-violet-400 transition-colors line-clamp-2`}>{item.title}</p>
-                          {item.description && (
-                            <p className={`${fontConfig.body} theme-text-muted mt-1 line-clamp-1`}>{item.description}</p>
+              <div className="h-full overflow-y-auto overscroll-contain px-4 py-3 pb-6">
+                {/* Translate toggle */}
+                <div className="flex items-center justify-end mb-3">
+                  <button
+                    onClick={handleTranslateToggle}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      translateEnabled ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' : 'theme-bg-input border theme-border theme-text-muted'
+                    }`}
+                  >
+                    {translating && <span className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />}
+                    CZ
+                  </button>
+                </div>
+
+                {/* News list */}
+                <div className="space-y-2">
+                  {allNews.map((item, index) => {
+                    const fresh = isFresh(item.publishedAt);
+                    const chipColor = newsSourceColors[item.source] || 'bg-slate-700/50 theme-text-muted border-slate-600';
+                    return (
+                      <button key={item.id} onClick={() => openNewsDetail(index)} className={`w-full text-left block p-3 rounded-xl transition-colors group ${fresh ? 'border border-green-500/30 theme-bg-card' : 'theme-card'}`}>
+                        <div className="flex items-start gap-3">
+                          {item.imageUrl && (
+                            <img src={item.imageUrl} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
                           )}
+                          <div className="flex-1 min-w-0">
+                            <p className={`${fontConfig.title} theme-text font-medium leading-snug`}>{getNewsTitle(item)}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
-                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
-                        <div className="flex items-center gap-1.5">
-                          {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
-                          <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(item.publishedAt)}</span>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t theme-border-light">
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border font-medium ${chipColor}`}>{item.source}</span>
+                          <div className="flex items-center gap-1.5">
+                            {fresh && <span className="w-2 h-2 rounded-full bg-green-500" />}
+                            <span className="text-[11px] theme-text-faint font-mono">{formatRelativeTime(item.publishedAt)}</span>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </SwiperSlide>
 
@@ -401,6 +468,15 @@ export function FeedScreen() {
           </Swiper>
         )}
       </div>
+
+      {/* News detail fullscreen */}
+      <NewsDetailSheet
+        articles={allNews}
+        initialIndex={newsDetailIndex}
+        isOpen={newsDetailOpen}
+        onClose={() => setNewsDetailOpen(false)}
+        translations={translateEnabled ? translations : undefined}
+      />
     </div>
   );
 }
