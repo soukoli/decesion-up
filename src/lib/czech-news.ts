@@ -117,7 +117,7 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
         'User-Agent': 'DecisionUp/1.0',
         'Accept': 'application/rss+xml, application/xml, text/xml',
       },
-      signal: AbortSignal.timeout(7000), // Longer timeout for Czech sources
+      signal: AbortSignal.timeout(10000), // Longer timeout for Czech sources
       next: { revalidate: 1200 }, // Cache for 20 minutes (more frequent updates)
     });
 
@@ -133,7 +133,7 @@ async function fetchCzechRSSFeed(source: typeof CZECH_NEWS_SOURCES[0]): Promise<
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
     
-    while ((match = itemRegex.exec(text)) !== null && items.length < 6) {
+    while ((match = itemRegex.exec(text)) !== null && items.length < 10) {
       const itemXml = match[1];
       
       const title = extractTag(itemXml, 'title');

@@ -52,7 +52,7 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
       headers: {
         'User-Agent': 'DecisionUp/1.0',
       },
-      signal: AbortSignal.timeout(5000), // Reduced timeout
+      signal: AbortSignal.timeout(8000), // Reduced timeout
       next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
@@ -68,7 +68,7 @@ async function fetchRSSFeed(source: typeof NEWS_SOURCES[0]): Promise<WorldNews[]
     const itemRegex = /<item>([\s\S]*?)<\/item>/g;
     let match;
     
-    while ((match = itemRegex.exec(text)) !== null && items.length < 6) {
+    while ((match = itemRegex.exec(text)) !== null && items.length < 15) {
       const itemXml = match[1];
       
       const title = extractTag(itemXml, 'title');

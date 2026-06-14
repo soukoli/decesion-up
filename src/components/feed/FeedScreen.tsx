@@ -431,6 +431,11 @@ export function FeedScreen() {
                     </span>
                   </div>
                 )}
+                {techVisible >= (trends.length + research.length) && trends.length > 0 && (
+                  <div className="text-center py-6">
+                    <p className="text-xs theme-text-faint">Zobrazeno {trends.length + research.length} článků</p>
+                  </div>
+                )}
               </div>
             </SwiperSlide>
 
@@ -469,6 +474,12 @@ export function FeedScreen() {
                         <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                       </span>
+                    </div>
+                  )}
+                  {newsVisible >= allNews.length && allNews.length > 0 && (
+                    <div className="text-center py-6">
+                      <p className="text-xs theme-text-faint">Zobrazeno {allNews.length} zpráv</p>
+                      <p className="text-[10px] theme-text-faint mt-0.5">Limit: max 15 per zdroj</p>
                     </div>
                   )}
                 </div>
