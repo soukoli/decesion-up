@@ -12,12 +12,18 @@ export function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [dailyFocus, setDailyFocus] = useState('');
+  const [editingFocus, setEditingFocus] = useState(false);
   const { showSnackbar } = useSnackbar();
   const supabase = createClient();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
     fetchIdeas();
+    // Load daily focus from localStorage
+    const today = new Date().toISOString().slice(0, 10);
+    const saved = localStorage.getItem(`daily-focus-${today}`);
+    if (saved) setDailyFocus(saved);
   }, []);
 
   // Listen for new/updated ideas
@@ -90,26 +96,42 @@ export function HomeScreen() {
       />
 
       <div className="px-4">
-        {/* Date */}
-        <p className="text-xs theme-text-muted mb-4">
-          {new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+        {/* Daily Focus */}
+        <div className="mb-4">
+          {editingFocus ? (
+            <textarea
+              value={dailyFocus}
+              onChange={(e) => setDailyFocus(e.target.value)}
+              onBlur={() => {
+                setEditingFocus(false);
+                const today = new Date().toISOString().slice(0, 10);
+                localStorage.setItem(`daily-focus-${today}`, dailyFocus);
+              }}
+              placeholder="Co dnes musím splnit..."
+              autoFocus
+              className="w-full p-3 theme-card text-[15px] font-semibold theme-text placeholder-[var(--text-faint)] resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 min-h-[60px]"
+              style={{ fieldSizing: 'content' } as any}
+            />
+          ) : (
+            <button
+              onClick={() => setEditingFocus(true)}
+              className="w-full text-left p-3 theme-card min-h-[48px]"
+            >
+              {dailyFocus ? (
+                <p className="text-[15px] font-semibold theme-text whitespace-pre-wrap">{dailyFocus}</p>
+              ) : (
+                <p className="text-[15px] theme-text-faint">Co dnes musím splnit...</p>
+              )}
+            </button>
+          )}
+        </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
-        <div className="theme-card rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-white">{ideas.length}</p>
-          <p className="text-[10px] theme-text-muted uppercase mt-0.5">Aktivní</p>
+        {/* Compact KPIs */}
+        <div className="flex items-center gap-4 mb-4 px-1">
+          <span className="text-xs theme-text-muted">{ideas.length} aktivních</span>
+          <span className="text-xs text-red-400">{critical.length} kritických</span>
+          <span className="text-xs text-green-400">{doneToday} hotovo</span>
         </div>
-        <div className="bg-red-950/30 border border-red-500/30 rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-red-400">{critical.length}</p>
-          <p className="text-[10px] text-red-400/60 uppercase mt-0.5">Kritické</p>
-        </div>
-        <div className="theme-card rounded-xl p-3 text-center">
-          <p className="text-2xl font-bold text-green-400">{doneToday}</p>
-          <p className="text-[10px] theme-text-muted uppercase mt-0.5">Hotovo</p>
-        </div>
-      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
