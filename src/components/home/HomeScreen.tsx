@@ -18,13 +18,35 @@ export function HomeScreen() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) loadDailyFocus(data.user.id);
+    });
     fetchIdeas();
-    // Load daily focus from localStorage
-    const today = new Date().toISOString().slice(0, 10);
-    const saved = localStorage.getItem(`daily-focus-${today}`);
-    if (saved) setDailyFocus(saved);
   }, []);
+
+  const loadDailyFocus = async (userId: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from('user_profile')
+      .select('daily_focus, daily_focus_date')
+      .eq('id', userId)
+      .single();
+    
+    if (data?.daily_focus_date === today && data?.daily_focus) {
+      setDailyFocus(data.daily_focus);
+    }
+  };
+
+  const saveDailyFocus = async (text: string) => {
+    if (!user) return;
+    const today = new Date().toISOString().slice(0, 10);
+    await supabase.from('user_profile').upsert({
+      id: user.id,
+      daily_focus: text,
+      daily_focus_date: today,
+    }, { onConflict: 'id' });
+  };
 
   // Listen for new/updated ideas
   useEffect(() => {
@@ -104,8 +126,7 @@ export function HomeScreen() {
               onChange={(e) => setDailyFocus(e.target.value)}
               onBlur={() => {
                 setEditingFocus(false);
-                const today = new Date().toISOString().slice(0, 10);
-                localStorage.setItem(`daily-focus-${today}`, dailyFocus);
+                saveDailyFocus(dailyFocus);
               }}
               placeholder="Co dnes musím splnit..."
               autoFocus
