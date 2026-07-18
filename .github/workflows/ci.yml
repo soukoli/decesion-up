@@ -78,3 +78,14 @@ jobs:
           else
             echo "✅ No secrets found in source code"
           fi
+
+      - name: Check licenses (no GPL/AGPL)
+        run: |
+          npx license-checker --production --summary --excludePackages "decision-app-new@0.1.0" > licenses.txt
+          if grep -iE "GPL|AGPL" licenses.txt; then
+            echo "⚠️ Warning: GPL/AGPL license detected (potential legal issue)"
+          else
+            echo "✅ No copyleft licenses detected"
+          fi
+          cat licenses.txt
+        continue-on-error: true
