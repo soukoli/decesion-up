@@ -150,6 +150,17 @@ export const PODCASTS: PodcastConfig[] = [
     defaultImage: '',
     priority: 11,
   },
+  {
+    id: 'fuckupy-v-it',
+    name: 'Fuckupy v IT',
+    category: 'Czech',
+    categoryColor: CATEGORY_COLORS.Czech,
+    rssUrl: 'https://anchor.fm/s/102eb10d8/podcast/rss',
+    spotifyUrl: 'https://open.spotify.com/show/0hdAwDbzypIu4xNSZllLyL',
+    webUrl: 'https://anchor.fm/fuckupyvit',
+    defaultImage: '',
+    priority: 12,
+  },
 ];
 
 // Helper functions
